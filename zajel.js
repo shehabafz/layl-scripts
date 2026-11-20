@@ -125,6 +125,7 @@ let a={
 .zajel-modal-overlay.minimized { background: transparent; backdrop-filter: none; pointer-events: none; }
 .zajel-box { background: linear-gradient(180deg, rgba(28, 31, 56, 0.98) 0%, rgba(18, 20, 36, 0.98) 100%); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 20px 25px 25px; width: 90%; max-width: 380px; max-height: 85vh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); transform: scale(0.9) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; pointer-events: auto; display: flex; flex-direction: column; }
 .zajel-modal-overlay.active .zajel-box { transform: scale(1) translateY(0); opacity: 1; }
+.zajel-top-controls, .zajel-top-controls-search, .zajel-tabs, .zajel-admin-header, .zajel-admin-stats, .zajel-admin-tabs { flex-shrink: 0 !important; }
 .zajel-top-controls { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
 .zajel-top-controls-search { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
 .zajel-btn-control { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s; }
@@ -133,7 +134,7 @@ let a={
 .zajel-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
 .zajel-tab-btn { flex: 1; background: transparent; color: #94a3b8; border: none; padding: 12px 5px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; position: relative; text-align: center; }
 .zajel-tab-btn.active { background: rgba(212, 175, 55, 0.15); color: #D4AF37; border-bottom: 2px solid #D4AF37; }
-.zajel-views-container { flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; margin-right: -5px; -webkit-overflow-scrolling: touch; }
+.zajel-views-container { flex: 1; min-height: 0 !important; overflow-y: auto; overflow-x: hidden; padding-right: 5px; margin-right: -5px; -webkit-overflow-scrolling: touch; }
 .zajel-views-container::-webkit-scrollbar { width: 4px; }
 .zajel-views-container::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 10px; }
 .zajel-view { display: none; }
@@ -190,8 +191,9 @@ let a={
 .zajel-stat-card { background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 7px 4px; text-align: center; }
 .zajel-stat-val { font-size: 13.5px; font-weight: bold; color: #D4AF37; }
 .zajel-stat-lbl { font-size: 10px; color: #94a3b8; margin-top: 2px; }
-.zajel-admin-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px; overflow-x: auto; border: 1px solid rgba(255,255,255,0.05); }
-.zajel-admin-tabs .zajel-tab-btn { padding: 10px 4px; font-size: 11px; white-space: nowrap; }
+.zajel-admin-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.05); }
+.zajel-admin-tabs::-webkit-scrollbar { display: none; }
+.zajel-admin-tabs .zajel-tab-btn { flex: 1 0 auto; padding: 10px 8px; font-size: 11px; white-space: nowrap; }
 .zajel-subtabs { display: flex; gap: 6px; margin-bottom: 10px; }
 .zajel-subtab { flex: 1; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 7px 8px; font-size: 11.5px; font-weight: bold; cursor: pointer; font-family: inherit; }
 .zajel-subtab.active { background: rgba(212,175,55,0.16); color: #D4AF37; border-color: rgba(212,175,55,0.45); }
@@ -1173,6 +1175,7 @@ let admin={
       let vid=t.extractYtId(this.value);
       if(vid)document.getElementById("za-bc-vid").value=vid
     });
+    document.getElementById("za-bc-include-self").onchange=()=>admin.updateBroadcastCount();
     document.getElementById("za-btn-send-bc").onclick=()=>admin.sendBroadcast();
     document.getElementById("za-btn-save-settings").onclick=()=>admin.saveSettings();
     document.getElementById("za-btn-clean-old").onclick=()=>admin.cleanOldLogs(7);
