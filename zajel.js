@@ -125,7 +125,7 @@ let a={
 .zajel-modal-overlay.minimized { background: transparent; backdrop-filter: none; pointer-events: none; }
 .zajel-box { background: linear-gradient(180deg, rgba(28, 31, 56, 0.98) 0%, rgba(18, 20, 36, 0.98) 100%); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 20px 25px 25px; width: 90%; max-width: 380px; max-height: 85vh; max-height: 85dvh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); transform: scale(0.9) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; pointer-events: auto; display: flex; flex-direction: column; box-sizing: border-box; }
 .zajel-modal-overlay.active .zajel-box { transform: scale(1) translateY(0); opacity: 1; }
-.zajel-top-controls, .zajel-top-controls-search, .zajel-tabs, .zajel-admin-header, .zajel-admin-stats, .zajel-admin-tabs { flex-shrink: 0 !important; }
+.zajel-top-controls, .zajel-top-controls-search, .zajel-tabs, .zajel-admin-header, .zajel-admin-stats, .zajel-admin-tabs, .zajel-admin-off-banner { flex-shrink: 0 !important; }
 .zajel-top-controls { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
 .zajel-top-controls-search { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
 .zajel-btn-control { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s; }
@@ -139,10 +139,12 @@ let a={
 .zajel-views-container::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 10px; }
 .zajel-view { display: none; }
 .zajel-view.active { display: block; }
+.zajel-admin-off-banner { background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.45); color: #fecaca; border-radius: 10px; padding: 7px 10px; font-size: 11.5px; text-align: center; margin-bottom: 12px; font-weight: bold; line-height: 1.5; }
+.zajel-maint-screen { text-align: center; padding: 24px 10px 16px; }
 .zajel-badge-count { background: #ef4444; color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-right: 4px; display: inline-block; }
 .zajel-box.minimized { position: fixed !important; bottom: 100px !important; right: 20px !important; left: auto !important; width: 60px !important; height: 60px !important; border-radius: 50% !important; padding: 0 !important; overflow: hidden; transform: scale(1) !important; cursor: grab; border: 2px solid #D4AF37; box-shadow: 0 5px 20px rgba(212,175,55,0.4); z-index: 3; transition: width 0.3s, height 0.3s, border-radius 0.3s, padding 0.3s; }
 .zajel-box.minimized:active { cursor: grabbing; }
-.zajel-box.minimized .zajel-tabs, .zajel-box.minimized .zajel-top-controls, .zajel-box.minimized .zajel-views-container { display: none !important; }
+.zajel-box.minimized .zajel-tabs, .zajel-box.minimized .zajel-top-controls, .zajel-box.minimized .zajel-views-container, .zajel-box.minimized .zajel-admin-off-banner, .zajel-box.minimized .zajel-maint-screen { display: none !important; }
 .zajel-box.minimized::after { content: '🎵'; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 20, 36, 0.8); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #D4AF37; z-index: 10; pointer-events: none; }
 .zajel-box.minimized .zajel-iframe-container { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; display: block !important; }
 .zajel-header { text-align: center; margin-bottom: 15px; }
@@ -308,7 +310,41 @@ let l={
     let banner=document.getElementById("zajel-reveal-banner");
     if(banner)banner.style.display=!0===e.settings.revealMode?"block":"none";
     let lbl=document.getElementById("zajel-to-label");
-    if(lbl)lbl.textContent=!0===e.settings.revealMode?"إلى من؟ (يوم الصراحة: سيظهر اسمك للمستلم):":"إلى من؟ (يصل كرسالة مجهولة):"
+    if(lbl)lbl.textContent=!0===e.settings.revealMode?"إلى من؟ (يوم الصراحة: سيظهر اسمك للمستلم):":"إلى من؟ (يصل كرسالة مجهولة):";
+
+    let isOff=!1===e.settings.enabled,isAdm=t.isAdmin();
+    let admBanner=document.getElementById("zajel-admin-off-banner");
+    if(admBanner)admBanner.style.display=isOff&&isAdm?"block":"none";
+
+    let maint=document.getElementById("zajel-maint-screen");
+    if(!maint)return;
+    let wasMaint="block"===maint.style.display;
+    let views=document.querySelector("#layl-zajel-modal .zajel-views-container");
+    let tabs=document.querySelector("#layl-zajel-modal .zajel-tabs");
+    let sc=document.getElementById("zajel-search-controls");
+    let dc=document.getElementById("zajel-default-controls");
+    let blkTop=document.getElementById("btn-zajel-blocks-top");
+    let minBtn=document.getElementById("btn-zajel-minimize");
+
+    if(isOff&&!isAdm){
+      l.notifyClose();
+      let ic=document.querySelector("#layl-zajel-modal .zajel-iframe-container");
+      ic&&(ic.innerHTML="");
+      let mMsg=document.getElementById("zajel-maint-msg");
+      mMsg&&(mMsg.textContent=e.settings.disabledMsg||"زاجل الموسيقى متوقف مؤقتاً للصيانة.");
+      maint.style.display="block";
+      views&&(views.style.display="none");
+      tabs&&(tabs.style.display="none");
+      sc&&(sc.style.display="none");
+      dc&&(dc.style.display="flex");
+      blkTop&&(blkTop.style.display="none");
+      minBtn&&(minBtn.style.display="none");
+    }else{
+      maint.style.display="none";
+      views&&(views.style.display="");
+      blkTop&&(blkTop.style.display="flex");
+      if(wasMaint)l.switchTab("send");
+    }
   },
   refreshUsersList(){
     let listEl=document.getElementById("zajel-users-list");
@@ -346,7 +382,7 @@ let l={
       n.innerHTML=`
 <div class="zajel-box" id="zajel-main-box">
 <div class="zajel-top-controls" id="zajel-default-controls">
-<button class="zajel-btn-control" title="قائمة المحظورين" onclick="window.LaylZajel.switchTab('blocks')"><i class="fas fa-user-secret" style="font-size:12px;"></i></button>
+<button class="zajel-btn-control" id="btn-zajel-blocks-top" title="قائمة المحظورين" onclick="window.LaylZajel.switchTab('blocks')"><i class="fas fa-user-secret" style="font-size:12px;"></i></button>
 <button class="zajel-btn-control" id="btn-zajel-minimize" title="تصغير" style="display:none;"><i class="fas fa-compress-arrows-alt"></i></button>
 <button class="zajel-btn-control zajel-btn-close" onclick="window.LaylZajel.close()" title="إغلاق"><i class="fas fa-times"></i></button>
 </div>
@@ -356,6 +392,13 @@ let l={
 <button type="button" class="zajel-btn-control" style="background:rgba(255,255,255,0.1);" onclick="window.LaylZajel.closeSearch()" title="رجوع"><i class="fas fa-arrow-left"></i></button>
 </div>
 <div style="color:#D4AF37; font-weight:bold; font-size: 16px;">نتائج يوتيوب</div>
+</div>
+<div id="zajel-admin-off-banner" class="zajel-admin-off-banner" style="display:none;">🛑 نظام الزاجل متوقف حالياً عن جميع الأعضاء (مفتوح لك بصلاحية الإدارة فقط)</div>
+<div id="zajel-maint-screen" class="zajel-maint-screen" style="display:none;">
+<div class="zajel-icon" style="font-size:48px;">🛠️</div>
+<div style="color:#f87171; font-weight:bold; font-size:17px; margin-bottom:8px;">زاجل الموسيقى متوقف مؤقتاً</div>
+<div id="zajel-maint-msg" style="color:#cbd5e1; font-size:13.5px; line-height:1.7; margin-bottom:16px;"></div>
+<button type="button" class="zajel-btn-dark" onclick="window.LaylZajel.close()" style="max-width:160px;">إغلاق</button>
 </div>
 <div class="zajel-tabs">
 <button class="zajel-tab-btn active" data-tab="send" onclick="window.LaylZajel.switchTab('send')"><i class="fas fa-paper-plane"></i> إرسال</button>
@@ -427,12 +470,12 @@ let l={
       document.getElementById("btn-zajel-minimize").addEventListener("click",ev=>{ev.stopPropagation();a.toggleMinimize()})
     }
     l.refreshUsersList();
-    l.applySettingsToUI();
     requestAnimationFrame(()=>n.classList.add("active"));
     let r=Object.values(e.inbox||{}).filter(m=>!m.isRead).length;
     l.switchTab(r>0?"inbox":"send");
     l.renderInboxList();
-    l.updateBadges()
+    l.updateBadges();
+    l.applySettingsToUI()
   },
   closeModal(){
     l.notifyClose();
@@ -454,6 +497,7 @@ let l={
     document.getElementById("zajel-default-controls").style.display="flex"
   },
   switchTab(n){
+    if(!t.isAdmin()&&!1===e.settings.enabled){l.applySettingsToUI();return}
     if("player"!==n)l.notifyClose();
     let m=document.getElementById("layl-zajel-modal");
     if(!m)return;
@@ -522,6 +566,7 @@ let l={
     a.showToast("🎶 تم اختيار المقطع بنجاح")
   },
   async performSearch(ctx){
+    if(!t.isAdmin()&&!1===e.settings.enabled)return alert(e.settings.disabledMsg||"زاجل الموسيقى متوقف مؤقتاً.");
     if(window.LaylZajel)window.LaylZajel.currentSearchContext=ctx;
     let inpId="send"===ctx?"zajel-yt-search-input":"zajel-self-yt-search-input";
     let q=document.getElementById(inpId).value.trim();
@@ -572,6 +617,7 @@ let l={
       l.sendZajel(u,dn,vid,`https://www.youtube.com/watch?v=${vid}`,msg)
     });
     document.getElementById("btn-play-self-zajel").addEventListener("click",()=>{
+      if(!t.isAdmin()&&!1===e.settings.enabled)return alert(e.settings.disabledMsg||"زاجل الموسيقى متوقف مؤقتاً.");
       let vid=document.getElementById("zajel-self-selected-video-id")?.value;
       if(!vid)return alert("الرجاء البحث عن أغنية واختيارها من النتائج أولاً.");
       l.playSelfZajel(vid)
@@ -768,6 +814,7 @@ ${unreadDot}
     n.innerHTML=html
   },
   playZajel(n){
+    if(!t.isAdmin()&&!1===e.settings.enabled){l.applySettingsToUI();return}
     let i=e.inbox[n];
     if(!i)return;
     let myS=t.sanitizeName(e.myUsername);
@@ -894,6 +941,7 @@ ${replyHtml}`;
     },300)
   },
   playSelfZajel(vid){
+    if(!t.isAdmin()&&!1===e.settings.enabled){l.applySettingsToUI();return}
     document.getElementById("zajel-player-content").innerHTML=`
 <div class="zajel-header" style="margin-bottom:5px;"><div class="zajel-icon">🎧</div></div>
 <div class="zajel-receiver-text">
@@ -954,7 +1002,8 @@ ${replyHtml}`;
       let v=snap.val();
       e.banData=v&&"object"==typeof v?v:v?{reason:"",expiresAt:null}:null
     });
-    a.injectAdminButton()
+    a.injectAdminButton();
+    l.applySettingsToUI()
   },
   bindGlobalListeners(){
     if(!e.db||e.isListeningGlobal)return;
@@ -962,13 +1011,15 @@ ${replyHtml}`;
     e.db.ref("admins").on("value",snap=>{
       let v=snap.val()||{};
       e.adminUsers=Object.keys(v);
-      a.injectAdminButton()
+      a.injectAdminButton();
+      l.applySettingsToUI()
     });
     e.db.ref(`${e.dbPath}/settings`).on("value",snap=>{
       let v=snap.val();
       if(v&&"object"==typeof v){
         e.settings=Object.assign({},e.settings,v);
-        l.applySettingsToUI()
+        l.applySettingsToUI();
+        admin.updateStats()
       }
     })
   }
@@ -1087,7 +1138,7 @@ let admin={
 </div>
 <div id="za-view-settings" class="zajel-view">
 <div class="zajel-setting-row">
-<div><div style="color:#f8fafc; font-size:12.5px; font-weight:bold;">تفعيل نظام الزاجل</div><div style="color:#94a3b8; font-size:10.5px;">إيقافه يمنع الأعضاء من الإرسال والرد</div></div>
+<div><div style="color:#f8fafc; font-size:12.5px; font-weight:bold;">تفعيل نظام الزاجل</div><div style="color:#94a3b8; font-size:10.5px;">إيقافه يغلق الزاجل فوراً عن جميع الأعضاء</div></div>
 <label class="zajel-switch"><input type="checkbox" id="za-set-enabled"><span class="zajel-slider"></span></label>
 </div>
 <div class="zajel-setting-row">
@@ -1180,6 +1231,15 @@ let admin={
     });
     document.getElementById("za-bc-include-self").onchange=()=>admin.updateBroadcastCount();
     document.getElementById("za-btn-send-bc").onclick=()=>admin.sendBroadcast();
+    document.getElementById("za-set-enabled").onchange=function(){
+      admin.saveSettings(this.checked?"✅ تم تفعيل نظام الزاجل":"🛑 تم إيقاف نظام الزاجل عن الأعضاء")
+    };
+    document.getElementById("za-set-replies").onchange=function(){
+      admin.saveSettings(this.checked?"✅ تم تفعيل الردود القصيرة":"🚫 تم إيقاف الردود القصيرة")
+    };
+    document.getElementById("za-set-reveal").onchange=function(){
+      admin.saveSettings(this.checked?"🎭 تم تفعيل وضع يوم الصراحة":"🔒 تم إيقاف يوم الصراحة")
+    };
     document.getElementById("za-btn-save-settings").onclick=()=>admin.saveSettings();
     document.getElementById("za-btn-clean-old").onclick=()=>admin.cleanOldLogs(7);
     document.getElementById("za-btn-clean-daily").onclick=()=>admin.cleanOldDailyCounts();
@@ -1230,7 +1290,7 @@ let admin={
     document.getElementById("za-set-badwords").value=e.settings.badWords||"";
     admin.updateStats()
   },
-  saveSettings(){
+  saveSettings(customMsg){
     if(!e.db)return;
     let payload={
       enabled:document.getElementById("za-set-enabled").checked,
@@ -1246,7 +1306,7 @@ let admin={
       e.settings=payload;
       l.applySettingsToUI();
       admin.updateStats();
-      a.showToast("✅ تم حفظ إعدادات الزاجل")
+      a.showToast(customMsg||"✅ تم حفظ إعدادات الزاجل")
     }).catch(()=>alert("❌ فشل الحفظ: تأكد من صلاحيات Firebase للآدمن."))
   },
   loadLogs(){
