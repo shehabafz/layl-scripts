@@ -123,7 +123,7 @@ let a={
 .zajel-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 11, 20, 0.9); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); opacity: 0; visibility: hidden; transition: opacity 0.3s ease; direction: rtl; }
 .zajel-modal-overlay.active { opacity: 1; visibility: visible; }
 .zajel-modal-overlay.minimized { background: transparent; backdrop-filter: none; pointer-events: none; }
-.zajel-box { background: linear-gradient(180deg, rgba(28, 31, 56, 0.98) 0%, rgba(18, 20, 36, 0.98) 100%); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 20px 25px 25px; width: 90%; max-width: 380px; max-height: 85vh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); transform: scale(0.9) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; pointer-events: auto; display: flex; flex-direction: column; }
+.zajel-box { background: linear-gradient(180deg, rgba(28, 31, 56, 0.98) 0%, rgba(18, 20, 36, 0.98) 100%); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 20px 25px 25px; width: 90%; max-width: 380px; max-height: 85vh; max-height: 85dvh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.8); transform: scale(0.9) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; pointer-events: auto; display: flex; flex-direction: column; box-sizing: border-box; }
 .zajel-modal-overlay.active .zajel-box { transform: scale(1) translateY(0); opacity: 1; }
 .zajel-top-controls, .zajel-top-controls-search, .zajel-tabs, .zajel-admin-header, .zajel-admin-stats, .zajel-admin-tabs { flex-shrink: 0 !important; }
 .zajel-top-controls { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
@@ -131,10 +131,10 @@ let a={
 .zajel-btn-control { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s; }
 .zajel-btn-control:hover { background: rgba(255,255,255,0.2); }
 .zajel-btn-close:hover { background: rgba(239, 68, 68, 0.8); }
-.zajel-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-.zajel-tab-btn { flex: 1; background: transparent; color: #94a3b8; border: none; padding: 12px 5px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; position: relative; text-align: center; }
+.zajel-tabs { display: flex; flex: 0 0 42px !important; height: 42px !important; min-height: 42px !important; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+.zajel-tab-btn { flex: 1; background: transparent; color: #94a3b8; border: none; padding: 0 5px; height: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; position: relative; text-align: center; }
 .zajel-tab-btn.active { background: rgba(212, 175, 55, 0.15); color: #D4AF37; border-bottom: 2px solid #D4AF37; }
-.zajel-views-container { flex: 1; min-height: 0 !important; overflow-y: auto; overflow-x: hidden; padding-right: 5px; margin-right: -5px; -webkit-overflow-scrolling: touch; }
+.zajel-views-container { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; padding-right: 5px; margin-right: -5px; -webkit-overflow-scrolling: touch; }
 .zajel-views-container::-webkit-scrollbar { width: 4px; }
 .zajel-views-container::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 10px; }
 .zajel-view { display: none; }
@@ -191,9 +191,9 @@ let a={
 .zajel-stat-card { background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 7px 4px; text-align: center; }
 .zajel-stat-val { font-size: 13.5px; font-weight: bold; color: #D4AF37; }
 .zajel-stat-lbl { font-size: 10px; color: #94a3b8; margin-top: 2px; }
-.zajel-admin-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.05); }
+.zajel-admin-tabs { display: flex; flex: 0 0 42px !important; height: 42px !important; min-height: 42px !important; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 12px; overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.05); }
 .zajel-admin-tabs::-webkit-scrollbar { display: none; }
-.zajel-admin-tabs .zajel-tab-btn { flex: 1 0 auto; padding: 10px 8px; font-size: 11px; white-space: nowrap; }
+.zajel-admin-tabs .zajel-tab-btn { flex: 1 0 auto !important; height: 100% !important; padding: 0 8px !important; font-size: 11px; white-space: nowrap; display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; }
 .zajel-subtabs { display: flex; gap: 6px; margin-bottom: 10px; }
 .zajel-subtab { flex: 1; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 7px 8px; font-size: 11.5px; font-weight: bold; cursor: pointer; font-family: inherit; }
 .zajel-subtab.active { background: rgba(212,175,55,0.16); color: #D4AF37; border-color: rgba(212,175,55,0.45); }
@@ -536,14 +536,17 @@ let l={
       if(!data.items||0===data.items.length){resEl.innerHTML='<div style="color: #94a3b8; text-align:center; padding:10px;">لا توجد نتائج.</div>';return}
       let html="";
       data.items.forEach(item=>{
-        let vid=item.id.videoId,title=t.escapeHTML(item.snippet.title),thumb=item.snippet.thumbnails.default.url;
+        let vid=t.escapeHTML(item.id.videoId),title=t.escapeHTML(item.snippet.title),thumb=item.snippet.thumbnails.default.url;
         html+=`
-<div class="zajel-inbox-item yt-result-item" onclick="window.LaylZajel.selectYtVideo('${vid}', '${title.replace(/'/g,"\\'")}')" style="display:flex; gap:10px; align-items:center; padding: 8px;">
+<div class="zajel-inbox-item yt-result-item" data-vid="${vid}" data-title="${title}" style="display:flex; gap:10px; align-items:center; padding: 8px;">
 <img src="${thumb}" style="width: 60px; border-radius: 5px;">
 <div style="color: #f8fafc; font-size: 12px; line-height: 1.4; text-align: right; flex:1;">${title}</div>
 </div>`
       });
-      resEl.innerHTML=html
+      resEl.innerHTML=html;
+      resEl.querySelectorAll(".yt-result-item").forEach(el=>{
+        el.onclick=()=>l.selectYtVideo(el.dataset.vid,el.dataset.title)
+      })
     }catch{resEl.innerHTML='<div style="color: #ef4444; text-align:center; padding:10px;">حدث خطأ في الاتصال!</div>'}
   },
   setupSendForm(){
@@ -1475,7 +1478,7 @@ ${badge}
       }
       let html="";
       data.items.forEach(item=>{
-        let vid=item.id.videoId,title=t.escapeHTML(item.snippet.title),thumb=item.snippet.thumbnails.default.url;
+        let vid=t.escapeHTML(item.id.videoId),title=t.escapeHTML(item.snippet.title),thumb=item.snippet.thumbnails.default.url;
         html+=`
 <div class="zajel-inbox-item za-bc-pick" data-vid="${vid}" data-title="${title}" style="padding:6px; margin-bottom:5px; gap:8px;">
 <img src="${thumb}" style="width:48px; border-radius:4px;">
@@ -1485,8 +1488,8 @@ ${badge}
       resBox.innerHTML=html;
       resBox.querySelectorAll(".za-bc-pick").forEach(el=>{
         el.onclick=()=>{
-          document.getElementById("za-bc-vid").value=el.getAttribute("data-vid");
-          document.getElementById("za-bc-yt").value=el.getAttribute("data-title");
+          document.getElementById("za-bc-vid").value=el.dataset.vid;
+          document.getElementById("za-bc-yt").value=el.dataset.title;
           resBox.innerHTML=`<div style="color:#34d399; font-size:11.5px; padding:4px;">✅ تم اختيار المقطع</div>`
         }
       })
