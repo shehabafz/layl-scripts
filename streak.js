@@ -118,12 +118,27 @@ let a={
     let days=Math.floor(hrs/24),rh=hrs%24;
     return rh?`${days} ي و ${rh} س`:`${days} يوم`
   },
-isGhostElement(el,deep){
+  isBotElement(el){
+    if(!el)return!1;
+    let item=el.closest(".user-pro-item, .list-group-item, .user-list-item")||el;
+    if(item.classList&&(item.classList.contains("bot-user")||item.classList.contains("is-bot")))return!0;
+    if("true"===item.getAttribute("data-bot")||"bot"===item.getAttribute("data-type"))return!0;
+    let imgs=item.querySelectorAll("img");
+    for(let img of imgs){
+      let src=(img.getAttribute("src")||"").toLowerCase();
+      let orig=(img.getAttribute("data-original-src")||"").toLowerCase();
+      if(src.includes("/uploads/bots/")||orig.includes("/uploads/bots/"))return!0
+    }
+    return!1
+  },
+  isGhostElement(el,deep){
     if(!el)return!0;
     let item=el.closest(".user-pro-item, .list-group-item, .user-list-item")||el;
     let hasGhostCls=node=>Boolean(node&&node.classList&&(node.classList.contains("ghost-user")||node.classList.contains("is-ghost")||node.classList.contains("offline-user")||node.classList.contains("offline")||node.classList.contains("fake-user")||node.classList.contains("disconnected")||node.classList.contains("user-ghost")));
     if(hasGhostCls(el)||hasGhostCls(item)||item.querySelector(".ghost-user, .is-ghost, .offline-user, .fake-user"))return!0;
     if("true"===item.getAttribute("data-ghost")||"true"===el.getAttribute("data-ghost")||"false"===item.getAttribute("data-online")||"offline"===item.getAttribute("data-status"))return!0;
+    let rb=(item.getAttribute("data-real-border")||"").toLowerCase();
+    if(rb&&(rb.includes("#808080")||rb.includes("#6c757d")||rb.includes("rgb(128, 128, 128)")||rb.includes("rgb(108, 117, 125)")))return!0;
     let st=(item.getAttribute("style")||"").toLowerCase();
     if(st.includes("border-left")&&(st.includes("#808080")||st.includes("#6c757d")||st.includes("rgb(128, 128, 128)")||st.includes("rgb(108, 117, 125)")))return!0;
     if(deep){
@@ -134,34 +149,28 @@ isGhostElement(el,deep){
     }
     return!1
   },
-    let nameEl=el.querySelector(".user-identity-name")||item.querySelector(".user-identity-name");
-    if(hasGrayStyle(el)||hasGrayStyle(item)||hasGrayStyle(nameEl))return!0;
-    if(deep){
-      try{
-        let target=nameEl||el;
-        let col=window.getComputedStyle(target).color;
-        if("rgb(108, 117, 125)"===col||"rgb(128, 128, 128)"===col)return!0
-      }catch{}
-    }
-    return!1
-  },
   getSidebarSummary(){
-    let real=[],ghosts=[],seen=new Set;
-    let nodes=document.querySelectorAll("#sidebar-users-container .user-identity");
-    if(!nodes.length)nodes=document.querySelectorAll(".users-list .user-identity");
+    let real=[],ghosts=[],bots=[],seen=new Set;
+    let nodes=document.querySelectorAll("#sidebar-users-container .list-group-item[data-username], #sidebar-users-container .user-pro-item[data-username]");
+    if(!nodes.length)nodes=document.querySelectorAll(".users-list .list-group-item[data-username], .users-list .user-pro-item[data-username], #sidebar-users-container .user-identity, .users-list .user-identity");
     nodes.forEach(el=>{
-      let u=n(el);
+      let item=el.closest(".user-pro-item, .list-group-item, .user-list-item")||el;
+      if((item.id||"").toLowerCase().includes("guest"))return;
+      let u=n(item);
       if(u&&u.username){
         let san=a.sanitizeName(u.username);
         if(san&&!seen.has(san)){
           seen.add(san);
-          let isG=a.isGhostElement(el,!0);
-          let obj={username:u.username,san,displayName:u.displayName||u.username,isGhost:isG};
-          isG?ghosts.push(obj):real.push(obj)
+          let isB=a.isBotElement(item);
+          let isG=!isB&&a.isGhostElement(item,!0);
+          let obj={username:u.username,san,displayName:u.displayName||u.username,isGhost:isG,isBot:isB};
+          if(isB)bots.push(obj);
+          else if(isG)ghosts.push(obj);
+          else real.push(obj)
         }
       }
     });
-    return{real,ghosts,total:real.length+ghosts.length}
+    return{real,ghosts,bots,total:real.length+ghosts.length+bots.length}
   },
   getOnlineUsers(){
     return a.getSidebarSummary().real
@@ -770,6 +779,7 @@ let admin={
                 <option value="all">الكل</option>
                 <option value="online">🟢 المتصلون فعلياً</option>
                 <option value="ghost">👻 تواجد وهمي</option>
+                <option value="bot">🤖 البوتات</option>
                 <option value="active">النشطون</option>
                 <option value="expired">المنطفئون</option>
                 <option value="frozen">🛡️ محميون بدرع</option>
@@ -822,6 +832,7 @@ let admin={
                 <div class="lsa-row" style="gap:5px;">
                   <span id="lsa-ev-online-badge" class="lsa-tag lsa-tag-green">0 متصل فعلي</span>
                   <span id="lsa-ev-ghost-badge" class="lsa-tag lsa-tag-gray">0 وهمي مستبعد</span>
+                  <span id="lsa-ev-bot-badge" class="lsa-tag lsa-tag-purple">0 بوت مستبعد</span>
                 </div>
               </div>
             </div>
@@ -1188,19 +1199,23 @@ let admin={
     let side=a.getSidebarSummary();
     let onlineSet=new Set(side.real.map(x=>x.san));
     let ghostSet=new Set(side.ghosts.map(x=>x.san));
+    let botSet=new Set(side.bots.map(x=>x.san));
     let hiMin=Number(t.settings.highTierMin)||100,miMin=Number(t.settings.midTierMin)||30;
     let mapEntries=new Map;
     Object.entries(t.cache||{}).forEach(([k,d])=>{if(d&&"object"==typeof d)mapEntries.set(k,d)});
     if("online"===flt){
       side.real.forEach(u=>{if(!mapEntries.has(u.san))mapEntries.set(u.san,{streak:0,originalName:u.username,displayName:u.displayName,lastLogin:0})})
+    }else if("bot"===flt){
+      side.bots.forEach(u=>{if(!mapEntries.has(u.san))mapEntries.set(u.san,{streak:0,originalName:u.username,displayName:u.displayName,lastLogin:0})})
     }
     let list=Array.from(mapEntries.entries()).map(([k,d])=>{
       let isAct=a.isUserActive(d,tm),isFrz=Boolean(d.frozenUntil&&d.frozenUntil>now),isRec=Boolean(d.lostStreak&&d.recoveryDeadline>now),isLocked=a.isGainLocked(d),mult=Number(d.boostMultiplier)||1;
-      return{key:k,d,name:d.displayName||d.originalName||k,orig:d.originalName||k,streak:d.streak||0,isAct,isFrz,isRec,isLocked,mult,isOnline:onlineSet.has(k),isGhost:ghostSet.has(k)}
+      return{key:k,d,name:d.displayName||d.originalName||k,orig:d.originalName||k,streak:d.streak||0,isAct,isFrz,isRec,isLocked,mult,isOnline:onlineSet.has(k),isGhost:ghostSet.has(k),isBot:botSet.has(k)}
     }).filter(x=>{
       if("active"===flt&&!x.isAct)return!1;
       if("online"===flt&&!x.isOnline)return!1;
       if("ghost"===flt&&!x.isGhost)return!1;
+      if("bot"===flt&&!x.isBot)return!1;
       if("expired"===flt&&(x.isAct||x.isRec||x.d.excluded))return!1;
       if("frozen"===flt&&!x.isFrz)return!1;
       if("boosted"===flt&&!(x.mult>1))return!1;
@@ -1266,7 +1281,8 @@ let admin={
     shown.forEach(x=>{
       let ico=a.getTierIcon(x.streak,x.d);
       let tags=[];
-      if(x.isOnline)tags.push('<span class="lsa-tag lsa-tag-green">● متصل فعلي</span>');
+      if(x.isBot)tags.push('<span class="lsa-tag lsa-tag-purple">🤖 بوت</span>');
+      else if(x.isOnline)tags.push('<span class="lsa-tag lsa-tag-green">● متصل فعلي</span>');
       else if(x.isGhost)tags.push('<span class="lsa-tag lsa-tag-gray">👻 وهمي</span>');
       if(x.d.excluded)tags.push('<span class="lsa-tag lsa-tag-red">🚫 مستبعد</span>');
       else if(x.isRec)tags.push(`<span class="lsa-tag lsa-tag-red">💨 استرجاع (${x.d.lostStreak})</span>`);
@@ -1919,12 +1935,13 @@ let admin={
   },
   updateEventsUI(){
     let frz=document.getElementById("lsa-ev-freeze"),dbl=document.getElementById("lsa-ev-double");
-    let ob=document.getElementById("lsa-ev-online-badge"),gb=document.getElementById("lsa-ev-ghost-badge");
+    let ob=document.getElementById("lsa-ev-online-badge"),gb=document.getElementById("lsa-ev-ghost-badge"),bb=document.getElementById("lsa-ev-bot-badge");
     let side=a.getSidebarSummary();
     frz&&(frz.checked=Boolean(t.settings.globalFreeze));
     dbl&&(dbl.checked=Boolean(t.settings.doubleMode));
     ob&&(ob.textContent=`🟢 ${side.real.length} متصل فعلي`);
-    gb&&(gb.textContent=`👻 ${side.ghosts.length} وهمي مستبعد`)
+    gb&&(gb.textContent=`👻 ${side.ghosts.length} وهمي مستبعد`);
+    bb&&(bb.textContent=`🤖 ${side.bots.length} بوت مستبعد`)
   },
   rescueInactive(daysWindow){
     if(!t.db)return;
@@ -2105,7 +2122,7 @@ let admin={
         </div>
         <div class="lsa-grid-3" style="text-align:center; margin-bottom:10px;">
           <div class="lsa-stat"><div class="lsa-stat-val">${total}</div><div class="lsa-stat-lbl">إجمالي السجلات</div></div>
-          <div class="lsa-stat"><div class="lsa-stat-val" style="color:#34d399;">${side.real.length} / ${side.ghosts.length}</div><div class="lsa-stat-lbl">فعلي / وهمي</div></div>
+          <div class="lsa-stat"><div class="lsa-stat-val" style="color:#34d399;">${side.real.length} / ${side.ghosts.length} / ${side.bots.length}</div><div class="lsa-stat-lbl">فعلي / وهمي / بوت</div></div>
           <div class="lsa-stat"><div class="lsa-stat-val">${avg} يوم</div><div class="lsa-stat-lbl">متوسط الشعلة</div></div>
         </div>
         <div style="font-size:11.5px; color:#cbd5e1; margin-bottom:4px;">👑 فئة ${hiMin}+ يوم: <b>${t100}</b> (${pct(t100)}%)</div>
@@ -2404,7 +2421,7 @@ let d=()=>{
     if(t.myUsername&&!1!==t.settings.enabled){
       let el=document.querySelector(`#sidebar-users-container [data-username="${t.myUsername}"]`),ok=!1;
       if(el){
-        a.isGhostElement(el,!0)||(ok=!0)
+        a.isBotElement(el)||a.isGhostElement(el,!0)||(ok=!0)
       }else ok=!0;
       ok&&(l.updateUserLogin(t.myUsername,t.myUsername),setTimeout(()=>{
         let san=a.sanitizeName(t.myUsername),cur=t.cache[san],day=new Date().toISOString().split("T")[0];
@@ -2432,7 +2449,7 @@ let c=()=>{
             [node,...Array.from(rows)].forEach(el=>{
               if(el&&el.classList){
                 let u=n(el);
-                if(!a.isGhostElement(el,!1)&&u&&u.username){
+                if(!a.isBotElement(el)&&!a.isGhostElement(el,!1)&&u&&u.username){
                   (el.classList.contains("msg-self")||el.querySelector(".msg-self"))&&(localStorage.setItem("pc_username",u.username),t.myUsername=u.username,o.injectAdminPanelBtn(),o.injectAdminStreakEditor());
                   (el.classList.contains("msg-status-login")||el.classList.contains("user-join-message")||el.classList.contains("sys-msg-login"))&&l.updateUserLogin(u.username,u.displayName)
                 }
@@ -2547,7 +2564,7 @@ let c=()=>{
       });
       document.querySelectorAll(".user-identity, .message-row, .user-pro-item").forEach(el=>{
         let u=n(el);
-        if(!a.isGhostElement(el,!1)&&u&&u.username)l.updateUserLogin(u.username,u.displayName)
+        if(!a.isBotElement(el)&&!a.isGhostElement(el,!1)&&u&&u.username)l.updateUserLogin(u.username,u.displayName)
       })
     }else{setTimeout(boot,500)}
   };
