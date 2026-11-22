@@ -1337,9 +1337,9 @@ window.lailCinema={
     if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="cinema-toast" class="lail-toast"></div>');el=document.getElementById("cinema-toast")}
     el&&(el.innerHTML=msg,el.classList.add("show"),setTimeout(()=>el.classList.remove("show"),ms))
   },
-  copyDnsHost:function(){
-    let host="dns.adguard-dns.com";
-    let ok=()=>this.showToast("✅ تم نسخ العنوان: dns.adguard-dns.com");
+copyDnsHost:function(val){
+    let host=val||"dns.adguard-dns.com";
+    let ok=()=>this.showToast(`✅ تم النسخ: ${host}`);
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(host).then(ok).catch(()=>{
         let ta=document.createElement("textarea");ta.value=host;ta.style.position="fixed";ta.style.opacity="0";
@@ -1353,7 +1353,10 @@ window.lailCinema={
   openAdGuide:function(){
     let old=document.getElementById("cinema-adguide-modal");
     old&&old.remove();
-    let isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent||"");
+    let ua=navigator.userAgent||"";
+    let isIOS=/iPhone|iPad|iPod/i.test(ua);
+    let isAndroid=/Android/i.test(ua);
+    let defTab=isIOS?"ios":isAndroid?"android":"pc";
     let ov=document.createElement("div");
     ov.id="cinema-adguide-modal";
     ov.className="lail-ag-ov";
@@ -1364,38 +1367,53 @@ window.lailCinema={
           <button type="button" class="lail-close-btn" id="lail-ag-close" style="width:30px;height:30px;font-size:13px;"><i class="fas fa-times"></i></button>
         </div>
         <div class="lail-ag-tabs">
-          <button type="button" class="lail-ag-tab ${isIOS?"":"active"}" data-agtab="android">📱 أندرويد وسامسونج</button>
-          <button type="button" class="lail-ag-tab ${isIOS?"active":""}" data-agtab="ios">🍏 آيفون (iOS)</button>
+          <button type="button" class="lail-ag-tab ${"android"===defTab?"active":""}" data-agtab="android">📱 أندرويد</button>
+          <button type="button" class="lail-ag-tab ${"ios"===defTab?"active":""}" data-agtab="ios">🍏 آيفون</button>
+          <button type="button" class="lail-ag-tab ${"pc"===defTab?"active":""}" data-agtab="pc">💻 كمبيوتر</button>
         </div>
         <div class="lail-ag-body">
-          <div id="lail-ag-android" style="display:${isIOS?"none":"block"};">
+          <div id="lail-ag-android" style="display:${"android"===defTab?"block":"none"};">
             <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">بدون برامج — بخطوتين فقط من إعدادات جوالك:</div>
             <div class="lail-ag-dns">
               <code>dns.adguard-dns.com</code>
-              <button type="button" class="lail-ag-copy" id="lail-ag-copy-btn"><i class="fas fa-copy"></i> نسخ</button>
+              <button type="button" class="lail-ag-copy" data-copy="dns.adguard-dns.com"><i class="fas fa-copy"></i> نسخ</button>
             </div>
             <div class="lail-ag-step"><span class="lail-ag-num">1</span><div>افتح <b>الإعدادات</b> ➔ <b>الاتصالات</b> (أو الشبكة والإنترنت) ➔ <b>المزيد من ضبط الاتصال</b> ➔ <b>DNS الخاص (Private DNS)</b>.</div></div>
             <div class="lail-ag-step"><span class="lail-ag-num">2</span><div>اختر <b>اسم مضيف مزود DNS الخاص</b>، الصق العنوان الذي نسخته واضغط <b>حفظ</b>.</div></div>
             <div class="lail-ag-tip">✨ يوقف 99% من النوافذ الإعلانية المنبثقة فوراً بدون التأثير على تشغيل الأفلام أو سرعة الشات.</div>
           </div>
-          <div id="lail-ag-ios" style="display:${isIOS?"block":"none"};">
+          <div id="lail-ag-ios" style="display:${"ios"===defTab?"block":"none"};">
             <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">أسهل طريقتين للآيفون (اختر واحدة فقط):</div>
             <div class="lail-ag-step"><span class="lail-ag-num">1</span><div><b>داخل متصفح سفاري (Safari):</b> حمّل تطبيق <b>AdGuard</b> المجاني من App Store، ثم افتح <b>الإعدادات</b> ➔ <b>التطبيقات</b> ➔ <b>Safari</b> ➔ <b>الملحقات</b> وفعّل خيارات AdGuard.</div></div>
             <div class="lail-ag-step"><span class="lail-ag-num">2</span><div><b>أو عبر متصفح Brave:</b> افتح شات ليل من متصفح <b>Brave</b> المجاني (يحجب جميع النوافذ الإعلانية تلقائياً بدون أي إعدادات).</div></div>
             <div class="lail-ag-tip">✨ تعمل كلتا الطريقتين بصمت دون أن يكتشفها السيرفر أو يتوقف الفيلم.</div>
+          </div>
+          <div id="lail-ag-pc" style="display:${"pc"===defTab?"block":"none"};">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">اختر الطريقة الأسهل لجهازك (ويندوز أو ماك):</div>
+            <div class="lail-ag-step"><span class="lail-ag-num">1</span><div><b>الأقوى (إضافة للمتصفح):</b> ثبّت إضافة <b>uBlock Origin Lite</b> أو <b>AdGuard</b> على Chrome / Edge (أو <b>uBlock Origin</b> على Firefox) من متجر الإضافات الرسمي.</div></div>
+            <div class="lail-ag-step"><span class="lail-ag-num">2</span><div><b>بدون إضافات (DNS المتصفح):</b> افتح إعدادات المتصفح ➔ <b>الخصوصية والأمان</b> ➔ <b>الأمان</b> ➔ فعّل <b>DNS الآمن</b> ➔ اختر <b>مخصص</b> والصق الرابط التالي:</div></div>
+            <div class="lail-ag-dns">
+              <code style="font-size:11.5px;word-break:break-all;">https://dns.adguard-dns.com/dns-query</code>
+              <button type="button" class="lail-ag-copy" data-copy="https://dns.adguard-dns.com/dns-query"><i class="fas fa-copy"></i> نسخ</button>
+            </div>
+            <div class="lail-ag-tip">✨ يمكنك أيضاً استخدام متصفح <b>Brave</b> ليعمل الحجب تلقائياً بدون أي إضافات أو إعدادات.</div>
           </div>
         </div>
       </div>`;
     document.body.appendChild(ov);
     ov.addEventListener("click",ev=>{ev.target===ov&&this.closeAdGuide()});
     document.getElementById("lail-ag-close").onclick=()=>this.closeAdGuide();
-    document.getElementById("lail-ag-copy-btn").onclick=()=>this.copyDnsHost();
+    ov.querySelectorAll(".lail-ag-copy").forEach(btn=>{
+      btn.onclick=()=>this.copyDnsHost(btn.dataset.copy)
+    });
     ov.querySelectorAll("[data-agtab]").forEach(btn=>{
       btn.onclick=()=>{
         let t=btn.dataset.agtab;
         ov.querySelectorAll("[data-agtab]").forEach(x=>x.classList.toggle("active",x===btn));
-        document.getElementById("lail-ag-android").style.display="android"===t?"block":"none";
-        document.getElementById("lail-ag-ios").style.display="ios"===t?"block":"none"
+        ["android","ios","pc"].forEach(k=>{
+          let el=document.getElementById(`lail-ag-${k}`);
+          el&&(el.style.display=k===t?"block":"none")
+        })
       }
     });
     requestAnimationFrame(()=>ov.classList.add("active"))
