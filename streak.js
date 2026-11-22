@@ -36,8 +36,14 @@ let defaultSettings={
 let t={
   db:null,
   cache:JSON.parse(localStorage.getItem(e.cacheKey)||"{}"),
+  displayNameMap:new Map,
   myUsername:localStorage.getItem("pc_username")||null,
   isRendering:!1,
+  observer:null,
+  observerPaused:0,
+  pendingFull:!1,
+  pendingNodes:new Set,
+  renderRaf:null,
   adminUsers:[],
   settings:Object.assign({},defaultSettings),
   adminLogs:[],
@@ -50,14 +56,27 @@ let a={
   escapeHTML:x=>x?String(x).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]||c):"",
   getTodayMidnight(){let x=new Date;return x.setHours(0,0,0,0),x.getTime()},
   formatNumber:x=>x>=1e9?(x/1e9).toFixed(1).replace(/\.0$/,"")+"B":x>=1e6?(x/1e6).toFixed(1).replace(/\.0$/,"")+"M":x>=1e3?(x/1e3).toFixed(1).replace(/\.0$/,"")+"K":x,
+  rebuildDisplayNameMap(){
+    t.displayNameMap.clear();
+    for(let[k,v]of Object.entries(t.cache||{})){
+      if(!v)continue;
+      if(v.displayName){
+        let d=v.displayName.trim().toLowerCase();
+        d&&!t.displayNameMap.has(d)&&t.displayNameMap.set(d,k)
+      }
+      if(v.originalName){
+        let o2=v.originalName.trim().toLowerCase();
+        o2&&!t.displayNameMap.has(o2)&&t.displayNameMap.set(o2,k)
+      }
+    }
+  },
   findUsernameByDisplayName(x){
     if(!x)return null;
-    let s=x.trim().toLowerCase();
-    for(let[k,v]of Object.entries(t.cache))if(v&&((v.displayName&&v.displayName.trim().toLowerCase()===s)||(v.originalName&&v.originalName.trim().toLowerCase()===s)))return k;
-    return null
+    return t.displayNameMap.get(x.trim().toLowerCase())||null
   },
   getCleanText(x){
     if(!x)return null;
+    if(!x.firstElementChild||!x.querySelector("img, i, svg, .user-identity-badge-icon, .user-identity-super"))return x.textContent.trim();
     let c=x.cloneNode(!0);
     return c.querySelectorAll("img, i, svg, .user-identity-badge-icon, .user-identity-super").forEach(y=>y.remove()),c.textContent.trim()
   },
@@ -182,6 +201,7 @@ let a={
     }catch{return"0.0"}
   }
 };
+a.rebuildDisplayNameMap();
 
 let r={
   injectStyles(){
@@ -460,107 +480,153 @@ let n=el=>{
   return!u&&mt&&(u=mt.getAttribute("data-username")),u||(u=el.getAttribute("data-username")||el.getAttribute("data-user")),!u&&dn&&t.myUsername&&(dn.includes(t.myUsername)||t.myUsername.includes(dn))&&(u=t.myUsername),!u&&dn&&(u=a.findUsernameByDisplayName(dn)||dn),{username:u,displayName:dn||u}
 };
 
+let OBSERVER_OPTS={childList:!0,subtree:!0,attributes:!0,attributeFilter:["data-username","data-user-id","class"]};
+
 let o={
-  triggerRender(){
-    t.isRendering||(t.isRendering=!0,requestAnimationFrame(()=>{o.executeRender(),t.isRendering=!1}))
+  withoutObserver(fn){
+    if(!t.observer)return fn();
+    0===t.observerPaused&&t.observer.disconnect();
+    t.observerPaused++;
+    try{return fn()}finally{
+      t.observerPaused--;
+      0===t.observerPaused&&t.observer.observe(document.body,OBSERVER_OPTS)
+    }
   },
-  executeRender(){
-    let tm=a.getTodayMidnight(),enabled=!1!==t.settings.enabled;
-    let chatMin=Number(t.settings.chatBadgeMin)||100,hiMin=Number(t.settings.highTierMin)||100,miMin=Number(t.settings.midTierMin)||30;
-    document.querySelectorAll(".user-identity-name, .user-identity").forEach(el=>{
-      let idEl=el.closest(".user-identity")||el;
-      if(!idEl||!idEl.classList.contains("user-identity")||idEl.closest(".guest, .is-guest, .guest-user, .quoted-message, .message-text")||idEl.classList.contains("mention-highlight"))return;
-      let itemEl=el.closest(".user-pro-item")||el.closest(".list-group-item")||el.closest(".user-list-item");
-      let inSide=null!==el.closest("#sidebar-users-container")||null!==el.closest(".sidebar-content")||null!==el.closest(".users-list");
-      let inProf=null!==el.closest("#profile-header-classic-bar")||null!==el.closest(".profile-header");
-      let isSys=null!==el.closest(".styled-sys-msg")||null!==el.closest(".msg-status-login")||null!==el.closest(".user-join-message");
-      let inMsg=null!==el.closest(".message-row")&&!isSys;
-      let target=null,onAvatar=!1;
-      if(inSide&&itemEl){
-        let av=itemEl.querySelector(".avatar-with-frame")||itemEl.querySelector(".avatar");
-        if(!av){let img=itemEl.querySelector("img.user-avatar")||itemEl.querySelector("img");img&&(av=img.parentNode)}
-        av&&(target=av,onAvatar=!0)
-      }else(inProf||inMsg)&&(target=idEl);
-      if(!target)return;
-      let badge=onAvatar?target.querySelector(":scope > .night-streak"):idEl.parentNode.querySelector(".night-streak");
-      let u=n(idEl.closest(".message-row, .user-pro-item, .list-group-item")||idEl);
-      if(!u||!u.username||""===u.username.trim())return;
-      let key=a.sanitizeName(u.username),d=t.cache[key],st=d?.streak||0,hid=d?.hidden||!1;
-      let expired=!a.isUserFrozen(d)&&(tm-(d?.lastLogin||0)>e.dayInMs);
-      let inRec=Boolean(d?.lostStreak&&d?.recoveryDeadline>Date.now());
-      let show=!1;
-      if(enabled&&st>0&&!d?.excluded&&!expired&&!inRec){
-        if(inSide&&hid)show=!1;
-        else if(inSide||inProf)show=!0;
-        else if(inMsg&&st>=chatMin)show=!0
-      }
-      if(show){
-        badge||(badge=document.createElement("span"),onAvatar?target.appendChild(badge):idEl.insertAdjacentElement("afterend",badge));
-        let cls=`night-streak ${onAvatar?"avatar-streak":"inline-streak"} ${st>=hiMin?"streak-high":st>=miMin?"streak-mid":"streak-low"}`;
-        badge.className!==cls&&(badge.className=cls);
-        let disp=u.displayName||u.username;
-        badge.setAttribute("data-streak",st);
-        badge.setAttribute("data-name",disp);
-        badge.setAttribute("data-userkey",key);
-        let txt=`${a.getTierIcon(st,d)} ${a.formatNumber(st)}`;
-        badge.innerHTML!==txt&&(badge.innerHTML=txt)
-      }else{
-        badge&&badge.remove()
-      }
-    });
-    o.injectEliteMenuBtn();
-    o.injectPrivacyToggle();
-    o.injectAdminStreakEditor();
-    o.injectAdminPanelBtn()
+  triggerRender(node){
+    if(!node){t.pendingFull=!0;t.pendingNodes.clear()}
+    else if(!t.pendingFull){t.pendingNodes.add(node)}
+    if(!t.renderRaf){
+      t.renderRaf=requestAnimationFrame(()=>{
+        t.renderRaf=null;
+        let full=t.pendingFull,nodes=full?null:Array.from(t.pendingNodes);
+        t.pendingFull=!1;
+        t.pendingNodes.clear();
+        o.executeRender(full,nodes)
+      })
+    }
+  },
+  executeRender(full,nodes){
+    if(t.isRendering)return;
+    t.isRendering=!0;
+    try{
+      o.withoutObserver(()=>{
+        let tm=a.getTodayMidnight(),now=Date.now(),enabled=!1!==t.settings.enabled;
+        let chatMin=Number(t.settings.chatBadgeMin)||100,hiMin=Number(t.settings.highTierMin)||100,miMin=Number(t.settings.midTierMin)||30;
+        let targets;
+        if(full||!nodes){
+          targets=document.querySelectorAll(".user-identity")
+        }else{
+          let set=new Set;
+          for(let nd of nodes){
+            if(!nd||!nd.isConnected)continue;
+            if(nd.classList&&nd.classList.contains("user-identity")){set.add(nd)}
+            else{
+              let up=nd.closest&&nd.closest(".user-identity");
+              up&&set.add(up);
+              nd.querySelectorAll&&nd.querySelectorAll(".user-identity").forEach(x=>set.add(x))
+            }
+          }
+          targets=set
+        }
+        targets.forEach(idEl=>{
+          if(!idEl||!idEl.classList.contains("user-identity")||idEl.closest("#login-overlay.d-none, .guest, .is-guest, .guest-user, .quoted-message, .message-text")||idEl.classList.contains("mention-highlight"))return;
+          let itemEl=idEl.closest(".user-pro-item, .list-group-item, .user-list-item");
+          let inSide=null!==idEl.closest("#sidebar-users-container, .sidebar-content, .users-list");
+          let inProf=null!==idEl.closest("#profile-header-classic-bar, .profile-header");
+          let isSys=null!==idEl.closest(".styled-sys-msg, .msg-status-login, .user-join-message");
+          let inMsg=null!==idEl.closest(".message-row")&&!isSys;
+          let target=null,onAvatar=!1;
+          if(inSide&&itemEl){
+            let av=itemEl.querySelector(".avatar-with-frame, .avatar");
+            if(!av){let img=itemEl.querySelector("img.user-avatar")||itemEl.querySelector("img");img&&(av=img.parentNode)}
+            av&&(target=av,onAvatar=!0)
+          }else(inProf||inMsg)&&(target=idEl);
+          if(!target)return;
+          let badge=onAvatar?target.querySelector(":scope > .night-streak"):idEl.parentNode.querySelector(".night-streak");
+          let u=n(idEl.closest(".message-row, .user-pro-item, .list-group-item")||idEl);
+          if(!u||!u.username||""===u.username.trim())return;
+          let key=a.sanitizeName(u.username),d=t.cache[key],st=d?.streak||0,hid=d?.hidden||!1;
+          let expired=!a.isUserFrozen(d)&&(tm-(d?.lastLogin||0)>e.dayInMs);
+          let inRec=Boolean(d?.lostStreak&&d?.recoveryDeadline>now);
+          let show=!1;
+          if(enabled&&st>0&&!d?.excluded&&!expired&&!inRec){
+            if(inSide&&hid)show=!1;
+            else if(inSide||inProf)show=!0;
+            else if(inMsg&&st>=chatMin)show=!0
+          }
+          if(show){
+            badge||(badge=document.createElement("span"),onAvatar?target.appendChild(badge):idEl.insertAdjacentElement("afterend",badge));
+            let cls=`night-streak ${onAvatar?"avatar-streak":"inline-streak"} ${st>=hiMin?"streak-high":st>=miMin?"streak-mid":"streak-low"}`;
+            badge.className!==cls&&(badge.className=cls);
+            let disp=u.displayName||u.username,stStr=String(st);
+            badge.getAttribute("data-streak")!==stStr&&badge.setAttribute("data-streak",stStr);
+            badge.getAttribute("data-name")!==disp&&badge.setAttribute("data-name",disp);
+            badge.getAttribute("data-userkey")!==key&&badge.setAttribute("data-userkey",key);
+            let txt=`${a.getTierIcon(st,d)} ${a.formatNumber(st)}`;
+            badge.textContent!==txt&&(badge.textContent=txt)
+          }else{
+            badge&&badge.remove()
+          }
+        });
+        o.injectEliteMenuBtn();
+        o.injectPrivacyToggle();
+        o.injectAdminStreakEditor();
+        o.injectAdminPanelBtn()
+      })
+    }finally{t.isRendering=!1}
   },
   injectEliteMenuBtn(){
     let c=document.getElementById("elite-board-menu-items");
     if(c&&!document.getElementById("btn-streak-leaderboard")){
-      c.insertAdjacentHTML("beforeend",`
-        <button id="btn-streak-leaderboard" class="elite-menu-btn" onclick="window.LaylStreaks.openLeaderboard()">
-          <div class="elite-menu-btn-content">
-            <div class="elite-menu-icon-wrapper" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); color: #f59e0b;">
-              <i class="fas fa-fire-alt"></i>
+      o.withoutObserver(()=>{
+        c.insertAdjacentHTML("beforeend",`
+          <button id="btn-streak-leaderboard" class="elite-menu-btn" onclick="window.LaylStreaks.openLeaderboard()">
+            <div class="elite-menu-btn-content">
+              <div class="elite-menu-icon-wrapper" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); color: #f59e0b;">
+                <i class="fas fa-fire-alt"></i>
+              </div>
+              <span class="elite-menu-text">أبطال الشعلة (الستريك)</span>
             </div>
-            <span class="elite-menu-text">أبطال الشعلة (الستريك)</span>
-          </div>
-          <i class="fas fa-chevron-left elite-menu-chevron"></i>
-        </button>
-      `)
+            <i class="fas fa-chevron-left elite-menu-chevron"></i>
+          </button>
+        `)
+      })
     }
   },
   injectPrivacyToggle(){
     let row=document.getElementById("streak-visibility-row");
-    if(!1===t.settings.allowUserHide){row&&(row.style.display="none");return}
-    if(row){row.style.display="";return}
+    if(!1===t.settings.allowUserHide){row&&"none"!==row.style.display&&o.withoutObserver(()=>{row.style.display="none"});return}
+    if(row){""!==row.style.display&&o.withoutObserver(()=>{row.style.display=""});return}
     let c=document.querySelector("#privacy-group .settings-group-content");
     if(c&&!document.getElementById("toggle-streak-visibility-checkbox")){
-      let html=`
-        <div class="classic-settings-toggle-row" id="streak-visibility-row">
-          <div class="toggle-label">
-            <i class="fa-solid fa-fire-flame-curved"></i>
-            <span>إخفاء الشعلة من قائمة المتواجدين</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="toggle-streak-visibility-checkbox">
-            <span class="slider round"></span>
-          </label>
-        </div>`;
-      let ref=document.getElementById("change-password-trigger-btn");
-      ref?ref.insertAdjacentHTML("beforebegin",html):c.insertAdjacentHTML("beforeend",html);
-      let cb=document.getElementById("toggle-streak-visibility-checkbox");
-      if(t.myUsername){let d=t.cache[a.sanitizeName(t.myUsername)];d&&d.hidden&&(cb.checked=!0)}
-      cb.addEventListener("change",function(){
-        let val=this.checked;
-        if(!t.myUsername||!t.db){alert("الرجاء إرسال رسالة واحدة في الشات أو تحديث الصفحة لتفعيل هويتك بنجاح.");this.checked=!val;return}
-        t.db.ref(`${e.dbPath}/${a.sanitizeName(t.myUsername)}/hidden`).set(val).catch(()=>{})
+      o.withoutObserver(()=>{
+        let html=`
+          <div class="classic-settings-toggle-row" id="streak-visibility-row">
+            <div class="toggle-label">
+              <i class="fa-solid fa-fire-flame-curved"></i>
+              <span>إخفاء الشعلة من قائمة المتواجدين</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-streak-visibility-checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>`;
+        let ref=document.getElementById("change-password-trigger-btn");
+        ref?ref.insertAdjacentHTML("beforebegin",html):c.insertAdjacentHTML("beforeend",html);
+        let cb=document.getElementById("toggle-streak-visibility-checkbox");
+        if(t.myUsername){let d=t.cache[a.sanitizeName(t.myUsername)];d&&d.hidden&&(cb.checked=!0)}
+        cb.addEventListener("change",function(){
+          let val=this.checked;
+          if(!t.myUsername||!t.db){alert("الرجاء إرسال رسالة واحدة في الشات أو تحديث الصفحة لتفعيل هويتك بنجاح.");this.checked=!val;return}
+          t.db.ref(`${e.dbPath}/${a.sanitizeName(t.myUsername)}/hidden`).set(val).catch(()=>{})
+        })
       })
     }
   },
   injectAdminStreakEditor(){
     if(!a.isAdmin()){
       let old=document.getElementById("admin-edit-streak-container");
-      old&&old.remove();
+      old&&o.withoutObserver(()=>old.remove());
       return
     }
     let sec=document.getElementById("profile-admin-edit-section");
@@ -572,69 +638,76 @@ let o={
       else if(u){let san=a.sanitizeName(u);t.cache[san]&&(cur=t.cache[san].streak||0)}
       if(document.getElementById("admin-edit-streak-container")){
         let inp=document.getElementById("profile-admin-streak-input");
-        inp&&(inp.value=cur);
+        inp&&document.activeElement!==inp&&inp.value!==String(cur)&&(inp.value=cur);
         return
       }
-      let html=`
-        <div id="admin-edit-streak-container" class="classic-admin-row">
-          <div class="classic-admin-label-text">الشعلة <i class="fas fa-fire ms-1 text-warning"></i></div>
-          <div class="classic-admin-input-container">
-            <input type="number" id="profile-admin-streak-input" class="classic-admin-input" min="0" max="999999" value="${cur}">
-          </div>
-          <button id="btn-save-profile-streak" class="classic-admin-action-btn" type="button">
-            حفظ <i class="fas fa-check"></i>
-          </button>
-        </div>`;
-      let mov=document.getElementById("move-member-container");
-      mov?mov.insertAdjacentHTML("beforebegin",html):sec.insertAdjacentHTML("beforeend",html);
-      document.getElementById("btn-save-profile-streak").addEventListener("click",function(ev){
-        if(ev.preventDefault(),!t.db){alert("غير متصل بقاعدة البيانات.");return}
-        if(!a.isAdmin()){alert("هذه الميزة متاحة للإدارة فقط.");return}
-        let target=null,el=document.querySelector("#userProfileModal [data-username]");
-        if(el&&(target=el.getAttribute("data-username")),!target){alert("لم يتم العثور على هوية العضو.");return}
-        let val=Math.max(0,parseInt(document.getElementById("profile-admin-streak-input").value)||0),san=a.sanitizeName(target),tm=a.getTodayMidnight();
-        let oldD=t.cache[san]||{},oldVal=oldD.streak||0;
-        let payload={
-          streak:val,
-          bestStreak:Math.max(oldD.bestStreak||0,val),
-          lastLogin:tm,
-          originalName:target,
-          lostStreak:null,
-          recoveryDeadline:null
-        };
-        if(val>=oldVal)payload.adminAlert=`تم تعديل شعلتك إلى "${val}" يوم من قبل الإدارة`;
-        else payload.adminPenaltyAlert=`تم خصم وتعديل شعلتك إلى "${val}" يوم من قبل الإدارة`;
-        t.db.ref(`${e.dbPath}/${san}`).update(payload).then(()=>{
-          admin.logAction("تعديل من البروفايل",target,`${oldVal} ➔ ${val}`);
-          this.innerHTML='تم <i class="fas fa-check-double"></i>';
-          this.style.backgroundColor="#198754";
-          setTimeout(()=>{this.innerHTML='حفظ <i class="fas fa-check"></i>';this.style.backgroundColor=""},2e3)
-        }).catch(()=>{alert("حدث خطأ أثناء الحفظ.")})
+      o.withoutObserver(()=>{
+        let html=`
+          <div id="admin-edit-streak-container" class="classic-admin-row">
+            <div class="classic-admin-label-text">الشعلة <i class="fas fa-fire ms-1 text-warning"></i></div>
+            <div class="classic-admin-input-container">
+              <input type="number" id="profile-admin-streak-input" class="classic-admin-input" min="0" max="999999" value="${cur}">
+            </div>
+            <button id="btn-save-profile-streak" class="classic-admin-action-btn" type="button">
+              حفظ <i class="fas fa-check"></i>
+            </button>
+          </div>`;
+        let mov=document.getElementById("move-member-container");
+        mov?mov.insertAdjacentHTML("beforebegin",html):sec.insertAdjacentHTML("beforeend",html);
+        document.getElementById("btn-save-profile-streak").addEventListener("click",function(ev){
+          if(ev.preventDefault(),!t.db){alert("غير متصل بقاعدة البيانات.");return}
+          if(!a.isAdmin()){alert("هذه الميزة متاحة للإدارة فقط.");return}
+          let target=null,el=document.querySelector("#userProfileModal [data-username]");
+          if(el&&(target=el.getAttribute("data-username")),!target){alert("لم يتم العثور على هوية العضو.");return}
+          let val=Math.max(0,parseInt(document.getElementById("profile-admin-streak-input").value)||0),san=a.sanitizeName(target),tm=a.getTodayMidnight();
+          let oldD=t.cache[san]||{},oldVal=oldD.streak||0;
+          let payload={
+            streak:val,
+            bestStreak:Math.max(oldD.bestStreak||0,val),
+            lastLogin:tm,
+            originalName:target,
+            lostStreak:null,
+            recoveryDeadline:null
+          };
+          if(val>=oldVal)payload.adminAlert=`تم تعديل شعلتك إلى "${val}" يوم من قبل الإدارة`;
+          else payload.adminPenaltyAlert=`تم خصم وتعديل شعلتك إلى "${val}" يوم من قبل الإدارة`;
+          t.db.ref(`${e.dbPath}/${san}`).update(payload).then(()=>{
+            admin.logAction("تعديل من البروفايل",target,`${oldVal} ➔ ${val}`);
+            this.innerHTML='تم <i class="fas fa-check-double"></i>';
+            this.style.backgroundColor="#198754";
+            setTimeout(()=>{this.innerHTML='حفظ <i class="fas fa-check"></i>';this.style.backgroundColor=""},2e3)
+          }).catch(()=>{alert("حدث خطأ أثناء الحفظ.")})
+        })
       })
     }
   },
   injectAdminPanelBtn(){
     if(!a.isAdmin()){
-      document.querySelectorAll("#btn-lail-streak-admin").forEach(x=>x.remove());
+      let olds=document.querySelectorAll("#btn-lail-streak-admin");
+      olds.length&&o.withoutObserver(()=>olds.forEach(x=>x.remove()));
       return
     }
-    document.querySelectorAll(".modern-classic-list").forEach(list=>{
+    let lists=document.querySelectorAll(".modern-classic-list");
+    if(!lists.length)return;
+    lists.forEach(list=>{
       if(!list||list.querySelector("#btn-lail-streak-admin"))return;
-      let b=document.createElement("button");
-      b.type="button";
-      b.className="modern-classic-item";
-      b.id="btn-lail-streak-admin";
-      b.innerHTML=`
-        <div class="modern-classic-item-content">
-          <div class="modern-classic-icon-wrapper" style="background: linear-gradient(135deg, #4a091a, #8b1836); color: #D4AF37;">
-            <i class="fas fa-fire-alt"></i>
+      o.withoutObserver(()=>{
+        let b=document.createElement("button");
+        b.type="button";
+        b.className="modern-classic-item";
+        b.id="btn-lail-streak-admin";
+        b.innerHTML=`
+          <div class="modern-classic-item-content">
+            <div class="modern-classic-icon-wrapper" style="background: linear-gradient(135deg, #4a091a, #8b1836); color: #D4AF37;">
+              <i class="fas fa-fire-alt"></i>
+            </div>
+            <span class="modern-classic-text">لوحة تحكم الستريك</span>
           </div>
-          <span class="modern-classic-text">لوحة تحكم الستريك</span>
-        </div>
-        <i class="fas fa-chevron-left modern-classic-chevron"></i>`;
-      b.addEventListener("click",ev=>{ev.preventDefault();ev.stopPropagation();admin.open()});
-      let anchor=list.querySelector("#btn-lail-zajel-admin")||list.querySelector("#btn-lail-zajel");
-      anchor?anchor.insertAdjacentElement("afterend",b):list.appendChild(b)
+          <i class="fas fa-chevron-left modern-classic-chevron"></i>`;
+        b.addEventListener("click",ev=>{ev.preventDefault();ev.stopPropagation();admin.open()});
+        let anchor=list.querySelector("#btn-lail-zajel-admin")||list.querySelector("#btn-lail-zajel");
+        anchor?anchor.insertAdjacentElement("afterend",b):list.appendChild(b)
+      })
     })
   },
   setupEventDelegation(){
@@ -707,11 +780,11 @@ let l={
       if(cur&&!cur.excluded&&cur.lostStreak&&cur.recoveryDeadline>Date.now()){
         let html=`<span>🔥 شعلتك (<b style="color:#fef08a">${cur.lostStreak}</b>) انطفأت! أرسل رسائل لاستردادها (الفرص المتوفرة: ${(cur.recoveryChances||0)+1})</span> <span style="background:rgba(0,0,0,0.3); padding:3px 10px; border-radius:8px;">تقدمك: <b style="color:#fbbf24">${cur.recoveryProgress||0}</b>/${target}</span>`;
         if(el)el.innerHTML=html;
-        else{let div=document.createElement("div");div.id=id;div.innerHTML=html;document.body.appendChild(div)}
+        else{o.withoutObserver(()=>{let div=document.createElement("div");div.id=id;div.innerHTML=html;document.body.appendChild(div)})}
         return
       }
     }
-    el&&el.remove()
+    el&&o.withoutObserver(()=>el.remove())
   },
   declineRecovery(){
     if(!t.myUsername||!t.db)return;
@@ -722,8 +795,7 @@ let l={
     }).then(()=>{r.closeModal();l.updateRecoveryBanner()}).catch(()=>{})
   }
 };
-
-let admin={
+            let admin={
   activeTab:"members",
   selectMode:!1,
   selectedKeys:new Set,
@@ -1374,6 +1446,7 @@ let admin={
     keys.forEach(k=>{updates[k]=null});
     t.db.ref(e.dbPath).update(updates).then(()=>{
       keys.forEach(k=>delete t.cache[k]);
+      a.rebuildDisplayNameMap();
       localStorage.setItem(e.cacheKey,JSON.stringify(t.cache));
       admin.logAction("حذف متعدد",`${keys.length} سجل`,"حذف نهائي من القاعدة");
       admin.selectedKeys.clear();
@@ -1643,7 +1716,7 @@ let admin={
       });
       if(delOld)updates[fromKey]=null;
       t.db.ref(e.dbPath).update(updates).then(()=>{
-        if(delOld)delete t.cache[fromKey];
+        if(delOld){delete t.cache[fromKey];a.rebuildDisplayNameMap()}
         admin.logAction("نقل/دمج شعلة",`${fromRaw} ➔ ${toRaw}`,`الرصيد النهائي: ${finalSt} (${mode})`);
         r.showToast(`✅ تم نقل الشعلة إلى (${toRaw}) بنجاح`);
         sub.remove();
@@ -1755,6 +1828,7 @@ let admin={
       matched.forEach(x=>{updates[x.key]=null});
       t.db.ref(e.dbPath).update(updates).then(()=>{
         matched.forEach(x=>delete t.cache[x.key]);
+        a.rebuildDisplayNameMap();
         localStorage.setItem(e.cacheKey,JSON.stringify(t.cache));
         admin.logAction("حذف خاملين نهائي",`${matched.length} سجل`,`خامل أكثر من ${days} يوم`);
         r.showToast(`🧹 تم حذف ${matched.length} حساب نهائياً من قاعدة البيانات`);
@@ -1805,6 +1879,7 @@ let admin={
     if(!t.db||!confirm(`حذف سجل الستريك للعضو (${d?.displayName||key}) نهائياً من قاعدة البيانات؟`))return;
     t.db.ref(`${e.dbPath}/${key}`).remove().then(()=>{
       delete t.cache[key];
+      a.rebuildDisplayNameMap();
       localStorage.setItem(e.cacheKey,JSON.stringify(t.cache));
       admin.logAction("حذف سجل عضو",d?.originalName||key,`الرصيد السابق: ${d?.streak||0}`);
       admin.refreshAll();
@@ -2346,6 +2421,7 @@ let admin={
     if(!confirm(`حذف (${cnt}) سجل فارغ أو برصيد 0 نهائياً من القاعدة؟`))return;
     t.db.ref(e.dbPath).update(updates).then(()=>{
       Object.keys(updates).forEach(k=>delete t.cache[k]);
+      a.rebuildDisplayNameMap();
       localStorage.setItem(e.cacheKey,JSON.stringify(t.cache));
       admin.logAction("تنظيف سجلات فارغة",`${cnt} سجل`,"حذف السجلات الصفرية/التالفة");
       admin.populateSettingsUI();
@@ -2374,6 +2450,7 @@ let admin={
     admin.exportBackup();
     t.db.ref(e.dbPath).remove().then(()=>{
       t.cache={};
+      a.rebuildDisplayNameMap();
       localStorage.setItem(e.cacheKey,"{}");
       admin.logAction("تصفير موسم جديد",`${cnt} سجل`,"تم أخذ نسخة احتياطية وتصفير القاعدة");
       admin.refreshAll();
@@ -2435,33 +2512,66 @@ let d=()=>{
 };
 
 let c=()=>{
-  new MutationObserver(muts=>{
-    let need=!1;
-    if(a.isAdmin()&&!document.getElementById("btn-lail-streak-admin")&&document.querySelector(".modern-classic-list"))need=!0;
+  let obs=new MutationObserver(muts=>{
+    let dirty=new Set,needUi=!1;
+    if(a.isAdmin()&&!document.getElementById("btn-lail-streak-admin")&&document.querySelector(".modern-classic-list"))needUi=!0;
     for(let m of muts){
-      if("attributes"===m.type&&(m.target.classList?.contains("user-identity")||"userProfileModal"===m.target.id))need=!0;
-      else if("childList"===m.type){
+      let mt=m.target;
+      if(!mt||1!==mt.nodeType)continue;
+      if(mt.closest&&mt.closest(".lsa-overlay, .layl-modal-overlay, #login-overlay.d-none"))continue;
+      if("attributes"===m.type){
+        if(mt.classList?.contains("user-identity")||"userProfileModal"===mt.id)dirty.add(mt)
+      }else if("childList"===m.type){
         for(let node of m.addedNodes){
-          if(1===node.nodeType){
-            let myMsg=node.classList?.contains("message-row")?node:node.querySelector(".message-row");
+          if(1!==node.nodeType)continue;
+          let cls=node.classList;
+          if(cls&&(cls.contains("night-streak")||cls.contains("lsa-overlay")||cls.contains("layl-modal-overlay")||cls.contains("lsa-toast")))continue;
+          let nid=node.id;
+          if("layl-recovery-banner"===nid||"btn-lail-streak-admin"===nid||"btn-streak-leaderboard"===nid||"streak-visibility-row"===nid||"admin-edit-streak-container"===nid)continue;
+          let isRow=cls&&(cls.contains("message-row")||cls.contains("msg-status-login")||cls.contains("user-join-message")||cls.contains("styled-sys-msg")||cls.contains("sys-msg-login")||cls.contains("msg-self"));
+          let rows=node.querySelectorAll?node.querySelectorAll(".message-row, .msg-status-login, .user-join-message, .styled-sys-msg, .sys-msg-login"):null;
+          if(isRow||(rows&&rows.length)){
+            let myMsg=cls?.contains("message-row")?node:node.querySelector(".message-row");
             if(myMsg&&t.myUsername&&myMsg.querySelector(`.message-text[data-username="${t.myUsername}"]`)){l.handleRecoveryProgress()}
-            let rows=node.querySelectorAll?node.querySelectorAll(".message-row, .msg-status-login, .user-join-message, .styled-sys-msg, .sys-msg-login"):[];
-            [node,...Array.from(rows)].forEach(el=>{
+            let scan=isRow?(rows&&rows.length?[node,...Array.from(rows)]:[node]):Array.from(rows);
+            for(let el of scan){
               if(el&&el.classList){
-                let u=n(el);
-                if(!a.isBotElement(el)&&!a.isGhostElement(el,!1)&&u&&u.username){
-                  (el.classList.contains("msg-self")||el.querySelector(".msg-self"))&&(localStorage.setItem("pc_username",u.username),t.myUsername=u.username,o.injectAdminPanelBtn(),o.injectAdminStreakEditor());
-                  (el.classList.contains("msg-status-login")||el.classList.contains("user-join-message")||el.classList.contains("sys-msg-login"))&&l.updateUserLogin(u.username,u.displayName)
+                let isSelf=el.classList.contains("msg-self")||Boolean(el.querySelector(".msg-self"));
+                let isLogin=el.classList.contains("msg-status-login")||el.classList.contains("user-join-message")||el.classList.contains("sys-msg-login");
+                if(isSelf||isLogin){
+                  let u=n(el);
+                  if(!a.isBotElement(el)&&!a.isGhostElement(el,!1)&&u&&u.username){
+                    isSelf&&(localStorage.setItem("pc_username",u.username),t.myUsername=u.username,o.injectAdminPanelBtn(),o.injectAdminStreakEditor());
+                    isLogin&&l.updateUserLogin(u.username,u.displayName)
+                  }
                 }
               }
-            });
-            if("elite-board-menu-items"===node.id||"privacy-group"===node.id||"profile-admin-edit-section"===node.id||"btn-lail-zajel-admin"===node.id||node.classList?.contains("modern-classic-list")||node.classList?.contains("classic-settings-container")||node.classList?.contains("message-row")||node.classList?.contains("user-pro-item")||node.classList?.contains("list-group-item")||node.classList?.contains("user-identity")||node.querySelector(".modern-classic-list, .message-row, .user-pro-item, .list-group-item, .user-identity-name, #sidebar-users-container, #profile-header-classic-bar, #privacy-group, #elite-board-menu-items, #profile-admin-edit-section"))need=!0
+            }
+          }
+          if("elite-board-menu-items"===nid||"privacy-group"===nid||"profile-admin-edit-section"===nid||"btn-lail-zajel-admin"===nid||(cls&&(cls.contains("modern-classic-list")||cls.contains("classic-settings-container")))){
+            needUi=!0
+          }
+          if(isRow||(cls&&(cls.contains("user-pro-item")||cls.contains("list-group-item")||cls.contains("user-identity")))||(node.querySelector&&node.querySelector(".user-identity, .user-identity-name, #sidebar-users-container, #profile-header-classic-bar"))){
+            dirty.add(node)
+          }else if(node.querySelector&&node.querySelector(".modern-classic-list, #privacy-group, #elite-board-menu-items, #profile-admin-edit-section")){
+            needUi=!0
           }
         }
       }
     }
-    need&&o.triggerRender()
-  }).observe(document.body,{childList:!0,subtree:!0,attributes:!0,attributeFilter:["data-username","data-user-id","class"]})
+    if(dirty.size){
+      dirty.forEach(nd=>o.triggerRender(nd))
+    }else if(needUi){
+      o.withoutObserver(()=>{
+        o.injectEliteMenuBtn();
+        o.injectPrivacyToggle();
+        o.injectAdminStreakEditor();
+        o.injectAdminPanelBtn()
+      })
+    }
+  });
+  t.observer=obs;
+  obs.observe(document.body,OBSERVER_OPTS)
 };
 
 (()=>{
@@ -2496,7 +2606,8 @@ let c=()=>{
       });
       t.db.ref(e.dbPath).on("value",snap=>{
         t.cache=snap.val()||{};
-        localStorage.setItem(e.cacheKey,JSON.stringify(t.cache));
+        a.rebuildDisplayNameMap();
+        try{localStorage.setItem(e.cacheKey,JSON.stringify(t.cache))}catch{}
         o.triggerRender();
         admin.refreshAll();
         if(t.myUsername&&t.cache[a.sanitizeName(t.myUsername)]){
