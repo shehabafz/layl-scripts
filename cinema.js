@@ -2355,4 +2355,905 @@ let timer,obs=new MutationObserver(()=>{
 document.body&&obs.observe(document.body,{childList:!0,subtree:!0});
 injectCinemaBtn();
 window.lailCinema.initFirebase();
+
+            /* === ملحق مكتبة ليل الخاصة (الإضافة اليدوية للأفلام والمسلسلات في أي قسم) === */
+(function(){
+  st.customMedia={};
+  let cmBound=!1,cmEditId=null;
+
+  const fullImg=(p,sz="w500")=>{
+    if(!p)return"https://via.placeholder.com/500x750/1a1a1f/fff?text=Lail+Cinema";
+    return/^https?:\/\//i.test(p)?p:`https://image.tmdb.org/t/p/${sz}${p}`
+  };
+
+  const isDirectVideo=u=>/\.(mp4|webm|ogg)(\?.*)?$/i.test(String(u||"").trim());
+
+  const smartUrl=(raw,asPlaylist=!1)=>{
+    let u=String(raw||"").trim();if(!u)return"";
+    if(isDirectVideo(u))return u;
+    try{
+      let plM=u.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+      if(asPlaylist&&plM)return`https://www.youtube.com/embed/videoseries?list=${plM[1]}&rel=0`;
+      let ytM=u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if(ytM)return`https://www.youtube.com/embed/${ytM[1]}?autoplay=1&rel=0`;
+      if(plM)return`https://www.youtube.com/embed/videoseries?list=${plM[1]}&rel=0`;
+      let gdM=u.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if(gdM)return`https://drive.google.com/file/d/${gdM[1]}/preview`;
+      let dmM=u.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+      if(dmM)return`https://www.dailymotion.com/embed/video/${dmM[1]}`
+    }catch{}
+    return u
+  };
+
+  const getCustomList=(filterFn)=>Object.values(st.customMedia||{})
+    .filter(x=>x&&x.id&&!h.isBlacklisted(x.id,x.media_type)&&(!filterFn||filterFn(x)))
+    .sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+
+  const customCardItem=it=>({
+    id:it.id,
+    media_type:it.media_type,
+    title:it.title,
+    name:it.title,
+    poster_path:it.poster_path,
+    vote_average:Number(it.vote_average)||0,
+    badge:it.badge||"",
+    isCustom:!0
+  });
+
+  // دعم روابط الأعمال اليدوية في التشغيل والغرف الجماعية
+  const origBuildEmbed=h.buildEmbedUrl;
+  h.buildEmbedUrl=function(type,id,s=1,e=1,srvId=null){
+    if(String(id||"").startsWith("cm_")){
+      let it=st.customMedia[id];if(!it)return"";
+      if("movie"===it.media_type)return smartUrl(it.url,!1);
+      let eps=Array.isArray(it.episodes)?it.episodes:[];
+      if(eps.length){
+        let ep=eps.find(x=>Number(x.num)===Number(e))||eps[Math.max(0,(Number(e)||1)-1)]||eps[0];
+        return smartUrl(ep?.url||"",!1)
+      }
+      if(it.playlistUrl)return smartUrl(it.playlistUrl,!0);
+      return""
+    }
+    return origBuildEmbed(type,id,s,e,srvId)
+  };
+
+  // دعم تشغيل الفيديو المباشر MP4 + الـ iframe بسلاسة
+  const origSetIframe=window.lailCinema.setIframeUrl;
+  window.lailCinema.setIframeUrl=function(url){
+    let host=document.getElementById("lail-iframe-host"),ifr=document.getElementById("cinema-iframe"),vid=document.getElementById("lail-direct-video");
+    if(!url){
+      if(vid){vid.pause();vid.removeAttribute("src");vid.load();vid.style.display="none"}
+      if(ifr){ifr.style.display="block";ifr.src=""}
+      return
+    }
+    if(isDirectVideo(url)&&host){
+      if(ifr){ifr.src="";ifr.style.display="none"}
+      if(!vid){
+        vid=document.createElement("video");
+        vid.id="lail-direct-video";
+        vid.setAttribute("controls","");
+        vid.setAttribute("playsinline","");
+        vid.style.cssText="width:100%;height:100%;background:#000;object-fit:contain;display:block;";
+        host.insertBefore(vid,document.getElementById("party-reactions"))
+      }
+      vid.style.display="block";vid.src=url;vid.play().catch(()=>{});
+      return
+    }
+    if(vid){vid.pause();vid.removeAttribute("src");vid.style.display="none"}
+    if(ifr){ifr.style.display="block"}
+    origSetIframe.call(this,url)
+  };
+
+  // إخفاء مبدّل السيرفرات الأجنبية عند تشغيل عمل يدوي
+  const origApply=window.lailCinema.applyAdminSettings;
+  window.lailCinema.applyAdminSettings=function(){
+    origApply.call(this);
+    if(String(this.currentVideoData?.id||"").startsWith("cm_")){
+      let sel=document.getElementById("lail-player-server-sel");
+      sel&&(sel.style.display="none")
+    }
+  };
+
+  // ربط Firebase بمسار المكتبة الخاصة
+  const bindCustomRef=()=>{
+    if(!window.lailCinema.db||cmBound)return;
+    cmBound=!0;
+    window.lailCinema.db.ref(`${ADMIN_PATH}/custom_media`).on("value",snap=>{
+      st.customMedia=snap.val()||{};
+      renderCustomAdminList()
+    })
+  };
+  const origBindGlobal=window.lailCinema.bindGlobalListeners;
+  window.lailCinema.bindGlobalListeners=function(){
+    origBindGlobal.call(this);
+    bindCustomRef()
+  };
+  bindCustomRef();
+
+  // تعديل صفوف العرض لتدعم المعرفات النصية والصور الكاملة ودمج الأعمال اليدوية
+  window.lailCinema.appendFeaturedRow=function(c,tp){
+    let items=Object.values(st.featured||{}).filter(x=>x&&x.id&&x.media_type===tp&&!h.isBlacklisted(x.id,x.media_type)).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    if(!items.length)return;
+    let fTitle=h.esc(st.settings.featuredTitle||DEFAULT_SETTINGS.featuredTitle);
+    let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#D4AF37;border-right-color:#D4AF37;">${fTitle}</div><div class="lail-row-scroller">`;
+    items.forEach(it=>{
+      html+=`<div class="lail-movie-card" style="border:1px solid rgba(212,175,55,0.45);" onclick="window.lailCinema.openDetails('${it.id}', '${it.media_type}')"><div class="lail-featured-badge">${h.esc(it.badge||"اختيار الإدارة ⭐")}</div><div class="lail-movie-rate"><i class="fas fa-star"></i> ${it.vote_average?Number(it.vote_average).toFixed(1):"N/A"}</div><img class="lail-movie-poster" src="${fullImg(it.poster_path)}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(it.title)}</div></div>`
+    });
+    html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
+  };
+
+  window.lailCinema.appendHistoryRow=function(c,title,items){
+    let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#e50914;">${title}</div><div class="lail-row-scroller">`;
+    items.forEach(x=>{
+      html+=`<div class="lail-movie-card lail-continue-card" onclick="window.lailCinema.openDetails('${x.id}', '${x.type}')">${x.season?`<div class="lail-ep-badge">S${x.season} E${x.episode}</div>`:""}<img class="lail-movie-poster" src="${fullImg(x.poster)}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title)}</div></div>`
+    });
+    html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
+  };
+
+  window.lailCinema.appendNetflixRow=function(c,title,items,tp,secKey=null){
+    let minR=Number(st.settings.minRating)||0;
+    let customHere=secKey?getCustomList(x=>x.media_type===tp&&x.section===secKey).map(customCardItem):[];
+    let tmdbClean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||tp)&&!h.isGenreBlocked(x.genre_ids)&&((x.vote_average||0)>=minR||0===minR));
+    let combined=[...customHere,...tmdbClean];
+    if(!combined.length)return;
+    let moreBtn=secKey?`<span onclick="window.lailCinema.selectCustomSection('${secKey}')" style="margin-right:auto;font-size:.84rem;color:#D4AF37;cursor:pointer;font-weight:bold;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">عرض الكل <i class="fas fa-chevron-left"></i></span>`:"";
+    let html=`<div class="lail-row-container"><div class="lail-row-title">${title}${moreBtn}</div><div class="lail-row-scroller">`;
+    combined.forEach(x=>{
+      let bd=x.badge?`<div class="lail-featured-badge">${h.esc(x.badge)}</div>`:"";
+      html+=`<div class="lail-movie-card" onclick="window.lailCinema.openDetails('${x.id}', '${x.media_type||tp}')">${bd}<div class="lail-movie-rate"><i class="fas fa-star"></i> ${x.vote_average?Number(x.vote_average).toFixed(1):"★"}</div><img class="lail-movie-poster" src="${fullImg(x.poster_path)}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title||x.name)}</div></div>`
+    });
+    html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
+  };
+
+  // إظهار صف «🎬 مكتبة ليل الخاصة» في الرئيسية
+  const origBuildLayout=window.lailCinema.buildNetflixLayout;
+  window.lailCinema.buildNetflixLayout=async function(tp){
+    await origBuildLayout.call(this,tp);
+    let nv=document.getElementById("cinema-netflix-view");if(!nv)return;
+    let exclusives=getCustomList(x=>x.media_type===tp&&(!1!==x.showInHome||"exclusive"===x.section)).map(customCardItem);
+    if(!exclusives.length)return;
+    let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#6ee7b7;border-right-color:#10b981;">🎬 مكتبة ليل الخاصة<span onclick="window.lailCinema.openCustomLibraryGrid('${tp}')" style="margin-right:auto;font-size:.84rem;color:#6ee7b7;cursor:pointer;font-weight:bold;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">عرض الكل <i class="fas fa-chevron-left"></i></span></div><div class="lail-row-scroller">`;
+    exclusives.forEach(x=>{
+      let bd=x.badge?`<div class="lail-featured-badge">${h.esc(x.badge)}</div>`:"";
+      html+=`<div class="lail-movie-card" style="border:1px solid rgba(16,185,129,0.4);" onclick="window.lailCinema.openDetails('${x.id}', '${x.media_type}')">${bd}<div class="lail-movie-rate"><i class="fas fa-star"></i> ${x.vote_average?Number(x.vote_average).toFixed(1):"★"}</div><img class="lail-movie-poster" src="${fullImg(x.poster_path)}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title)}</div></div>`
+    });
+    html+="</div></div>";
+    nv.insertAdjacentHTML("afterbegin",html)
+  };
+
+  window.lailCinema.openCustomLibraryGrid=function(tp){
+    this.currentCustomApi=null;this.currentCustomKey=`lail_lib_${tp}`;this.currentGenre=null;this.currentQuery=null;
+    let si=document.getElementById("cinema-search-input"),gh=document.getElementById("grid-header"),gr=document.getElementById("cinema-grid");
+    si&&(si.value="");gh&&(gh.innerHTML='<i class="fas fa-gem" style="color:#10b981;"></i> مكتبة ليل الخاصة');
+    let sb=document.getElementById("cinema-sidebar");sb&&"0px"===sb.style.right&&this.toggleSidebar();
+    let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
+    nv&&(nv.style.display="none");gv&&(gv.style.display="block");
+    this.hasMore=!1;this.currentPage=1;
+    if(gr){gr.innerHTML="";this.appendGridItems(getCustomList(x=>x.media_type===tp).map(customCardItem))}
+  };
+
+  // إدراج زر مكتبة ليل الخاصة داخل القائمة الجانبية عند وجود أعمال
+  const origRenderSidebar=window.lailCinema.renderSidebar;
+  window.lailCinema.renderSidebar=function(){
+    origRenderSidebar.call(this);
+    if("fav"===this.currentType)return;
+    let cnt=getCustomList(x=>x.media_type===this.currentType).length;
+    if(!cnt)return;
+    let el=document.getElementById("sidebar-genres");if(!el)return;
+    let homeEl=el.firstElementChild;
+    let itemHtml=`<div class="lail-genre-item ${this.currentCustomKey===`lail_lib_${this.currentType}`?"active":""}" onclick="window.lailCinema.openCustomLibraryGrid('${this.currentType}')"><i class="fas fa-gem" style="color:#10b981;"></i> مكتبة ليل الخاصة (${cnt})</div>`;
+    homeEl?homeEl.insertAdjacentHTML("afterend",itemHtml):el.insertAdjacentHTML("afterbegin",itemHtml)
+  };
+
+  // دمج الأعمال اليدوية في الصفحة الأولى من البحث والأقسام والتصنيفات
+  const origLoadGrid=window.lailCinema.loadGridContent;
+  window.lailCinema.loadGridContent=async function(reset=!1){
+    let shouldInject=reset||1===this.currentPage;
+    let customMatches=[];
+    if(shouldInject){
+      if(this.currentCustomKey){
+        customMatches=getCustomList(x=>x.section===this.currentCustomKey).map(customCardItem)
+      }else if(this.currentGenre){
+        customMatches=getCustomList(x=>x.media_type===this.currentType&&x.section===`genre_${this.currentGenre}`).map(customCardItem)
+      }else if(this.currentQuery){
+        let q=this.currentQuery.toLowerCase();
+        customMatches=getCustomList(x=>`${x.title||""} ${x.overview||""}`.toLowerCase().includes(q)).map(customCardItem)
+      }
+    }
+    await origLoadGrid.call(this,reset);
+    if(customMatches.length){
+      let gr=document.getElementById("cinema-grid");
+      if(gr){
+        if(gr.textContent.includes("لا توجد نتائج"))gr.innerHTML="";
+        let frag=document.createDocumentFragment();
+        customMatches.forEach(x=>{
+          let card=document.createElement("div");card.className="lail-movie-card";card.style.border="1px solid rgba(16,185,129,0.45)";
+          card.onclick=()=>this.openDetails(x.id,x.media_type);
+          card.innerHTML=`${x.badge?`<div class="lail-featured-badge">${h.esc(x.badge)}</div>`:""}<div class="lail-movie-rate"><i class="fas fa-star"></i> ${x.vote_average?Number(x.vote_average).toFixed(1):"★"}</div><img class="lail-movie-poster" src="${fullImg(x.poster_path)}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title)}</div>`;
+          frag.appendChild(card)
+        });
+        gr.insertBefore(frag,gr.firstChild)
+      }
+    }
+  };
+
+  // صفحة تفاصيل الأعمال المضافة يدوياً
+  const origOpenDetails=window.lailCinema.openDetails;
+  window.lailCinema.openDetails=async function(id,tp){
+    if(!String(id||"").startsWith("cm_"))return origOpenDetails.call(this,id,tp);
+    let it=st.customMedia[id];
+    if(!it)return this.showToast("❌ هذا العمل غير موجود أو تم حذفه.");
+    if(h.isBlacklisted(id,it.media_type)&&!h.isAdmin())return this.showToast("🚫 هذا العمل غير متاح حالياً.");
+    this.currentDetailsId=id;
+    this.currentDetailsType=it.media_type;
+    this.currentDetailsItem=it;
+    let det=document.getElementById("cinema-details");if(!det)return;
+    det.style.display="flex";det.scrollTop=0;
+    let tvB=document.getElementById("tv-episodes-container"),rcB=document.getElementById("recs-container"),bd=document.getElementById("details-backdrop"),ps=document.getElementById("details-poster"),pw=document.getElementById("details-poster-wrap");
+    tvB&&(tvB.style.display="none");rcB&&(rcB.style.display="none");
+    this.applyAdminSettings();
+    this.checkIfFavorite(id);
+    let bg=fullImg(it.backdrop_path||it.poster_path,"w1280"),pos=fullImg(it.poster_path,"w500");
+    bd&&(bd.src=bg,bd.style.opacity="0.6");
+    if(ps&&pw){ps.src=pos;pw.style.display="block"}
+    document.getElementById("details-title")&&(document.getElementById("details-title").innerText=it.title);
+    document.getElementById("details-overview")&&(document.getElementById("details-overview").innerText=it.overview||"عمل متاح ضمن مكتبة سينما ليل الخاصة.");
+    document.getElementById("details-rate")&&(document.getElementById("details-rate").innerHTML=`<i class="fas fa-star"></i> ${it.vote_average?Number(it.vote_average).toFixed(1):"★"}`);
+    document.getElementById("details-date")&&(document.getElementById("details-date").innerText=it.year||"");
+    document.getElementById("details-score")&&(document.getElementById("details-score").innerText="مكتبة ليل الخاصة ✨");
+    document.getElementById("details-age")&&(document.getElementById("details-age").innerText="مضمون");
+    document.getElementById("details-runtime")&&(document.getElementById("details-runtime").innerText="");
+    document.getElementById("details-genres")&&(document.getElementById("details-genres").innerHTML=`<span class="lail-genre-badge">${"movie"===it.media_type?"فيلم":"مسلسل"}</span>${it.badge?`<span class="lail-genre-badge" style="border-color:#D4AF37;color:#D4AF37;">${h.esc(it.badge)}</span>`:""}`);
+    document.getElementById("details-cast")&&(document.getElementById("details-cast").innerHTML="");
+
+    let pBtn=document.getElementById("details-play-btn");
+    if("movie"===it.media_type){
+      pBtn&&(pBtn.innerHTML='<i class="fas fa-play"></i> تشغيل الفيلم',pBtn.onclick=()=>this.playVideo(id,"movie",it.title))
+    }else{
+      let eps=Array.isArray(it.episodes)?it.episodes:[];
+      if(eps.length){
+        pBtn&&(pBtn.innerHTML='<i class="fas fa-play"></i> تشغيل الحلقة 1',pBtn.onclick=()=>this.playVideo(id,"tv",it.title,1,eps[0].num||1));
+        if(tvB){
+          tvB.style.display="block";
+          let sel=document.getElementById("season-selector"),el=document.getElementById("episodes-list");
+          sel&&(sel.innerHTML='<option value="1">الحلقات المتوفرة ('+eps.length+')</option>',sel.onchange=null);
+          if(el){
+            el.innerHTML="";
+            let showP=(!1!==st.settings.allowParties&&(!st.settings.partiesVipOnly||h.isVip()))||h.isAdmin();
+            eps.forEach((ep,idx)=>{
+              let num=ep.num||idx+1;
+              let row=document.createElement("div");row.className="lail-episode-item";
+              row.innerHTML=`<div class="lail-ep-img-wrapper"><img class="lail-ep-img" src="${pos}" loading="lazy"><i class="fas fa-play-circle lail-ep-play-icon"></i></div><div class="lail-ep-info"><h4 class="lail-ep-title"><span>${num}. ${h.esc(ep.name||`الحلقة ${num}`)}</span>${showP?'<button class="lail-party-btn lail-ep-pbtn" style="padding:4px 8px;font-size:0.8rem;" title="غرفة جماعية"><i class="fas fa-users"></i></button>':""}</h4><p class="lail-ep-desc" style="color:#94a3b8;font-size:.9rem;">اضغط للتشغيل المباشر بدون إعلانات منبثقة</p></div>`;
+              row.querySelector(".lail-ep-img-wrapper").onclick=()=>this.playVideo(id,"tv",it.title,1,num);
+              let pb=row.querySelector(".lail-ep-pbtn");pb&&(pb.onclick=()=>this.createParty(id,"tv",it.title,1,num));
+              el.appendChild(row)
+            })
+          }
+        }
+      }else if(it.playlistUrl){
+        pBtn&&(pBtn.innerHTML='<i class="fas fa-play"></i> تشغيل قائمة الحلقات',pBtn.onclick=()=>this.playVideo(id,"tv",it.title,1,1))
+      }
+    }
+  };
+
+  // === واجهة الإضافة اليدوية داخل تبويب «اختياراتنا» في لوحة التحكم ===
+  function sectionOptionsHtml(tp){
+    let sec=window.lailCinema.arabicSections();
+    let keys="movie"===tp
+      ?["gulf_movie","egy_movie","ar_movie_all","tr_movie","kr_movie","in_movie","anime_movie"]
+      :["gulf_tv","egy_tv","levant_tv","ar_tv_all","tr_tv","kr_tv","anime_tv"];
+    let html='<option value="exclusive">🎬 مكتبة ليل الخاصة فقط</option><optgroup label="الأقسام حسب المنطقة">';
+    keys.forEach(k=>{let s=sec[k];s&&(html+=`<option value="${k}">${s.title}</option>`)});
+    html+='</optgroup><optgroup label="التصنيفات العالمية">';
+    let gList="movie"===tp?window.lailCinema.genres.movie:window.lailCinema.genres.tv;
+    (gList||[]).forEach(g=>{html+=`<option value="genre_${g.id}">تصنيف: ${h.esc(g.name)}</option>`});
+    html+="</optgroup>";
+    return html
+  }
+
+  function sectionLabel(key){
+    if(!key||"exclusive"===key)return"مكتبة ليل الخاصة";
+    let sec=window.lailCinema.arabicSections();
+    if(sec[key])return sec[key].title;
+    if(key.startsWith("genre_")){
+      let gid=Number(key.slice(6));
+      let g=[...window.lailCinema.genres.movie,...window.lailCinema.genres.tv].find(x=>x.id===gid);
+      return g?`تصنيف: ${g.name}`:key
+    }
+    return key
+  }
+
+  function renderCustomAdminList(){
+    let c=document.getElementById("lcma-cm-list");if(!c)return;
+    let q=(document.getElementById("lcma-cm-filter")?.value||"").trim().toLowerCase();
+    let items=Object.values(st.customMedia||{}).filter(x=>x&&(!q||(x.title||"").toLowerCase().includes(q))).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    if(!items.length){c.innerHTML='<div style="text-align:center;color:#64748b;padding:14px;font-size:12px;">لا توجد أعمال مضافة يدوياً بعد.</div>';return}
+    c.innerHTML=items.map(it=>{
+      let epInfo="tv"===it.media_type?(it.episodes?.length?`${it.episodes.length} حلقة`:(it.playlistUrl?"قائمة يوتيوب":"0 حلقة")):"فيلم";
+      return`
+        <div class="lcma-mrow">
+          <img src="${fullImg(it.poster_path,"w200")}">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(it.title)}</div>
+            <div class="lcma-row" style="gap:4px;margin-top:3px;">
+              <span class="lcma-tag lcma-t-green">${h.esc(sectionLabel(it.section))}</span>
+              <span class="lcma-tag lcma-t-gold">${epInfo}</span>
+            </div>
+          </div>
+          <button type="button" class="lcma-btn lcma-btn-info lcma-mini lcma-cm-edit" data-id="${h.esc(it.id)}" title="تعديل / إضافة حلقات"><i class="fas fa-pen"></i></button>
+          <button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-cm-top" data-id="${h.esc(it.id)}" title="رفع للأول"><i class="fas fa-arrow-up"></i></button>
+          <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-cm-del" data-id="${h.esc(it.id)}" title="حذف"><i class="fas fa-trash"></i></button>
+        </div>`
+    }).join("");
+    c.querySelectorAll(".lcma-cm-edit").forEach(b=>b.onclick=()=>fillCustomForm(st.customMedia[b.dataset.id]));
+    c.querySelectorAll(".lcma-cm-top").forEach(b=>b.onclick=()=>{window.lailCinema.db.ref(`${ADMIN_PATH}/custom_media/${b.dataset.id}/timestamp`).set(Date.now()).then(()=>window.lailCinema.showToast("⬆️ تم الرفع للمقدمة"))});
+    c.querySelectorAll(".lcma-cm-del").forEach(b=>b.onclick=()=>{
+      let id=b.dataset.id,ttl=st.customMedia[id]?.title||id;
+      if(confirm(`حذف «${ttl}» من مكتبة ليل الخاصة؟`))window.lailCinema.db.ref(`${ADMIN_PATH}/custom_media/${id}`).remove().then(()=>{cinemaAdmin.log("حذف عمل يدوي",ttl,"");window.lailCinema.showToast("🗑️ تم الحذف")})
+    })
+  }
+
+  function resetCustomForm(){
+    cmEditId=null;
+    let sv=(id,v)=>{let el=document.getElementById(id);el&&(el.value=v)};
+    sv("lcma-cm-title","");sv("lcma-cm-poster","");sv("lcma-cm-backdrop","");sv("lcma-cm-year","");sv("lcma-cm-rate","");
+    sv("lcma-cm-badge","");sv("lcma-cm-overview","");sv("lcma-cm-url","");sv("lcma-cm-pl","");sv("lcma-cm-eps","");
+    let hc=document.getElementById("lcma-cm-home");hc&&(hc.checked=!0);
+    let sb=document.getElementById("lcma-cm-save"),cb=document.getElementById("lcma-cm-cancel");
+    sb&&(sb.innerHTML='<i class="fas fa-plus-circle"></i> حفظ وإضافة العمل للسينما');
+    cb&&(cb.style.display="none")
+  }
+
+  function toggleCustomTypeFields(){
+    let tp=document.getElementById("lcma-cm-type")?.value||"movie";
+    let secSel=document.getElementById("lcma-cm-sec"),prev=secSel?.value;
+    if(secSel){secSel.innerHTML=sectionOptionsHtml(tp);if(prev&&secSel.querySelector(`option[value="${prev}"]`))secSel.value=prev}
+    let mb=document.getElementById("lcma-cm-movbox"),tb=document.getElementById("lcma-cm-tvbox");
+    mb&&(mb.style.display="movie"===tp?"block":"none");
+    tb&&(tb.style.display="tv"===tp?"block":"none")
+  }
+
+  function fillCustomForm(it){
+    if(!it)return;
+    cmEditId=it.id;
+    let tpEl=document.getElementById("lcma-cm-type");if(tpEl){tpEl.value=it.media_type||"movie";toggleCustomTypeFields()}
+    let sv=(id,v)=>{let el=document.getElementById(id);el&&(el.value=v||"")};
+    sv("lcma-cm-sec",it.section||"exclusive");
+    sv("lcma-cm-title",it.title);sv("lcma-cm-poster",it.poster_path);sv("lcma-cm-backdrop",it.backdrop_path);
+    sv("lcma-cm-year",it.year);sv("lcma-cm-rate",it.vote_average||"");sv("lcma-cm-badge",it.badge);sv("lcma-cm-overview",it.overview);
+    sv("lcma-cm-url",it.url);sv("lcma-cm-pl",it.playlistUrl);
+    let epLines=(it.episodes||[]).map(ep=>ep.name&&ep.name!==`الحلقة ${ep.num}`?`${ep.name} | ${ep.url}`:ep.url).join("\n");
+    sv("lcma-cm-eps",epLines);
+    let hc=document.getElementById("lcma-cm-home");hc&&(hc.checked=!1!==it.showInHome);
+    let sb=document.getElementById("lcma-cm-save"),cb=document.getElementById("lcma-cm-cancel");
+    sb&&(sb.innerHTML='<i class="fas fa-save"></i> حفظ التعديلات');
+    cb&&(cb.style.display="inline-flex");
+    document.getElementById("lcma-fsub-custom")?.scrollIntoView({behavior:"smooth"})
+  }
+
+  async function saveCustomMedia(){
+    if(!window.lailCinema.db)return;
+    let tp=document.getElementById("lcma-cm-type").value;
+    let title=(document.getElementById("lcma-cm-title").value||"").trim();
+    let poster=(document.getElementById("lcma-cm-poster").value||"").trim();
+    if(!title)return alert("أدخل اسم الفيلم أو المسلسل.");
+    let url=(document.getElementById("lcma-cm-url").value||"").trim();
+    let pl=(document.getElementById("lcma-cm-pl").value||"").trim();
+    let rawEps=(document.getElementById("lcma-cm-eps").value||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    let episodes=rawEps.map((line,idx)=>{
+      let parts=line.split("|").map(x=>x.trim());
+      if(parts.length>=2)return{num:idx+1,name:parts[0],url:parts.slice(1).join("|")};
+      return{num:idx+1,name:`الحلقة ${idx+1}`,url:line}
+    });
+    if("movie"===tp&&!url)return alert("أدخل رابط تشغيل الفيلم.");
+    if("tv"===tp&&!pl&&!episodes.length)return alert("أدخل رابط قائمة تشغيل يوتيوب أو رابط حلقة واحدة على الأقل.");
+    let id=cmEditId||("cm_"+Date.now());
+    let payload={
+      id,media_type:tp,title,
+      poster_path:poster,
+      backdrop_path:(document.getElementById("lcma-cm-backdrop").value||"").trim()||poster,
+      year:(document.getElementById("lcma-cm-year").value||"").trim(),
+      vote_average:parseFloat(document.getElementById("lcma-cm-rate").value)||0,
+      badge:(document.getElementById("lcma-cm-badge").value||"").trim(),
+      overview:(document.getElementById("lcma-cm-overview").value||"").trim(),
+      section:document.getElementById("lcma-cm-sec").value||"exclusive",
+      showInHome:document.getElementById("lcma-cm-home").checked,
+      url:"movie"===tp?url:"",
+      playlistUrl:"tv"===tp?pl:"",
+      episodes:"tv"===tp?episodes:[],
+      timestamp:Date.now()
+    };
+    window.lailCinema.db.ref(`${ADMIN_PATH}/custom_media/${id}`).set(payload).then(()=>{
+      cinemaAdmin.log(cmEditId?"تعديل عمل يدوي":"إضافة عمل يدوي",title,sectionLabel(payload.section));
+      window.lailCinema.showToast(cmEditId?`✅ تم تحديث «${title}»`:`🎬 تمت إضافة «${title}» بنجاح`);
+      resetCustomForm()
+    }).catch(()=>alert("❌ فشل الحفظ في Firebase."))
+  }
+
+  // تضمين المكتبة اليدوية داخل النسخ الاحتياطي والاستيراد
+  const origExport=cinemaAdmin.exportBackup;
+  cinemaAdmin.exportBackup=function(){
+    let pack={settings:st.settings,featured:st.featured,blacklist:st.blacklist,banned:st.bannedCache,schedule:st.schedule,poll:st.poll,custom_media:st.customMedia};
+    let blob=new Blob([JSON.stringify(pack,null,2)],{type:"application/json;charset=utf-8"});
+    let url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=`lail-cinema-backup-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1e3);
+    window.lailCinema.showToast("💾 تم تحميل النسخة الاحتياطية شاملة المكتبة الخاصة")
+  };
+
+  // حقن القسم الفرعي داخل تبويب «اختياراتنا» عند فتح لوحة التحكم
+  const origAdminOpen=cinemaAdmin.open;
+  cinemaAdmin.open=function(){
+    origAdminOpen();
+    let featView=document.getElementById("lcma-v-featured");
+    if(!featView||document.getElementById("lcma-fsub-custom"))return;
+    let existingHtml=featView.innerHTML;
+    featView.innerHTML=`
+      <div class="lcma-subtabs">
+        <button type="button" class="lcma-subtab active" data-fsub="picks"><i class="fas fa-crown"></i> اختيارات الإدارة</button>
+        <button type="button" class="lcma-subtab" data-fsub="custom"><i class="fas fa-plus-circle"></i> الإضافة اليدوية (مكتبة ليل)</button>
+      </div>
+      <div id="lcma-fsub-picks">${existingHtml}</div>
+      <div id="lcma-fsub-custom" style="display:none;">
+        <div class="lcma-card" style="border-color:rgba(16,185,129,0.35);">
+          <div class="lcma-card-t" style="color:#6ee7b7;"><span><i class="fas fa-magic"></i> تعبئة تلقائية من TMDB (اختياري)</span></div>
+          <div class="lcma-row" style="margin-bottom:6px;">
+            <input type="text" id="lcma-cm-tq" class="lcma-inp" style="flex:1;" placeholder="ابحث بالاسم لسحب البوستر والقصة تلقائياً...">
+            <button type="button" id="lcma-cm-tbtn" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i> بحث</button>
+          </div>
+          <div id="lcma-cm-tres" style="max-height:150px;overflow-y:auto;"></div>
+        </div>
+
+        <div class="lcma-card">
+          <div class="lcma-card-t"><span><i class="fas fa-film"></i> بيانات العمل والروابط</span></div>
+          <div class="lcma-g2" style="margin-bottom:6px;">
+            <div><label class="lcma-lbl">النوع</label><select id="lcma-cm-type" class="lcma-inp"><option value="tv">مسلسل</option><option value="movie">فيلم</option></select></div>
+            <div><label class="lcma-lbl">القسم الذي يظهر فيه</label><select id="lcma-cm-sec" class="lcma-inp"></select></div>
+          </div>
+          <div class="lcma-g2" style="margin-bottom:6px;">
+            <div><label class="lcma-lbl">الاسم *</label><input type="text" id="lcma-cm-title" class="lcma-inp" placeholder="اسم الفيلم أو المسلسل"></div>
+            <div><label class="lcma-lbl">شارة فوق البوستر (اختياري)</label><input type="text" id="lcma-cm-badge" class="lcma-inp" placeholder="مثلاً: حصري 🎬 / يوتيوب"></div>
+          </div>
+          <div style="margin-bottom:6px;"><label class="lcma-lbl">رابط صورة البوستر</label><input type="text" id="lcma-cm-poster" class="lcma-inp" dir="ltr" placeholder="https://..."></div>
+          <input type="hidden" id="lcma-cm-backdrop">
+          <div class="lcma-g2" style="margin-bottom:6px;">
+            <div><label class="lcma-lbl">سنة الإصدار</label><input type="text" id="lcma-cm-year" class="lcma-inp" placeholder="2025"></div>
+            <div><label class="lcma-lbl">التقييم (مثلاً 8.5)</label><input type="number" step="0.1" min="0" max="10" id="lcma-cm-rate" class="lcma-inp" placeholder="8.5"></div>
+          </div>
+          <div style="margin-bottom:7px;"><label class="lcma-lbl">القصة (اختياري)</label><textarea id="lcma-cm-overview" class="lcma-inp" rows="2" placeholder="نبذة مختصرة..."></textarea></div>
+
+          <div id="lcma-cm-movbox" style="display:none;margin-bottom:8px;">
+            <label class="lcma-lbl">رابط الفيلم * (YouTube / Google Drive / Embed / MP4)</label>
+            <input type="text" id="lcma-cm-url" class="lcma-inp" dir="ltr" placeholder="https://youtube.com/watch?v=... أو رابط تضمين أو mp4">
+          </div>
+
+          <div id="lcma-cm-tvbox" style="margin-bottom:8px;">
+            <div style="margin-bottom:6px;">
+              <label class="lcma-lbl">رابط قائمة تشغيل يوتيوب كاملة (YouTube Playlist - اختياري)</label>
+              <input type="text" id="lcma-cm-pl" class="lcma-inp" dir="ltr" placeholder="https://www.youtube.com/playlist?list=...">
+            </div>
+            <div>
+              <label class="lcma-lbl">أو روابط الحلقات (كل سطر حلقة — اكتب الرابط فقط أو: اسم الحلقة | الرابط)</label>
+              <textarea id="lcma-cm-eps" class="lcma-inp" dir="ltr" rows="4" placeholder="https://youtu.be/xxxxx&#10;الحلقة 2 | https://youtu.be/yyyyy"></textarea>
+            </div>
+          </div>
+
+          <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#cbd5e1;margin-bottom:9px;cursor:pointer;">
+            <input type="checkbox" id="lcma-cm-home" checked> إظهار أيضاً في صف «🎬 مكتبة ليل الخاصة» بالرئيسية
+          </label>
+          <div class="lcma-row" style="gap:6px;">
+            <button type="button" id="lcma-cm-save" class="lcma-btn lcma-btn-gold" style="flex:1;"><i class="fas fa-plus-circle"></i> حفظ وإضافة العمل للسينما</button>
+            <button type="button" id="lcma-cm-cancel" class="lcma-btn lcma-btn-dark lcma-mini" style="display:none;">إلغاء التعديل</button>
+          </div>
+        </div>
+
+        <div class="lcma-card">
+          <div class="lcma-card-t"><span><i class="fas fa-folder-open"></i> الأعمال المضافة يدوياً</span></div>
+          <input type="text" id="lcma-cm-filter" class="lcma-inp" style="margin-bottom:7px;" placeholder="🔍 تصفية أعمالك المضافة...">
+          <div id="lcma-cm-list"></div>
+        </div>
+      </div>`;
+
+    // إعادة ربط أزرار التبويب الفرعي الأول (اختيارات الإدارة)
+    document.getElementById("lcma-feat-title-save").onclick=()=>{
+      let ttl=(document.getElementById("lcma-feat-title-inp").value||"").trim()||DEFAULT_SETTINGS.featuredTitle;
+      cinemaAdmin.patchSettings({featuredTitle:ttl},"✅ تم تحديث عنوان الصف")
+    };
+    document.getElementById("lcma-set-ar-rows").onchange=function(){
+      cinemaAdmin.patchSettings({showArabicRows:this.checked},this.checked?"🌙 تم تفعيل الصفوف العربية والخليجية":"تم إخفاء الصفوف العربية")
+    };
+    document.getElementById("lcma-feat-search").onclick=()=>cinemaAdmin.searchTMDB("feat");
+    document.getElementById("lcma-feat-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("feat"))});
+
+    // تبديل التبويبات الفرعية
+    featView.querySelectorAll("[data-fsub]").forEach(b=>b.onclick=()=>{
+      let sub=b.dataset.fsub;
+      featView.querySelectorAll("[data-fsub]").forEach(x=>x.classList.toggle("active",x===b));
+      document.getElementById("lcma-fsub-picks").style.display="picks"===sub?"block":"none";
+      document.getElementById("lcma-fsub-custom").style.display="custom"===sub?"block":"none";
+      if("custom"===sub){toggleCustomTypeFields();renderCustomAdminList()}
+    });
+
+    // ربط أزرار الإضافة اليدوية
+    document.getElementById("lcma-cm-type").onchange=toggleCustomTypeFields;
+    document.getElementById("lcma-cm-save").onclick=saveCustomMedia;
+    document.getElementById("lcma-cm-cancel").onclick=resetCustomForm;
+    document.getElementById("lcma-cm-filter").oninput=renderCustomAdminList;
+    document.getElementById("lcma-cm-tbtn").onclick=async()=>{
+      let q=(document.getElementById("lcma-cm-tq").value||"").trim(),box=document.getElementById("lcma-cm-tres");
+      if(!q||!box)return;
+      box.innerHTML='<div style="text-align:center;color:#D4AF37;padding:8px;"><i class="fas fa-spinner fa-spin"></i></div>';
+      try{
+        let d=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar&query=${encodeURIComponent(q)}`).then(x=>x.json());
+        let list=(d.results||[]).filter(x=>"movie"===x.media_type||"tv"===x.media_type).slice(0,5);
+        box.innerHTML=list.length?list.map((it,idx)=>`<div class="lcma-mrow">${it.poster_path?`<img src="https://image.tmdb.org/t/p/w200${it.poster_path}">`:""}<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(it.title||it.name)}</div><div style="font-size:10px;color:#94a3b8;">${"movie"===it.media_type?"فيلم":"مسلسل"} • ${(it.release_date||it.first_air_date||"").slice(0,4)||"-"}</div></div><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-cm-fill" data-i="${idx}">تعبئة ✨</button></div>`).join(""):'<div style="text-align:center;color:#94a3b8;font-size:11.5px;padding:6px;">لا نتائج.</div>';
+        box.querySelectorAll(".lcma-cm-fill").forEach(btn=>btn.onclick=()=>{
+          let it=list[Number(btn.dataset.i)];
+          document.getElementById("lcma-cm-type").value=it.media_type;
+          toggleCustomTypeFields();
+          document.getElementById("lcma-cm-title").value=it.title||it.name||"";
+          document.getElementById("lcma-cm-poster").value=it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:"";
+          document.getElementById("lcma-cm-backdrop").value=it.backdrop_path?`https://image.tmdb.org/t/p/w1280${it.backdrop_path}`:"";
+          document.getElementById("lcma-cm-year").value=(it.release_date||it.first_air_date||"").slice(0,4);
+          document.getElementById("lcma-cm-rate").value=it.vote_average?it.vote_average.toFixed(1):"";
+          document.getElementById("lcma-cm-overview").value=it.overview||"";
+          box.innerHTML="";
+          window.lailCinema.showToast("✨ تم سحب البيانات — أضف الرابط فقط واضغط حفظ")
+        })
+      }catch{box.innerHTML='<div style="color:#ef4444;text-align:center;">خطأ اتصال.</div>'}
+    };
+    document.getElementById("lcma-cm-tq").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),document.getElementById("lcma-cm-tbtn").click())});
+
+    cinemaAdmin.populateInputs();
+    toggleCustomTypeFields();
+    renderCustomAdminList()
+  };
+  window.lailCinema.openAdmin=cinemaAdmin.open;
+})();
+
+            /* === ملحق نظام البلاغات (زر إبلاغ للأعضاء + إدارة ومعالجة البلاغات بلوحة التحكم) === */
+(function(){
+  st.reportsCache={};
+  let reportsRef=null,repFilter="open",selectedReps=new Set,lastRepTs=0;
+
+  if(!document.getElementById("lail-cinema-report-style")){
+    let rs=document.createElement("style");
+    rs.id="lail-cinema-report-style";
+    rs.textContent=`
+      .lail-report-btn{background:rgba(245,158,11,0.14);color:#fcd34d;border:1px solid rgba(245,158,11,0.42);padding:12px 20px;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.25s;font-family:inherit}
+      .lail-report-btn:hover{background:#f59e0b;color:#111;border-color:#f59e0b}
+      .lail-p-btn-rep{color:#fcd34d;border-color:rgba(245,158,11,0.45);background:rgba(245,158,11,0.16)}
+      .lail-p-btn-rep:hover{background:#f59e0b;color:#111;border-color:#f59e0b}
+      .lail-player-modal.mini-mode #lail-player-report-btn{display:none!important}
+      .lail-rep-ov{position:fixed;inset:0;background:rgba(8,10,18,0.9);z-index:2147483646;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;direction:rtl;font-family:'Segoe UI',tahoma,sans-serif}
+      .lail-rep-ov.active{opacity:1}
+      .lail-rep-box{background:linear-gradient(180deg,rgba(28,31,56,0.99),rgba(14,16,30,0.99));border:1px solid rgba(245,158,11,0.45);border-radius:20px;width:92%;max-width:420px;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,0.9);transform:scale(0.95) translateY(12px);transition:transform .24s ease;color:#f8fafc;box-sizing:border-box}
+      .lail-rep-ov.active .lail-rep-box{transform:scale(1) translateY(0)}
+      .lail-rep-opt{display:flex;align-items:center;gap:9px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:9px 11px;margin-bottom:6px;cursor:pointer;font-size:12.5px;transition:.2s}
+      .lail-rep-opt:hover{border-color:rgba(245,158,11,0.55);background:rgba(245,158,11,0.08)}
+      .lail-rep-opt input{accent-color:#f59e0b;width:16px;height:16px;cursor:pointer}
+      .lail-rep-ta{width:100%;background:rgba(0,0,0,0.38);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:9px 11px;border-radius:10px;font-family:inherit;font-size:12.5px;outline:none;box-sizing:border-box;resize:vertical;margin:6px 0 12px}
+      .lail-rep-ta:focus{border-color:#f59e0b}
+      .lail-rep-send{width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#111;border:none;border-radius:11px;padding:10px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
+      .lail-rep-send:hover{filter:brightness(1.08)}
+      .lcma-rep-bdg{background:#ef4444;color:#fff;font-size:9.5px;font-weight:900;padding:1px 6px;border-radius:12px;margin-right:4px;display:none}
+      .lcma-rep-card{background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:9px 10px;margin-bottom:8px;transition:border .2s}
+      .lcma-rep-card.is-sel{border-color:#D4AF37;background:rgba(212,175,55,0.07)}
+      .lcma-rep-card.is-done{opacity:.72}
+    `;
+    (document.head||document.documentElement).appendChild(rs)
+  }
+
+  APP_HTML=APP_HTML
+    .replace('<button id="details-admin-block-btn"','<button id="details-report-btn" type="button" class="lail-report-btn" onclick="window.lailCinema.openReportModal(false)"><i class="fas fa-flag"></i> إبلاغ</button> <button id="details-admin-block-btn"')
+    .replace('<button id="lail-pip-btn"','<button id="lail-player-report-btn" type="button" class="lail-p-btn lail-p-btn-rep" title="إبلاغ عن مشكلة في التشغيل" onclick="window.lailCinema.openReportModal(true)"><i class="fas fa-flag"></i></button><button id="lail-pip-btn"');
+
+  window.lailCinema.closeReportModal=function(){
+    let m=document.getElementById("cinema-report-modal");
+    m&&(m.classList.remove("active"),setTimeout(()=>m.remove(),200))
+  };
+
+  window.lailCinema.openReportModal=function(fromPlayer=!1){
+    if(!this.db)return this.showToast("خطأ في الاتصال بالقاعدة، حاول مجدداً.");
+    if(!h.isAdmin()&&Date.now()-lastRepTs<45e3){
+      let rem=Math.ceil((45e3-(Date.now()-lastRepTs))/1e3);
+      return this.showToast(`⏳ يرجى الانتظار ${rem} ثانية قبل إرسال بلاغ آخر.`)
+    }
+    let id=null,type="movie",title="",s=null,e=null,poster="";
+    if(fromPlayer&&this.currentVideoData?.id){
+      let v=this.currentVideoData;
+      id=v.id;type=v.type||"movie";title=v.title||"";s=v.s||null;e=v.e||null;
+      poster=this.currentDetailsItem&&String(this.currentDetailsItem.id)===String(id)?(this.currentDetailsItem.poster_path||""):(st.customMedia?.[id]?.poster_path||"")
+    }else if(this.currentDetailsItem){
+      let it=this.currentDetailsItem;
+      id=it.id;type=this.currentDetailsType||(it.title?"movie":"tv");title=it.title||it.name||"";poster=it.poster_path||""
+    }
+    if(!id)return this.showToast("تعذر تحديد العمل المراد الإبلاغ عنه.");
+
+    let old=document.getElementById("cinema-report-modal");old&&old.remove();
+    let reasons=[
+      "الفيلم أو المسلسل لا يعمل",
+      "تقطيع أو بطء شديد في السيرفر",
+      "مشكلة في الترجمة أو الصوت",
+      "محتوى غير لائق أو مخالف",
+      "ملاحظة أخرى"
+    ];
+    let subInfo=("movie"===type?"🎬 فيلم":"📺 مسلسل")+(s?` • موسم ${s} - حلقة ${e}`:"");
+    let ov=document.createElement("div");
+    ov.id="cinema-report-modal";
+    ov.className="lail-rep-ov";
+    ov.innerHTML=`
+      <div class="lail-rep-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <div style="color:#fcd34d;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;"><i class="fas fa-flag"></i> الإبلاغ عن مشكلة</div>
+          <button type="button" class="lail-close-btn" id="lail-rep-close" style="width:30px;height:30px;font-size:13px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="background:rgba(0,0,0,0.28);border-radius:10px;padding:8px 11px;margin-bottom:10px;font-size:12.5px;">
+          <div style="font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(title)}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${subInfo}</div>
+        </div>
+        <div style="margin-bottom:8px;">
+          ${reasons.map((r,i)=>`<label class="lail-rep-opt"><input type="radio" name="lail-rep-rsn" value="${h.esc(r)}" ${0===i?"checked":""}><span>${h.esc(r)}</span></label>`).join("")}
+        </div>
+        <textarea id="lail-rep-note" class="lail-rep-ta" rows="2" maxlength="300" placeholder="أضف تفاصيل أو رقم الحلقة أو أي ملاحظات إضافية (اختياري)..."></textarea>
+        <button type="button" id="lail-rep-submit" class="lail-rep-send"><i class="fas fa-paper-plane"></i> إرسال البلاغ للإدارة</button>
+      </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener("click",ev=>{ev.target===ov&&this.closeReportModal()});
+    document.getElementById("lail-rep-close").onclick=()=>this.closeReportModal();
+    document.getElementById("lail-rep-submit").onclick=()=>{
+      let rsn=ov.querySelector('input[name="lail-rep-rsn"]:checked')?.value||reasons[0];
+      let note=(document.getElementById("lail-rep-note")?.value||"").trim();
+      if("ملاحظة أخرى"===rsn&&!note)return alert("يرجى كتابة ملاحظتك قبل الإرسال.");
+      let btn=document.getElementById("lail-rep-submit");
+      btn&&(btn.disabled=!0,btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...');
+      this.db.ref(`${ADMIN_PATH}/reports`).push({
+        mediaId:String(id),
+        mediaType:type,
+        title,
+        season:s||null,
+        episode:e||null,
+        poster_path:poster||"",
+        reason:rsn,
+        note,
+        reporter:this.myUsername||"ضيف",
+        reporterSan:h.san(this.myUsername)||"",
+        status:"open",
+        timestamp:firebase.database.ServerValue.TIMESTAMP
+      }).then(()=>{
+        lastRepTs=Date.now();
+        this.closeReportModal();
+        this.showToast("✅ تم إرسال بلاغك للإدارة، شكراً لتعاونك!",4500,"gold")
+      }).catch(()=>{
+        btn&&(btn.disabled=!1,btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال البلاغ للإدارة');
+        alert("❌ تعذر إرسال البلاغ، حاول مجدداً.")
+      })
+    };
+    requestAnimationFrame(()=>ov.classList.add("active"))
+  };
+
+  // === إدارة البلاغات داخل لوحة التحكم (تبويب الرقابة والحظر ➔ البلاغات) ===
+  function updateRepBadges(){
+    let openCnt=Object.values(st.reportsCache||{}).filter(x=>x&&"resolved"!==x.status).length;
+    ["lcma-rep-tabbadge","lcma-rep-subbadge"].forEach(id=>{
+      let el=document.getElementById(id);
+      if(el){el.textContent=openCnt;el.style.display=openCnt>0?"inline-block":"none"}
+    })
+  }
+
+  function getFilteredReports(){
+    return Object.entries(st.reportsCache||{})
+      .map(([id,d])=>Object.assign({id},d))
+      .filter(r=>"all"===repFilter||("open"===repFilter?"resolved"!==r.status:"resolved"===r.status))
+      .sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))
+  }
+
+  function updateBulkBar(visibleList){
+    let cntEl=document.getElementById("lcma-rep-selcnt"),selAll=document.getElementById("lcma-rep-selall");
+    Array.from(selectedReps).forEach(k=>{st.reportsCache[k]||selectedReps.delete(k)});
+    cntEl&&(cntEl.textContent=selectedReps.size);
+    if(selAll){
+      selAll.checked=visibleList.length>0&&visibleList.every(x=>selectedReps.has(x.id))
+    }
+  }
+
+  function renderReports(){
+    let c=document.getElementById("lcma-reports-list");if(!c)return;
+    let list=getFilteredReports();
+    updateBulkBar(list);
+    if(!list.length){
+      c.innerHTML='<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد بلاغات في هذا التصنيف حالياً.</div>';
+      return
+    }
+    let fullImg=p=>!p?"":(/^https?:\/\//i.test(p)?p:`https://image.tmdb.org/t/p/w200${p}`);
+    c.innerHTML=list.map(r=>{
+      let isDone="resolved"===r.status,isSel=selectedReps.has(r.id);
+      let ps=fullImg(r.poster_path),epStr=r.season?` (S${r.season} E${r.episode})`:"";
+      return`
+        <div class="lcma-rep-card ${isSel?"is-sel":""} ${isDone?"is-done":""}">
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;">
+            <input type="checkbox" class="lcma-rep-chk" data-id="${h.esc(r.id)}" ${isSel?"checked":""} style="margin-top:4px;accent-color:#D4AF37;width:15px;height:15px;cursor:pointer;flex-shrink:0;">
+            ${ps?`<img src="${ps}" style="width:36px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0;">`:""}
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:5px;flex-wrap:wrap;">
+                <b style="font-size:12.5px;color:#fff;">${"movie"===r.mediaType?"🎬":"📺"} ${h.esc(r.title||"بدون اسم")}${epStr}</b>
+                <span class="lcma-tag ${isDone?"lcma-t-green":"lcma-t-red"}">${isDone?"✅ تم الحل":"🔴 جديد"}</span>
+              </div>
+              <div class="lcma-row" style="gap:4px;margin-top:3px;">
+                <span class="lcma-tag lcma-t-gold">${h.esc(r.reason||"بلاغ")}</span>
+                <span style="font-size:10px;color:#94a3b8;">بواسطة: <b style="color:#38bdf8;">${h.esc(r.reporter||"-")}</b> • ${h.formatDate(r.timestamp)}</span>
+              </div>
+              ${r.note?`<div style="margin-top:5px;background:rgba(255,255,255,0.04);border-right:2px solid #f59e0b;padding:4px 8px;border-radius:4px;font-size:11.5px;color:#e2e8f0;line-height:1.5;">${h.esc(r.note)}</div>`:""}
+            </div>
+          </div>
+          <div class="lcma-row" style="gap:4px;">
+            <button type="button" class="lcma-btn lcma-btn-info lcma-mini lcma-rp-open" data-id="${h.esc(r.id)}"><i class="fas fa-external-link-alt"></i> فتح</button>
+            <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-rp-block" data-id="${h.esc(r.id)}"><i class="fas fa-ban"></i> حجب العمل</button>
+            <button type="button" class="lcma-btn ${isDone?"lcma-btn-warn":"lcma-btn-ok"} lcma-mini lcma-rp-tog" data-id="${h.esc(r.id)}"><i class="fas ${isDone?"fa-undo":"fa-check"}"></i> ${isDone?"إعادة فتح":"تم الحل"}</button>
+            ${r.reporterSan?`<button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-rp-reply" data-id="${h.esc(r.id)}" title="إرسال رد للعضو"><i class="fas fa-reply"></i> رد</button>`:""}
+            <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-rp-del" data-id="${h.esc(r.id)}" style="margin-right:auto;"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>`
+    }).join("");
+
+    c.querySelectorAll(".lcma-rep-chk").forEach(chk=>chk.onchange=()=>{
+      let id=chk.dataset.id;
+      chk.checked?selectedReps.add(id):selectedReps.delete(id);
+      chk.closest(".lcma-rep-card")?.classList.toggle("is-sel",chk.checked);
+      updateBulkBar(list)
+    });
+    c.querySelectorAll(".lcma-rp-open").forEach(b=>b.onclick=()=>{
+      let r=st.reportsCache[b.dataset.id];if(!r)return;
+      cinemaAdmin.close();
+      let mid=/^\d+$/.test(String(r.mediaId))?Number(r.mediaId):r.mediaId;
+      window.lailCinema.init().then(()=>window.lailCinema.openDetails(mid,r.mediaType||"movie"))
+    });
+    c.querySelectorAll(".lcma-rp-block").forEach(b=>b.onclick=()=>{
+      let id=b.dataset.id,r=st.reportsCache[id];if(!r)return;
+      if(!confirm(`حجب «${r.title}» عن جميع الأعضاء وإغلاق هذا البلاغ؟`))return;
+      cinemaAdmin.addBlacklist({id:r.mediaId,media_type:r.mediaType||"movie",title:r.title,poster_path:r.poster_path||""});
+      window.lailCinema.db.ref(`${ADMIN_PATH}/reports/${id}/status`).set("resolved").then(()=>{
+        cinemaAdmin.log("حجب من بلاغ",r.title,r.reason||"")
+      })
+    });
+    c.querySelectorAll(".lcma-rp-tog").forEach(b=>b.onclick=()=>{
+      let id=b.dataset.id,r=st.reportsCache[id];if(!r)return;
+      let next="resolved"===r.status?"open":"resolved";
+      window.lailCinema.db.ref(`${ADMIN_PATH}/reports/${id}/status`).set(next).then(()=>{
+        cinemaAdmin.log("resolved"===next?"إغلاق بلاغ":"إعادة فتح بلاغ",r.title||id,"");
+        window.lailCinema.showToast("resolved"===next?"✅ تم تعليم البلاغ كمحلول":"🔄 تم إعادة فتح البلاغ")
+      })
+    });
+    c.querySelectorAll(".lcma-rp-reply").forEach(b=>b.onclick=()=>{
+      let r=st.reportsCache[b.dataset.id];if(!r||!r.reporterSan)return;
+      let msg=prompt(`إرسال تنبيه رد إلى (${r.reporter}) بخصوص «${r.title}»:`,`شكراً لبلاغك بخصوص (${r.title})، تم التعامل مع المشكلة بنجاح 🎬`);
+      msg&&msg.trim()&&cinemaAdmin.sendUserCmd(r.reporterSan,"alert",msg.trim())
+    });
+    c.querySelectorAll(".lcma-rp-del").forEach(b=>b.onclick=()=>{
+      let id=b.dataset.id;
+      if(confirm("حذف هذا البلاغ؟"))window.lailCinema.db.ref(`${ADMIN_PATH}/reports/${id}`).remove().then(()=>{
+        selectedReps.delete(id);window.lailCinema.showToast("🗑️ تم حذف البلاغ")
+      })
+    })
+  }
+
+  const origAdminOpen=cinemaAdmin.open;
+  const origAdminClose=cinemaAdmin.close;
+
+  cinemaAdmin.close=function(){
+    if(reportsRef){reportsRef.off();reportsRef=null}
+    selectedReps.clear();
+    origAdminClose()
+  };
+
+  cinemaAdmin.open=function(){
+    origAdminOpen();
+    let ov=document.getElementById("lail-cinema-admin-modal");if(!ov)return;
+    let modTabBtn=ov.querySelector('[data-mtab="moderation"]');
+    if(modTabBtn&&!document.getElementById("lcma-rep-tabbadge")){
+      modTabBtn.insertAdjacentHTML("beforeend",'<span id="lcma-rep-tabbadge" class="lcma-rep-bdg">0</span>')
+    }
+    let modView=document.getElementById("lcma-v-moderation");
+    if(!modView||document.getElementById("lcma-msub-reports"))return;
+
+    let subBar=modView.querySelector(".lcma-subtabs");
+    if(subBar){
+      let repBtn=document.createElement("button");
+      repBtn.type="button";repBtn.className="lcma-subtab";repBtn.dataset.msub="reports";
+      repBtn.innerHTML='<i class="fas fa-flag"></i> البلاغات <span id="lcma-rep-subbadge" class="lcma-rep-bdg">0</span>';
+      subBar.insertBefore(repBtn,subBar.firstChild)
+    }
+
+    let repPane=document.createElement("div");
+    repPane.id="lcma-msub-reports";
+    repPane.style.display="none";
+    repPane.innerHTML=`
+      <div class="lcma-card" style="padding:9px 10px;">
+        <div class="lcma-row" style="justify-content:space-between;margin-bottom:8px;">
+          <div class="lcma-row" style="gap:4px;">
+            <button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-rf" data-rf="open" style="width:auto;">جديدة</button>
+            <button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-rf" data-rf="resolved">تم الحل</button>
+            <button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-rf" data-rf="all">الكل</button>
+          </div>
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#cbd5e1;cursor:pointer;">
+            <input type="checkbox" id="lcma-rep-selall" style="accent-color:#D4AF37;"> تحديد الكل (<span id="lcma-rep-selcnt">0</span>)
+          </label>
+        </div>
+        <div class="lcma-row" style="gap:5px;">
+          <button type="button" id="lcma-rep-bulk-ok" class="lcma-btn lcma-btn-ok lcma-mini" style="flex:1;"><i class="fas fa-check-double"></i> تم الحل للمحدد</button>
+          <button type="button" id="lcma-rep-bulk-del" class="lcma-btn lcma-btn-danger lcma-mini" style="flex:1;"><i class="fas fa-trash"></i> حذف المحدد</button>
+          <button type="button" id="lcma-rep-clr-done" class="lcma-btn lcma-btn-dark lcma-mini" title="حذف البلاغات المحلولة"><i class="fas fa-broom"></i> تنظيف المحلولة</button>
+        </div>
+      </div>
+      <div id="lcma-reports-list"></div>`;
+    modView.appendChild(repPane);
+
+    // إعادة ربط التبويبات الفرعية داخل الرقابة والحظر لتشمل «البلاغات»
+    modView.querySelectorAll("[data-msub]").forEach(b=>b.onclick=()=>{
+      let sub=b.dataset.msub;
+      modView.querySelectorAll("[data-msub]").forEach(x=>x.classList.toggle("active",x===b));
+      ["bans","blacklist","genres","inspect","vip","reports"].forEach(k=>{
+        let p=document.getElementById(`lcma-msub-${k}`);p&&(p.style.display=k===sub?"block":"none")
+      });
+      if("genres"===sub)cinemaAdmin.renderGenreBlocker();
+      else if("vip"===sub)cinemaAdmin.renderVipList();
+      else if("reports"===sub)renderReports()
+    });
+
+    // أزرار التصفية والتحديد الجماعي
+    repPane.querySelectorAll(".lcma-rf").forEach(b=>b.onclick=()=>{
+      repFilter=b.dataset.rf;
+      repPane.querySelectorAll(".lcma-rf").forEach(x=>{
+        x.classList.toggle("lcma-btn-gold",x===b);
+        x.classList.toggle("lcma-btn-dark",x!==b);
+        x.style.width="auto"
+      });
+      renderReports()
+    });
+    document.getElementById("lcma-rep-selall").onchange=function(){
+      let vis=getFilteredReports();
+      vis.forEach(x=>{this.checked?selectedReps.add(x.id):selectedReps.delete(x.id)});
+      renderReports()
+    };
+    document.getElementById("lcma-rep-bulk-ok").onclick=()=>{
+      if(!selectedReps.size)return window.lailCinema.showToast("حدد بلاغاً واحداً على الأقل.");
+      let up={};selectedReps.forEach(id=>{up[`${id}/status`]="resolved"});
+      window.lailCinema.db.ref(`${ADMIN_PATH}/reports`).update(up).then(()=>{
+        cinemaAdmin.log("معالجة بلاغات",`${selectedReps.size} بلاغ`,"");
+        selectedReps.clear();window.lailCinema.showToast("✅ تم تعليم المحدد كمحلول")
+      })
+    };
+    document.getElementById("lcma-rep-bulk-del").onclick=()=>{
+      if(!selectedReps.size)return window.lailCinema.showToast("حدد بلاغاً واحداً على الأقل.");
+      if(!confirm(`حذف (${selectedReps.size}) بلاغ محدد؟`))return;
+      let up={};selectedReps.forEach(id=>{up[id]=null});
+      window.lailCinema.db.ref(`${ADMIN_PATH}/reports`).update(up).then(()=>{
+        cinemaAdmin.log("حذف بلاغات",`${selectedReps.size} بلاغ`,"");
+        selectedReps.clear();window.lailCinema.showToast("🗑️ تم حذف البلاغات المحددة")
+      })
+    };
+    document.getElementById("lcma-rep-clr-done").onclick=()=>{
+      let up={},cnt=0;
+      Object.entries(st.reportsCache||{}).forEach(([id,d])=>{if(d&&"resolved"===d.status){up[id]=null;cnt++}});
+      if(!cnt)return window.lailCinema.showToast("لا توجد بلاغات محلولة لتنظيفها.");
+      if(confirm(`حذف جميع البلاغات المحلولة (${cnt})؟`))window.lailCinema.db.ref(`${ADMIN_PATH}/reports`).update(up).then(()=>{
+        cinemaAdmin.log("تنظيف البلاغات المحلولة",`${cnt} بلاغ`,"");window.lailCinema.showToast(`🧹 تم حذف ${cnt} بلاغ محلول`)
+      })
+    };
+
+    // الاستماع الحي للبلاغات فقط أثناء فتح لوحة التحكم (صفر استهلاك بالخلفية)
+    if(window.lailCinema.db){
+      reportsRef&&reportsRef.off();
+      reportsRef=window.lailCinema.db.ref(`${ADMIN_PATH}/reports`);
+      reportsRef.limitToLast(150).on("value",snap=>{
+        st.reportsCache=snap.val()||{};
+        updateRepBadges();
+        renderReports()
+      })
+    }
+  };
+
+  window.lailCinema.openAdmin=cinemaAdmin.open;
+  window.lailCinema.closeAdmin=cinemaAdmin.close;
+})();
 }();
