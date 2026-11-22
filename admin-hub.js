@@ -47,6 +47,16 @@ const PANELS = [
     bg: "linear-gradient(135deg, #450a0a, #991b1b)",
     color: "#fbbf24",
     fallback: () => window.lailCinema?.openAdmin?.()
+  },
+  {
+    id: "btn-lail-feedback-admin",
+    title: "لوحة الاقتراحات والشكاوي",
+    desc: "التذاكر، ساحة التصويت، الرادار، الحظر والإعدادات",
+    icon: "fas fa-inbox",
+    bg: "linear-gradient(135deg, #3b0764, #6b21a8)",
+    color: "#D4AF37",
+    badgeId: "lfb-admin-badge",
+    fallback: () => window.LaylFeedback?.openAdmin?.()
   }
 ];
 
