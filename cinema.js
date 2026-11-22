@@ -10,8 +10,7 @@ const DEFAULT_SERVERS=[
     id:"srv_default",
     name:"السيرفر الأساسي",
     movie:"https://vidsrc.me/embed/movie?tmdb={id}",
-    tv:"https://vidsrc.me/embed/tv?tmdb={id}&season={s}&episode={e}",
-    sandbox:!1
+    tv:"https://vidsrc.me/embed/tv?tmdb={id}&season={s}&episode={e}"
   }
 ];
 
@@ -23,8 +22,6 @@ const DEFAULT_SETTINGS={
   allowMiniPlayer:!0,
   allowGuests:!0,
   allowUserServerSwitch:!0,
-  allowUserShieldToggle:!0,
-  globalSandbox:!1,
   defaultServerId:"srv_default",
   servers:DEFAULT_SERVERS,
   maxRooms:0,
@@ -42,9 +39,12 @@ if(!document.getElementById("lail-cinema-style")){
   c.id="lail-cinema-style";
   c.textContent=`.lail-cinema-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,10,0.98);z-index:99998;display:none;justify-content:center;align-items:center;backdrop-filter:blur(15px);direction:rtl;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 .lail-cinema-content{background:#0b0b0e;width:95%;max-width:1400px;height:92vh;border-radius:20px;border:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;overflow:hidden;color:#fff;box-shadow:0 30px 60px rgba(0,0,0,0.9);position:relative}
-.lail-cinema-header{padding:18px 30px;display:flex;justify-content:space-between;align-items:center;background:rgba(11,11,14,0.95);border-bottom:1px solid rgba(255,255,255,0.05);z-index:10;flex-shrink:0}
-.lail-cinema-header h3{margin:0;font-size:1.6rem;font-weight:900;color:#e50914;display:flex;align-items:center;gap:12px;letter-spacing:1px;text-shadow:0 2px 10px rgba(229,9,20,0.3)}
-.lail-close-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:.3s;display:flex;justify-content:center;align-items:center}
+.lail-cinema-header{padding:16px 26px;display:flex;justify-content:space-between;align-items:center;background:rgba(11,11,14,0.95);border-bottom:1px solid rgba(255,255,255,0.05);z-index:10;flex-shrink:0;gap:10px}
+.lail-cinema-header h3{margin:0;font-size:1.55rem;font-weight:900;color:#e50914;display:flex;align-items:center;gap:10px;letter-spacing:1px;text-shadow:0 2px 10px rgba(229,9,20,0.3)}
+.lail-header-controls{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lail-adguide-btn{background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.4);color:#6ee7b7;height:36px;padding:0 13px;border-radius:20px;font-size:.84rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.2s;font-family:inherit;white-space:nowrap}
+.lail-adguide-btn:hover{background:rgba(16,185,129,0.28);color:#fff}
+.lail-close-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:.3s;display:flex;justify-content:center;align-items:center;flex-shrink:0}
 .lail-close-btn:hover{background:#e50914;border-color:#e50914;transform:rotate(90deg)}
 .lail-cinema-nav{display:flex;padding:0 30px;gap:20px;background:#0b0b0e;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;flex-wrap:wrap}
 .lail-cinema-tabs{display:flex;gap:25px;overflow-x:auto;scrollbar-width:none}
@@ -72,9 +72,8 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-poll-opt.voted{border-color:#D4AF37;background:rgba(212,175,55,0.12)}
 .lail-poll-opt img{width:42px;height:62px;object-fit:cover;border-radius:6px;flex-shrink:0}
 .lail-featured-badge{position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#D4AF37,#b59226);color:#111;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:900;z-index:2;max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,0.6)}
-.lail-server-select{background:rgba(20,22,36,0.88);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:6px 10px;font-size:.82rem;font-weight:bold;outline:none;cursor:pointer;backdrop-filter:blur(8px)}
+.lail-server-select{background:rgba(20,22,36,0.88);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;height:36px;padding:0 10px;font-size:.82rem;font-weight:bold;outline:none;cursor:pointer;backdrop-filter:blur(8px);max-width:130px;flex-shrink:0}
 .lail-server-select option{background:#121424;color:#fff}
-.lail-p-shield-on{background:rgba(16,185,129,0.28)!important;color:#6ee7b7!important;border-color:rgba(16,185,129,0.6)!important}
 .lail-sidebar-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:15;display:none;opacity:0;transition:.3s;backdrop-filter:blur(5px)}
 .lail-cinema-sidebar{position:absolute;top:0;right:-300px;width:280px;height:100%;background:#0b0b0e;border-left:1px solid rgba(255,255,255,0.05);z-index:16;display:flex;flex-direction:column;transition:right .4s cubic-bezier(0.2,0.8,0.2,1);box-shadow:-10px 0 30px rgba(0,0,0,0.8)}
 .lail-sidebar-header{padding:25px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0}
@@ -112,27 +111,26 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-details-modal{position:absolute;top:0;left:0;width:100%;height:100%;background:#0b0b0e;z-index:20;display:none;flex-direction:column;overflow-y:auto;scroll-behavior:smooth}
 .lail-details-modal::-webkit-scrollbar{width:8px}
 .lail-details-modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-.lail-details-hero{position:relative;width:100%;height:75vh;flex-shrink:0;background:#000}
+.lail-details-hero{position:relative;width:100%;height:68vh;flex-shrink:0;background:#000}
 .lail-details-backdrop{width:100%;height:100%;object-fit:cover;opacity:.6;mask-image:linear-gradient(to bottom,black 20%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,black 20%,transparent 100%)}
-.lail-details-layout{display:flex;gap:40px;position:relative;z-index:2;padding:0 50px;margin-top:-35vh;align-items:flex-end;margin-bottom:50px}
-.lail-details-poster-wrap{flex-shrink:0;width:260px;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.1);display:none;aspect-ratio:2/3;background:#1a1a1f}
-@media (min-width:900px){.lail-details-poster-wrap{display:block}}
-.lail-details-poster-wrap img{width:100%;height:100%;object-fit:cover}
-.lail-details-content-wrap{flex:1;text-shadow:0 2px 10px rgba(0,0,0,0.8)}
-.lail-details-title{font-size:3.5rem;margin:0 0 15px 0;color:#fff;font-weight:900;line-height:1.2}
-.lail-details-meta{color:#ccc;font-size:1.05rem;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:15px;align-items:center}
+.lail-details-layout{display:flex;gap:36px;position:relative;z-index:2;padding:0 50px;margin-top:-32vh;align-items:flex-end;margin-bottom:45px}
+.lail-details-poster-wrap{flex-shrink:0;width:245px;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.92);border:1px solid rgba(255,255,255,0.14);display:block;aspect-ratio:2/3;background:#1a1a1f}
+.lail-details-poster-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.lail-details-content-wrap{flex:1;min-width:0;text-shadow:0 2px 10px rgba(0,0,0,0.8)}
+.lail-details-title{font-size:3rem;margin:0 0 15px 0;color:#fff;font-weight:900;line-height:1.2}
+.lail-details-meta{color:#ccc;font-size:1.05rem;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .lail-match-score{color:#46d369;font-weight:bold}
 .lail-age-rating{border:1px solid rgba(255,255,255,0.4);padding:2px 8px;border-radius:4px;font-size:.9rem;font-weight:bold;color:#fff}
-.lail-details-genres{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap}
+.lail-details-genres{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
 .lail-genre-badge{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:.85rem;color:#fff;backdrop-filter:blur(4px)}
-.lail-details-overview{font-size:1.15rem;line-height:1.8;color:rgba(255,255,255,0.9);max-width:900px;margin-bottom:25px}
-.lail-actions-row{display:flex;gap:15px;flex-wrap:wrap;margin-top:15px}
-.lail-play-btn{background:#fff;color:#000;border:none;padding:12px 30px;border-radius:8px;font-size:1.1rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s;box-shadow:0 10px 20px rgba(255,255,255,0.2)}
-.lail-play-btn:hover{background:#e50914;color:#fff;transform:scale(1.05)}
-.lail-fav-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:12px 25px;border-radius:8px;font-size:1.1rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s;backdrop-filter:blur(5px)}
+.lail-details-overview{font-size:1.1rem;line-height:1.8;color:rgba(255,255,255,0.9);max-width:900px;margin-bottom:22px}
+.lail-actions-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:15px}
+.lail-play-btn{background:#fff;color:#000;border:none;padding:12px 30px;border-radius:8px;font-size:1.05rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s;box-shadow:0 10px 20px rgba(255,255,255,0.2)}
+.lail-play-btn:hover{background:#e50914;color:#fff;transform:scale(1.04)}
+.lail-fav-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:12px 25px;border-radius:8px;font-size:1.05rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s;backdrop-filter:blur(5px)}
 .lail-fav-btn:hover{background:rgba(255,255,255,0.2)}
 .lail-fav-btn.is-fav{color:#ef4444;border-color:#ef4444;background:rgba(239,68,68,0.1)}
-.lail-party-btn{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.4);padding:12px 25px;border-radius:8px;font-size:1.1rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s}
+.lail-party-btn{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.4);padding:12px 25px;border-radius:8px;font-size:1.05rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.3s}
 .lail-party-btn:hover{background:#3b82f6;color:#fff}
 .lail-section-title{font-size:1.4rem;font-weight:bold;margin-bottom:20px;color:#fff;border-right:4px solid #e50914;padding-right:12px}
 .lail-recs-section,.lail-episodes-section{padding:0 50px 50px}
@@ -148,14 +146,15 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-ep-img-wrapper:hover .lail-ep-play-icon{opacity:1}
 .lail-ep-info{flex:1}
 .lail-ep-title{font-size:1.1rem;font-weight:bold;margin:0 0 5px 0;color:#fff;display:flex;justify-content:space-between}
-.lail-player-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999999;display:none;flex-direction:column;transition:all .3s cubic-bezier(0.2,0.8,0.2,1);box-shadow:0 20px 60px rgba(0,0,0,0.9)}
-.lail-player-header{padding:15px 25px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,0.9),transparent);position:absolute;top:0;width:100%;z-index:21;opacity:0;transition:.3s;box-sizing:border-box;gap:10px}
+.lail-player-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999999;display:none;flex-direction:column;transition:all .3s cubic-bezier(0.2,0.8,0.2,1);box-shadow:0 20px 60px rgba(0,0,0,0.9);direction:rtl}
+.lail-player-header{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap;gap:12px;background:linear-gradient(rgba(0,0,0,0.92),transparent);position:absolute;top:0;left:0;width:100%;z-index:21;opacity:0;transition:.3s;box-sizing:border-box}
+.lail-player-header h4{margin:0;flex:1;min-width:0;color:#fff;font-size:1.05rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,0.95)}
 .lail-player-modal:hover .lail-player-header,.lail-player-modal.is-dragging .lail-player-header{opacity:1}
-.lail-player-actions{display:flex;gap:8px;align-items:center;position:relative;z-index:30;flex-wrap:wrap}
-.lail-p-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.1);color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.05rem;cursor:pointer;transition:.3s;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(8px)}
-.lail-p-btn:hover{background:#fff;color:#000;transform:scale(1.08)}
+.lail-player-actions{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;flex-shrink:0;position:relative;z-index:30}
+.lail-p-btn{background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.14);color:#fff;width:38px;height:38px;border-radius:50%;font-size:1rem;cursor:pointer;transition:.2s;display:flex;justify-content:center;align-items:center;flex-shrink:0;backdrop-filter:blur(8px)}
+.lail-p-btn:hover{background:#fff;color:#000;transform:scale(1.06)}
 .lail-p-btn-danger:hover{background:#e50914;color:#fff;border-color:#e50914}
-.lail-p-btn-party{background:rgba(59,130,246,0.2);color:#93c5fd;border-color:rgba(59,130,246,0.5);border-radius:8px;width:auto;padding:0 13px;font-size:.86rem;font-weight:bold;gap:6px}
+.lail-p-btn-party{background:rgba(59,130,246,0.2);color:#93c5fd;border-color:rgba(59,130,246,0.5);border-radius:8px;width:auto;height:36px;padding:0 12px;font-size:.84rem;font-weight:bold;gap:6px;white-space:nowrap}
 .lail-p-btn-party:hover{background:#3b82f6;color:#fff}
 .lail-iframe-container{flex:1;width:100%;height:100%;background:#000;position:relative;overflow:hidden}
 .lail-iframe-container iframe{width:100%;height:100%;border:none}
@@ -163,11 +162,11 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-player-modal.is-dragging .lail-iframe-blocker{display:block}
 .lail-player-modal.mini-mode{top:auto;left:20px;bottom:90px;width:380px;height:215px;border-radius:16px;border:1px solid rgba(255,255,255,0.2);overflow:visible;box-shadow:0 15px 40px rgba(0,0,0,0.9);min-width:250px;min-height:150px;max-width:90vw;max-height:90vh;user-select:none;-webkit-user-select:none}
 .lail-player-modal.mini-mode .lail-iframe-container{border-radius:16px;overflow:hidden}
-.lail-player-modal.mini-mode .lail-player-header{opacity:1;padding:10px 15px;background:linear-gradient(rgba(0,0,0,0.9),rgba(0,0,0,0.4));cursor:grab;border-radius:16px 16px 0 0}
-.lail-player-modal.mini-mode .lail-p-btn{width:32px;height:32px;font-size:.88rem}
-.lail-player-modal.mini-mode .lail-p-btn-party{font-size:.78rem;padding:0 9px}
-.lail-player-modal.mini-mode .lail-server-select,.lail-player-modal.mini-mode #lail-shield-btn{display:none!important}
-.lail-player-modal.mini-mode h4{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;font-weight:normal;text-shadow:0 1px 2px #000;pointer-events:none}
+.lail-player-modal.mini-mode .lail-player-header{opacity:1;padding:8px 12px;background:linear-gradient(rgba(0,0,0,0.9),rgba(0,0,0,0.4));cursor:grab;border-radius:16px 16px 0 0}
+.lail-player-modal.mini-mode .lail-p-btn{width:30px;height:30px;font-size:.85rem}
+.lail-player-modal.mini-mode .lail-p-btn-party{height:30px;font-size:.76rem;padding:0 8px}
+.lail-player-modal.mini-mode .lail-server-select{display:none!important}
+.lail-player-modal.mini-mode h4{font-size:.9rem;font-weight:normal;pointer-events:none}
 .lail-resize-handle{position:absolute;bottom:-5px;left:-5px;width:35px;height:35px;cursor:sw-resize;z-index:60;display:none}
 .lail-resize-handle::after{content:'';position:absolute;bottom:8px;left:8px;width:0;height:0;border-bottom:12px solid rgba(255,255,255,0.7);border-right:12px solid transparent;filter:drop-shadow(1px 1px 2px #000)}
 .lail-player-modal.mini-mode .lail-resize-handle{display:block}
@@ -184,6 +183,21 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-user-chip.is-host{border-color:#fbbf24;color:#fbbf24;background:rgba(251,191,36,0.1)}
 .lail-share-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
 .lail-share-btn:hover{background:rgba(255,255,255,0.2)}
+.lail-ag-ov{position:fixed;inset:0;background:rgba(8,10,18,0.9);z-index:2147483644;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;direction:rtl;font-family:'Segoe UI',tahoma,sans-serif}
+.lail-ag-ov.active{opacity:1}
+.lail-ag-box{background:linear-gradient(180deg,rgba(26,29,52,0.99) 0%,rgba(14,16,30,0.99) 100%);border:1px solid rgba(16,185,129,0.42);border-radius:20px;width:93%;max-width:450px;max-height:86vh;max-height:86dvh;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,0.88);transform:scale(0.95) translateY(12px);transition:transform .25s ease;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#f8fafc}
+.lail-ag-ov.active .lail-ag-box{transform:scale(1) translateY(0)}
+.lail-ag-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.lail-ag-tabs{display:flex;gap:6px;margin-bottom:12px}
+.lail-ag-tab{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:#94a3b8;padding:9px 8px;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+.lail-ag-tab.active{background:rgba(16,185,129,0.18);border-color:rgba(16,185,129,0.55);color:#6ee7b7}
+.lail-ag-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lail-ag-dns{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(0,0,0,0.42);border:1px dashed rgba(16,185,129,0.55);border-radius:12px;padding:10px 12px;margin:8px 0 12px}
+.lail-ag-dns code{color:#6ee7b7;font-size:13.5px;font-weight:800;direction:ltr;letter-spacing:.3px;user-select:all}
+.lail-ag-copy{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lail-ag-step{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:10px 11px;margin-bottom:8px;font-size:12.5px;line-height:1.65;color:#e2e8f0}
+.lail-ag-num{width:22px;height:22px;border-radius:50%;background:rgba(16,185,129,0.22);color:#6ee7b7;font-weight:900;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.lail-ag-tip{background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);color:#fde68a;border-radius:10px;padding:9px 11px;font-size:11.5px;line-height:1.6;margin-top:6px}
 #party-restore-btn{position:fixed;bottom:100px;right:20px;background:#e50914;color:#fff;width:56px;height:56px;border-radius:50%;box-shadow:0 4px 15px rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;cursor:pointer;z-index:2147483647;font-size:24px;transition:.3s;animation:pulse-red 2s infinite}
 #party-restore-btn:hover{transform:scale(1.1)}
 @keyframes pulse-red{0%{box-shadow:0 0 0 0 rgba(229,9,20,0.7)}70%{box-shadow:0 0 0 10px rgba(229,9,20,0)}100%{box-shadow:0 0 0 0 rgba(229,9,20,0)}}
@@ -196,7 +210,8 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-reaction-btn:hover{transform:scale(1.2);border-color:#fff}
 .lail-floating-emoji{position:absolute;bottom:60px;font-size:2rem;z-index:45;pointer-events:none;animation:floatUp 3s ease-out forwards}
 @keyframes floatUp{0%{transform:translateY(0) scale(1) rotate(0deg);opacity:1}100%{transform:translateY(-200px) scale(1.5) rotate(20deg);opacity:0}}
-@media (max-width:768px){.lail-cinema-content{width:100%;height:100%;border-radius:0;border:none}.lail-cinema-nav{flex-direction:column;align-items:stretch;padding:15px 20px;gap:15px}.lail-cinema-tabs{justify-content:center;gap:10px}.lail-c-tab{padding:10px 5px;font-size:.95rem}.lail-c-actions{flex-direction:row;flex-wrap:nowrap;width:100%;gap:10px}.lail-btn-sidebar,.lail-btn-party{flex:0 0 auto;padding:10px;font-size:.9rem}.lail-c-search-area{flex:1}.lail-c-search-area input{width:100%;max-width:none}.lail-cinema-banner,.lail-cinema-off-banner,.lail-event-strip,.lail-poll-box{margin-left:18px;margin-right:18px}.lail-details-hero{height:40vh}.lail-details-layout{padding:0 25px;margin-top:-10vh}.lail-details-title{font-size:2rem}.lail-details-overview{font-size:1rem}.lail-recs-section,.lail-episodes-section{padding:0 25px 30px}.lail-player-modal.mini-mode{width:280px;height:160px;left:10px;bottom:90px}.lail-cinema-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:15px 20px}.lail-row-scroller .lail-movie-card{width:130px}.lail-actions-row{flex-direction:column}.lail-actions-row button{width:100%;justify-content:center}}`;
+@media (max-width:899px){.lail-details-hero{height:38vh}.lail-details-layout{flex-direction:column;align-items:center;text-align:center;padding:0 22px;margin-top:-20vh;gap:18px;margin-bottom:32px}.lail-details-poster-wrap{width:155px;margin:0 auto}.lail-details-title{font-size:1.85rem;margin-bottom:10px}.lail-details-meta,.lail-details-genres{justify-content:center}.lail-details-overview{font-size:.98rem;text-align:center}}
+@media (max-width:768px){.lail-cinema-content{width:100%;height:100%;border-radius:0;border:none}.lail-cinema-header{padding:13px 16px}.lail-cinema-header h3{font-size:1.25rem}.lail-adguide-btn{height:33px;padding:0 10px;font-size:.76rem}.lail-cinema-nav{flex-direction:column;align-items:stretch;padding:15px 20px;gap:15px}.lail-cinema-tabs{justify-content:center;gap:10px}.lail-c-tab{padding:10px 5px;font-size:.95rem}.lail-c-actions{flex-direction:row;flex-wrap:nowrap;width:100%;gap:10px}.lail-btn-sidebar,.lail-btn-party{flex:0 0 auto;padding:10px;font-size:.9rem}.lail-c-search-area{flex:1}.lail-c-search-area input{width:100%;max-width:none}.lail-cinema-banner,.lail-cinema-off-banner,.lail-event-strip,.lail-poll-box{margin-left:18px;margin-right:18px}.lail-recs-section,.lail-episodes-section{padding:0 20px 30px}.lail-player-header{padding:10px 12px;gap:8px;opacity:1}.lail-player-header h4{font-size:.9rem}.lail-player-actions{gap:6px}.lail-p-btn{width:34px;height:34px;font-size:.9rem}.lail-p-btn-party{height:34px;padding:0 9px;font-size:.78rem}.lail-server-select{height:34px;font-size:.76rem;max-width:105px;padding:0 6px}.lail-player-modal.mini-mode{width:280px;height:160px;left:10px;bottom:90px}.lail-cinema-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:15px 20px}.lail-row-scroller .lail-movie-card{width:130px}.lail-actions-row{flex-direction:column}.lail-actions-row button{width:100%;justify-content:center}}`;
   (document.head||document.documentElement).appendChild(c)
 }
 
@@ -284,7 +299,7 @@ const h={
   }
 };
 
-let APP_HTML=`<div id="lail-cinema-app" class="lail-cinema-overlay"><div class="lail-cinema-content"><div class="lail-cinema-header"><h3><i class="fas fa-film"></i> سينما ليل</h3><button class="lail-close-btn" onclick="window.lailCinema.close()"><i class="fas fa-times"></i></button></div><div class="lail-cinema-nav"><div class="lail-cinema-tabs"><div id="tab-movie" class="lail-c-tab active" onclick="window.lailCinema.switchMainTab('movie')">الأفلام</div><div id="tab-tv" class="lail-c-tab" onclick="window.lailCinema.switchMainTab('tv')">المسلسلات</div><div id="tab-fav" class="lail-c-tab" style="color:#ef4444;" onclick="window.lailCinema.switchMainTab('fav')"><i class="fas fa-heart"></i> مفضلاتي</div></div><div class="lail-c-actions"><button class="lail-btn-sidebar" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-filter"></i> الأقسام</button><button id="cinema-nav-party-btn" class="lail-btn-party" onclick="window.lailCinema.openPartyJoin()"><i class="fas fa-users"></i> غرف المشاهدة</button><div class="lail-c-search-area"><i class="fas fa-search lail-search-icon"></i><input id="cinema-search-input" type="text" placeholder="بحث سريع..." onkeydown="if(event.key==='Enter') window.lailCinema.executeSearch()"></div></div></div><div id="cinema-admin-off-banner" class="lail-cinema-off-banner">🛑 سينما ليل متوقفة حالياً عن جميع الأعضاء (مفتوحة لك بصلاحية الإدارة فقط)</div><div id="cinema-announcement-banner" class="lail-cinema-banner"><i class="fas fa-bullhorn" style="color:#D4AF37;"></i><span id="cinema-announcement-text"></span></div><div class="lail-cinema-main"><div id="sidebar-overlay" class="lail-sidebar-overlay" onclick="window.lailCinema.toggleSidebar()"></div><div id="cinema-sidebar" class="lail-cinema-sidebar"><div class="lail-sidebar-header"><h4><i class="fas fa-list-ul"></i> التصنيفات</h4><button class="lail-close-btn" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-times"></i></button></div><div id="sidebar-genres" class="lail-genre-list"></div></div><div id="cinema-main-body" class="lail-cinema-body"><div id="cinema-event-area"></div><div id="cinema-poll-area"></div><div id="cinema-netflix-view" class="lail-netflix-view"></div><div id="cinema-grid-view" class="lail-grid-view"><div id="grid-header" class="lail-grid-header"></div><div id="cinema-grid" class="lail-cinema-grid"></div><div id="cinema-loader" class="lail-loader" style="display:none;"><div class="lail-spinner"></div></div></div></div></div><div id="cinema-details" class="lail-details-modal"><button class="lail-close-btn" style="position:fixed; top:25px; right:25px; z-index:30; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);" onclick="window.lailCinema.closeDetails()"><i class="fas fa-arrow-right"></i></button><div class="lail-details-hero"><img id="details-backdrop" class="lail-details-backdrop" src=""></div><div class="lail-details-layout"><div class="lail-details-poster-wrap"><img id="details-poster" src=""></div><div class="lail-details-content-wrap"><h1 id="details-title" class="lail-details-title"></h1><div class="lail-details-meta"><span class="lail-match-score" id="details-score"></span> <span id="details-date"></span> <span class="lail-age-rating" id="details-age"></span> <span class="lail-runtime" id="details-runtime"></span> <span id="details-rate" style="color:#fbbf24; font-weight:bold;"><i class="fas fa-star"></i></span></div><div id="details-genres" class="lail-details-genres"></div><p id="details-overview" class="lail-details-overview"></p><div id="details-cast" class="lail-details-cast"></div><div class="lail-actions-row"><button id="details-play-btn" class="lail-play-btn"><i class="fas fa-play"></i> تشغيل</button> <button id="details-fav-btn" class="lail-fav-btn" onclick="window.lailCinema.toggleFavorite()"><i class="far fa-heart"></i> أضف للمفضلة</button> <button id="details-party-btn" class="lail-party-btn" onclick="window.lailCinema.createParty()"><i class="fas fa-video"></i> إنشاء مشاهدة جماعية</button></div></div></div><div id="tv-episodes-container" class="lail-episodes-section" style="display:none;"><div class="lail-section-title">الحلقات والمواسم</div><select id="season-selector" class="lail-season-selector" onchange="window.lailCinema.loadSeason(this.value)"></select><div id="episodes-list" class="lail-episode-list"></div></div><div id="recs-container" class="lail-recs-section" style="display:none;"><div class="lail-section-title">قد يعجبك أيضاً</div><div id="recs-scroller" class="lail-row-scroller"></div></div></div><div id="cinema-party-modal" class="lail-party-modal"><div class="lail-party-box"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h2 id="party-modal-title"><i class="fas fa-users"></i> الانضمام لغرفة</h2><div><button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex;" onclick="window.lailCinema.minimizeParty()" title="تصغير للذهاب للشات"><i class="fas fa-minus"></i></button> <button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex; margin-right:5px;" onclick="window.lailCinema.leaveParty(true)" title="إغلاق الغرفة"><i class="fas fa-times"></i></button></div></div><div id="party-join-ui"><p>أدخل كود الغرفة الذي أرسله المضيف للانضمام للمشاهدة الجماعية.</p><input type="text" id="party-code-input" class="lail-party-input" placeholder="مثال: 4921" maxlength="6" autocomplete="off"> <button class="lail-party-btn" style="width:100%; justify-content:center;" onclick="window.lailCinema.joinParty()">انضمام للغرفة</button></div><div id="party-wait-ui" style="display:none;"><p id="party-wait-msg">تم إنشاء غرفتك! شارك الكود مع الأعضاء:</p><div id="party-code-display" class="lail-party-code-display">----</div><div style="display:flex; gap:10px; margin-bottom:20px;"><button class="lail-share-btn" onclick="window.lailCinema.copyPartyCode()"><i class="fas fa-copy"></i> انسخ الكود وصغر النافذة لإرساله بالدردشة</button></div><p style="font-size:0.85rem; color:#64748b; margin-bottom:5px;">الأعضاء المتواجدون:</p><div id="party-users-list" class="lail-users-list"></div><button id="party-start-btn" class="lail-play-btn" style="width:100%; justify-content:center; display:none;" onclick="window.lailCinema.startParty()">🚀 بدء العرض للجميع</button><p id="party-guest-wait" style="font-size:0.9rem; color:#fbbf24; display:none;"><i class="fas fa-hourglass-half fa-spin"></i> بانتظار المضيف لبدء الفيلم...</p></div></div></div></div></div><div id="cinema-player" class="lail-player-modal"><div id="player-drag-header" class="lail-player-header"><h4 id="player-title" style="margin:0; text-shadow:1px 1px 5px #000;"></h4><div class="lail-player-actions"><select id="lail-player-server-sel" class="lail-server-select" style="display:none;" onchange="window.lailCinema.switchPlayerServer(this.value)" title="تبديل السيرفر"></select><button id="lail-shield-btn" class="lail-p-btn lail-p-btn-party" style="display:none;" onclick="window.lailCinema.togglePlayerShield()" title="تفعيل/إيقاف درع منع النوافذ المنبثقة (Sandbox)"><i class="fas fa-shield-alt"></i> <span id="lail-shield-lbl">درع</span></button><button id="party-sync-btn" class="lail-p-btn lail-p-btn-party" style="display:none;" onclick="window.lailCinema.syncPartyTime()" title="تزامن مع المجموعة"><i class="fas fa-sync-alt"></i> مزامنة</button> <button id="party-pause-btn" class="lail-p-btn lail-p-btn-party" style="display:none; color:#fbbf24; border-color:#fbbf24;" onclick="window.lailCinema.hostTogglePause()" title="إيقاف مؤقت للجميع"><i class="fas fa-pause"></i> إيقاف للكل</button> <button id="lail-pip-btn" class="lail-p-btn" title="تصغير/تكبير المشغل" onclick="window.lailCinema.toggleMiniPlayer()"><i class="fas fa-compress-arrows-alt"></i></button> <button class="lail-p-btn lail-p-btn-danger" title="إغلاق المشغل" onclick="window.lailCinema.closePlayer()"><i class="fas fa-times"></i></button></div></div><div class="lail-iframe-container" id="lail-iframe-host"><div id="iframe-blocker" class="lail-iframe-blocker"></div><iframe id="cinema-iframe" src="" allowfullscreen allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe><div id="party-reactions" class="lail-reactions-bar" style="display:none;"></div></div><div id="lail-resize-handle" class="lail-resize-handle" title="اسحب لتغيير الحجم"></div></div><div id="cinema-toast" class="lail-toast"></div><div id="party-restore-btn" onclick="window.lailCinema.restoreParty()" title="العودة لغرفة المشاهدة"><i class="fas fa-users"></i></div>`;
+let APP_HTML=`<div id="lail-cinema-app" class="lail-cinema-overlay"><div class="lail-cinema-content"><div class="lail-cinema-header"><h3><i class="fas fa-film"></i> سينما ليل</h3><div class="lail-header-controls"><button type="button" class="lail-adguide-btn" onclick="window.lailCinema.openAdGuide()"><i class="fas fa-shield-alt"></i><span>إيقاف الإعلانات</span></button><button class="lail-close-btn" onclick="window.lailCinema.close()"><i class="fas fa-times"></i></button></div></div><div class="lail-cinema-nav"><div class="lail-cinema-tabs"><div id="tab-movie" class="lail-c-tab active" onclick="window.lailCinema.switchMainTab('movie')">الأفلام</div><div id="tab-tv" class="lail-c-tab" onclick="window.lailCinema.switchMainTab('tv')">المسلسلات</div><div id="tab-fav" class="lail-c-tab" style="color:#ef4444;" onclick="window.lailCinema.switchMainTab('fav')"><i class="fas fa-heart"></i> مفضلاتي</div></div><div class="lail-c-actions"><button class="lail-btn-sidebar" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-filter"></i> الأقسام</button><button id="cinema-nav-party-btn" class="lail-btn-party" onclick="window.lailCinema.openPartyJoin()"><i class="fas fa-users"></i> غرف المشاهدة</button><div class="lail-c-search-area"><i class="fas fa-search lail-search-icon"></i><input id="cinema-search-input" type="text" placeholder="بحث سريع..." onkeydown="if(event.key==='Enter') window.lailCinema.executeSearch()"></div></div></div><div id="cinema-admin-off-banner" class="lail-cinema-off-banner">🛑 سينما ليل متوقفة حالياً عن جميع الأعضاء (مفتوحة لك بصلاحية الإدارة فقط)</div><div id="cinema-announcement-banner" class="lail-cinema-banner"><i class="fas fa-bullhorn" style="color:#D4AF37;"></i><span id="cinema-announcement-text"></span></div><div class="lail-cinema-main"><div id="sidebar-overlay" class="lail-sidebar-overlay" onclick="window.lailCinema.toggleSidebar()"></div><div id="cinema-sidebar" class="lail-cinema-sidebar"><div class="lail-sidebar-header"><h4><i class="fas fa-list-ul"></i> التصنيفات</h4><button class="lail-close-btn" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-times"></i></button></div><div id="sidebar-genres" class="lail-genre-list"></div></div><div id="cinema-main-body" class="lail-cinema-body"><div id="cinema-event-area"></div><div id="cinema-poll-area"></div><div id="cinema-netflix-view" class="lail-netflix-view"></div><div id="cinema-grid-view" class="lail-grid-view"><div id="grid-header" class="lail-grid-header"></div><div id="cinema-grid" class="lail-cinema-grid"></div><div id="cinema-loader" class="lail-loader" style="display:none;"><div class="lail-spinner"></div></div></div></div></div><div id="cinema-details" class="lail-details-modal"><button class="lail-close-btn" style="position:fixed; top:25px; right:25px; z-index:30; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);" onclick="window.lailCinema.closeDetails()"><i class="fas fa-arrow-right"></i></button><div class="lail-details-hero"><img id="details-backdrop" class="lail-details-backdrop" src=""></div><div class="lail-details-layout"><div id="details-poster-wrap" class="lail-details-poster-wrap"><img id="details-poster" src=""></div><div class="lail-details-content-wrap"><h1 id="details-title" class="lail-details-title"></h1><div class="lail-details-meta"><span class="lail-match-score" id="details-score"></span> <span id="details-date"></span> <span class="lail-age-rating" id="details-age"></span> <span class="lail-runtime" id="details-runtime"></span> <span id="details-rate" style="color:#fbbf24; font-weight:bold;"><i class="fas fa-star"></i></span></div><div id="details-genres" class="lail-details-genres"></div><p id="details-overview" class="lail-details-overview"></p><div id="details-cast" class="lail-details-cast"></div><div class="lail-actions-row"><button id="details-play-btn" class="lail-play-btn"><i class="fas fa-play"></i> تشغيل</button> <button id="details-fav-btn" class="lail-fav-btn" onclick="window.lailCinema.toggleFavorite()"><i class="far fa-heart"></i> أضف للمفضلة</button> <button id="details-party-btn" class="lail-party-btn" onclick="window.lailCinema.createParty()"><i class="fas fa-video"></i> إنشاء مشاهدة جماعية</button></div></div></div><div id="tv-episodes-container" class="lail-episodes-section" style="display:none;"><div class="lail-section-title">الحلقات والمواسم</div><select id="season-selector" class="lail-season-selector" onchange="window.lailCinema.loadSeason(this.value)"></select><div id="episodes-list" class="lail-episode-list"></div></div><div id="recs-container" class="lail-recs-section" style="display:none;"><div class="lail-section-title">قد يعجبك أيضاً</div><div id="recs-scroller" class="lail-row-scroller"></div></div></div><div id="cinema-party-modal" class="lail-party-modal"><div class="lail-party-box"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h2 id="party-modal-title"><i class="fas fa-users"></i> الانضمام لغرفة</h2><div><button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex;" onclick="window.lailCinema.minimizeParty()" title="تصغير للذهاب للشات"><i class="fas fa-minus"></i></button> <button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex; margin-right:5px;" onclick="window.lailCinema.leaveParty(true)" title="إغلاق الغرفة"><i class="fas fa-times"></i></button></div></div><div id="party-join-ui"><p>أدخل كود الغرفة الذي أرسله المضيف للانضمام للمشاهدة الجماعية.</p><input type="text" id="party-code-input" class="lail-party-input" placeholder="مثال: 4921" maxlength="6" autocomplete="off"> <button class="lail-party-btn" style="width:100%; justify-content:center;" onclick="window.lailCinema.joinParty()">انضمام للغرفة</button></div><div id="party-wait-ui" style="display:none;"><p id="party-wait-msg">تم إنشاء غرفتك! شارك الكود مع الأعضاء:</p><div id="party-code-display" class="lail-party-code-display">----</div><div style="display:flex; gap:10px; margin-bottom:20px;"><button class="lail-share-btn" onclick="window.lailCinema.copyPartyCode()"><i class="fas fa-copy"></i> انسخ الكود وصغر النافذة لإرساله بالدردشة</button></div><p style="font-size:0.85rem; color:#64748b; margin-bottom:5px;">الأعضاء المتواجدون:</p><div id="party-users-list" class="lail-users-list"></div><button id="party-start-btn" class="lail-play-btn" style="width:100%; justify-content:center; display:none;" onclick="window.lailCinema.startParty()">🚀 بدء العرض للجميع</button><p id="party-guest-wait" style="font-size:0.9rem; color:#fbbf24; display:none;"><i class="fas fa-hourglass-half fa-spin"></i> بانتظار المضيف لبدء الفيلم...</p></div></div></div></div></div><div id="cinema-player" class="lail-player-modal"><div id="player-drag-header" class="lail-player-header"><h4 id="player-title"></h4><div class="lail-player-actions"><select id="lail-player-server-sel" class="lail-server-select" style="display:none;" onchange="window.lailCinema.switchPlayerServer(this.value)" title="تبديل السيرفر"></select><button id="party-sync-btn" class="lail-p-btn lail-p-btn-party" style="display:none;" onclick="window.lailCinema.syncPartyTime()" title="تزامن مع المجموعة"><i class="fas fa-sync-alt"></i> مزامنة</button><button id="party-pause-btn" class="lail-p-btn lail-p-btn-party" style="display:none; color:#fbbf24; border-color:#fbbf24;" onclick="window.lailCinema.hostTogglePause()" title="إيقاف مؤقت للجميع"><i class="fas fa-pause"></i> إيقاف للكل</button><button id="lail-pip-btn" class="lail-p-btn" title="تصغير/تكبير المشغل" onclick="window.lailCinema.toggleMiniPlayer()"><i class="fas fa-compress-arrows-alt"></i></button><button class="lail-p-btn lail-p-btn-danger" title="إغلاق المشغل" onclick="window.lailCinema.closePlayer()"><i class="fas fa-times"></i></button></div></div><div class="lail-iframe-container" id="lail-iframe-host"><div id="iframe-blocker" class="lail-iframe-blocker"></div><iframe id="cinema-iframe" src="" allowfullscreen allow="autoplay; fullscreen"></iframe><div id="party-reactions" class="lail-reactions-bar" style="display:none;"></div></div><div id="lail-resize-handle" class="lail-resize-handle" title="اسحب لتغيير الحجم"></div></div><div id="cinema-toast" class="lail-toast"></div><div id="party-restore-btn" onclick="window.lailCinema.restoreParty()" title="العودة لغرفة المشاهدة"><i class="fas fa-users"></i></div>`;
 
 function injectCinemaBtn(){
   let list=document.querySelector(".modern-classic-list");
@@ -423,15 +438,14 @@ const cinemaAdmin={
         </div>
         <div class="lcma-tabs">
           <button type="button" class="lcma-tab active" data-mtab="rooms"><i class="fas fa-broadcast-tower"></i> الغرف والرادار</button>
-          <button type="button" class="lcma-tab" data-mtab="events"><i class="fas fa-calendar-star"></i> السهرة والتصويت</button>
+          <button type="button" class="lcma-tab" data-mtab="events"><i class="fas fa-calendar-alt"></i> السهرة والتصويت</button>
           <button type="button" class="lcma-tab" data-mtab="featured"><i class="fas fa-crown"></i> اختياراتنا</button>
           <button type="button" class="lcma-tab" data-mtab="moderation"><i class="fas fa-user-shield"></i> الرقابة والحظر</button>
-          <button type="button" class="lcma-tab" data-mtab="servers"><i class="fas fa-server"></i> السيرفرات والدرع</button>
+          <button type="button" class="lcma-tab" data-mtab="servers"><i class="fas fa-server"></i> السيرفرات والمشغّل</button>
           <button type="button" class="lcma-tab" data-mtab="analytics"><i class="fas fa-chart-line"></i> الإحصائيات</button>
           <button type="button" class="lcma-tab" data-mtab="settings"><i class="fas fa-cog"></i> إعدادات وسجل</button>
         </div>
         <div class="lcma-body">
-          <!-- TAB 1: ROOMS & RADAR -->
           <div id="lcma-v-rooms" class="lcma-view active">
             <div class="lcma-card" style="border-color:rgba(16,185,129,0.3);">
               <div class="lcma-card-t" style="color:#6ee7b7;"><span><i class="fas fa-eye"></i> المتواجدون داخل السينما الآن</span><span id="lcma-pres-cnt" class="lcma-tag lcma-t-green">0</span></div>
@@ -454,7 +468,6 @@ const cinemaAdmin={
             </div>
           </div>
 
-          <!-- TAB 2: EVENTS, SCHEDULE, POLL & BROADCAST -->
           <div id="lcma-v-events" class="lcma-view">
             <div class="lcma-card" style="border-color:rgba(229,9,20,0.4);">
               <div class="lcma-card-t" style="color:#fca5a5;"><span><i class="fas fa-bullhorn"></i> بث إشعار فوري لجميع زوار السينما الآن</span></div>
@@ -463,7 +476,6 @@ const cinemaAdmin={
                 <button type="button" id="lcma-live-bc-send" class="lcma-btn lcma-btn-red lcma-mini" style="padding:8px 14px;"><i class="fas fa-paper-plane"></i> بث</button>
               </div>
             </div>
-
             <div class="lcma-card" style="border-color:rgba(212,175,55,0.35);">
               <div class="lcma-card-t"><span><i class="fas fa-ribbon"></i> شريط الإعلان الدائم بأعلى السينما</span></div>
               <div class="lcma-row">
@@ -471,7 +483,6 @@ const cinemaAdmin={
                 <button type="button" id="lcma-banner-save" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 13px;">حفظ</button>
               </div>
             </div>
-
             <div class="lcma-card">
               <div class="lcma-card-t">
                 <span><i class="fas fa-clock"></i> جدولة سهرة بعدّاد تنازلي</span>
@@ -489,7 +500,6 @@ const cinemaAdmin={
               </div>
               <button type="button" id="lcma-sched-save" class="lcma-btn lcma-btn-gold"><i class="fas fa-calendar-check"></i> تفعيل العدّاد التنازلي للجميع</button>
             </div>
-
             <div class="lcma-card">
               <div class="lcma-card-t">
                 <span><i class="fas fa-poll"></i> تصويت «فيلم السهرة» التفاعلي</span>
@@ -507,7 +517,6 @@ const cinemaAdmin={
             </div>
           </div>
 
-          <!-- TAB 3: FEATURED -->
           <div id="lcma-v-featured" class="lcma-view">
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-plus-circle"></i> تثبيت عمل في «👑 اختيارات إدارة ليل»</span></div>
@@ -524,7 +533,6 @@ const cinemaAdmin={
             </div>
           </div>
 
-          <!-- TAB 4: MODERATION -->
           <div id="lcma-v-moderation" class="lcma-view">
             <div class="lcma-subtabs">
               <button type="button" class="lcma-subtab active" data-msub="bans"><i class="fas fa-user-slash"></i> الحظر</button>
@@ -595,23 +603,7 @@ const cinemaAdmin={
             </div>
           </div>
 
-          <!-- TAB 5: SERVERS & SHIELD -->
           <div id="lcma-v-servers" class="lcma-view">
-            <div class="lcma-card" style="border-color:rgba(16,185,129,0.35);">
-              <div class="lcma-card-t" style="color:#6ee7b7;"><span><i class="fas fa-shield-alt"></i> درع منع النوافذ المنبثقة (Sandbox Shield)</span></div>
-              <div style="font-size:11px; color:#94a3b8; margin-bottom:8px; line-height:1.5;">
-                يمنع النوافذ الإعلانية المنبثقة من داخل الـ iframe. ملاحظة: بعض السيرفرات ترفض التشغيل عند تفعيله، لذا يمكنك تفعيله لكل سيرفر على حدة أو السماح للعضو بتبديله من المشغّل.
-              </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">تفعيل الدرع افتراضياً على كل السيرفرات</div><div style="font-size:10.5px; color:#94a3b8;">يفرض sandbox على المشغّل تلقائياً</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-gsandbox"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-srow" style="margin-bottom:0;">
-                <div><div style="font-size:12px; font-weight:bold;">زر تبديل الدرع (🛡️) للعضو داخل المشغّل</div><div style="font-size:10.5px; color:#94a3b8;">يعطي العضو خيار إيقاف الدرع لو رفض السيرفر التشغيل</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-ushield"><span class="lcma-sl"></span></label>
-              </div>
-            </div>
-
             <div class="lcma-card" style="border-color:rgba(56,189,248,0.3);">
               <div class="lcma-card-t" style="color:#7dd3fc;"><span><i class="fas fa-server"></i> مدير سيرفرات التشغيل (إضافة / حذف / افتراضي)</span></div>
               <div id="lcma-servers-list" style="margin-bottom:10px;"></div>
@@ -619,14 +611,10 @@ const cinemaAdmin={
                 <div style="font-size:11.5px; font-weight:bold; color:#D4AF37; margin-bottom:6px;">+ إضافة سيرفر جديد</div>
                 <input type="text" id="lcma-nsrv-name" class="lcma-inp" style="margin-bottom:5px;" placeholder="اسم السيرفر (مثلاً: سيرفر 2 السريع)">
                 <input type="text" id="lcma-nsrv-movie" class="lcma-inp" dir="ltr" style="margin-bottom:5px;" placeholder="رابط الأفلام باستخدام {id}">
-                <input type="text" id="lcma-nsrv-tv" class="lcma-inp" dir="ltr" style="margin-bottom:6px;" placeholder="رابط المسلسلات باستخدام {id} و {s} و {e}">
-                <label style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#cbd5e1; margin-bottom:7px; cursor:pointer;">
-                  <input type="checkbox" id="lcma-nsrv-sb"> تفعيل درع Sandbox لهذا السيرفر افتراضياً
-                </label>
+                <input type="text" id="lcma-nsrv-tv" class="lcma-inp" dir="ltr" style="margin-bottom:7px;" placeholder="رابط المسلسلات باستخدام {id} و {s} و {e}">
                 <button type="button" id="lcma-nsrv-add" class="lcma-btn lcma-btn-info" style="width:100%;"><i class="fas fa-plus"></i> إضافة السيرفر للقائمة</button>
               </div>
             </div>
-
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-sliders-h"></i> صلاحيات المشغّل وغرف المشاهدة</span></div>
               <div class="lcma-srow">
@@ -658,7 +646,6 @@ const cinemaAdmin={
             </div>
           </div>
 
-          <!-- TAB 6: ANALYTICS -->
           <div id="lcma-v-analytics" class="lcma-view">
             <div class="lcma-card" style="text-align:center;">
               <div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">تحليل عند الطلب لسجلات المشاهدة والمفضلات بدون أي استهلاك مستمر.</div>
@@ -667,7 +654,6 @@ const cinemaAdmin={
             <div id="lcma-analytics-body"></div>
           </div>
 
-          <!-- TAB 7: SETTINGS, MAINTENANCE & LOGS -->
           <div id="lcma-v-settings" class="lcma-view">
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-power-off"></i> التحكم العام والقيود</span></div>
@@ -689,7 +675,6 @@ const cinemaAdmin={
               </div>
               <button type="button" id="lcma-save-gen" class="lcma-btn lcma-btn-gold"><i class="fas fa-save"></i> حفظ الإعدادات العامة</button>
             </div>
-
             <div class="lcma-card">
               <div class="lcma-card-t" style="color:#cbd5e1;"><span><i class="fas fa-broom"></i> الصيانة وتخفيف الفايربيس</span></div>
               <div class="lcma-g2" style="margin-bottom:7px;">
@@ -702,7 +687,6 @@ const cinemaAdmin={
               </div>
               <input type="file" id="lcma-import-file" accept=".json,application/json" style="display:none;">
             </div>
-
             <div class="lcma-card">
               <div class="lcma-card-t">
                 <span><i class="fas fa-clipboard-list"></i> سجل العمليات الإدارية</span>
@@ -727,12 +711,10 @@ const cinemaAdmin={
       if("genres"===sub)cinemaAdmin.renderGenreBlocker()
     });
 
-    // Rooms
     document.getElementById("lcma-close-all-rooms").onclick=()=>cinemaAdmin.closeAllRooms();
     document.getElementById("lcma-oroom-search").onclick=()=>cinemaAdmin.searchTMDB("oroom");
     document.getElementById("lcma-oroom-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("oroom"))});
 
-    // Events
     document.getElementById("lcma-live-bc-send").onclick=()=>cinemaAdmin.sendLiveBroadcast();
     document.getElementById("lcma-banner-save").onclick=()=>{
       let txt=(document.getElementById("lcma-banner-inp").value||"").trim();
@@ -745,27 +727,20 @@ const cinemaAdmin={
     document.getElementById("lcma-poll-publish").onclick=()=>cinemaAdmin.publishPoll();
     document.getElementById("lcma-poll-end").onclick=()=>cinemaAdmin.endPoll();
 
-    // Featured
     document.getElementById("lcma-feat-search").onclick=()=>cinemaAdmin.searchTMDB("feat");
     document.getElementById("lcma-feat-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("feat"))});
 
-    // Moderation
     document.getElementById("lcma-btn-ban").onclick=()=>cinemaAdmin.banUser();
     document.getElementById("lcma-bl-search").onclick=()=>cinemaAdmin.searchTMDB("bl");
     document.getElementById("lcma-bl-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("bl"))});
     document.getElementById("lcma-save-genres").onclick=()=>cinemaAdmin.saveBlockedGenres();
     document.getElementById("lcma-insp-btn").onclick=()=>cinemaAdmin.inspectUser();
 
-    // Servers & Shield
-    document.getElementById("lcma-set-gsandbox").onchange=function(){cinemaAdmin.patchSettings({globalSandbox:this.checked},this.checked?"🛡️ تم تفعيل الدرع الشامل":"تم إيقاف الدرع الشامل")};
-    document.getElementById("lcma-set-ushield").onchange=function(){cinemaAdmin.patchSettings({allowUserShieldToggle:this.checked},this.checked?"✅ تم إظهار زر الدرع للأعضاء":"تم إخفاء زر الدرع")};
     document.getElementById("lcma-nsrv-add").onclick=()=>cinemaAdmin.addServer();
     document.getElementById("lcma-save-player").onclick=()=>cinemaAdmin.savePlayerSettings();
 
-    // Analytics
     document.getElementById("lcma-run-analytics").onclick=()=>cinemaAdmin.runAnalytics();
 
-    // Settings
     document.getElementById("lcma-set-enabled").onchange=function(){cinemaAdmin.patchSettings({enabled:this.checked},this.checked?"✅ تم تفعيل سينما ليل":"🛑 تم إيقاف سينما ليل عن الأعضاء")};
     document.getElementById("lcma-set-guests").onchange=function(){cinemaAdmin.patchSettings({allowGuests:this.checked},this.checked?"✅ تم السماح للضيوف":"🔒 السينما للأعضاء فقط")};
     document.getElementById("lcma-set-safe").onchange=function(){cinemaAdmin.patchSettings({safeMode:this.checked},this.checked?"🛡️ تم تفعيل الوضع العائلي":"تم إيقاف الوضع العائلي")};
@@ -845,8 +820,6 @@ const cinemaAdmin={
     let setChk=(id,val)=>{let el=document.getElementById(id);el&&(el.checked=Boolean(val))};
     let setVal=(id,val)=>{let el=document.getElementById(id);el&&(el.value=val)};
     setVal("lcma-banner-inp",s.bannerText||"");
-    setChk("lcma-set-gsandbox",s.globalSandbox);
-    setChk("lcma-set-ushield",!1!==s.allowUserShieldToggle);
     setChk("lcma-set-uswitch",!1!==s.allowUserServerSwitch);
     setChk("lcma-set-parties",!1!==s.allowParties);
     setChk("lcma-set-reacts",!1!==s.allowReactions);
@@ -1207,25 +1180,16 @@ const cinemaAdmin={
         <div class="lcma-card" style="background:rgba(0,0,0,0.25); ${isDef?"border-color:rgba(212,175,55,0.5);":""}">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px; flex-wrap:wrap;">
             <b style="font-size:12.5px;">${h.esc(srv.name)}</b>
-            <div class="lcma-row" style="gap:4px;">
-              ${isDef?'<span class="lcma-tag lcma-t-gold">الافتراضي ★</span>':""}
-              <span class="lcma-tag ${srv.sandbox?"lcma-t-green":"lcma-t-gray"}">${srv.sandbox?"🛡️ درع مفعّل":"بلا درع"}</span>
-            </div>
+            ${isDef?'<span class="lcma-tag lcma-t-gold">الافتراضي ★</span>':""}
           </div>
           <div style="font-size:10px; color:#94a3b8; direction:ltr; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:7px;">${h.esc(srv.movie)}</div>
           <div class="lcma-row" style="gap:5px;">
             ${!isDef?`<button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-srv-def" data-id="${h.esc(srv.id)}" style="width:auto;">تعيين كافتراضي</button>`:""}
-            <button type="button" class="lcma-btn ${srv.sandbox?"lcma-btn-warn":"lcma-btn-ok"} lcma-mini lcma-srv-sb" data-i="${idx}"><i class="fas fa-shield-alt"></i> ${srv.sandbox?"إيقاف الدرع":"تفعيل الدرع"}</button>
-            ${srvs.length>1?`<button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-srv-del" data-i="${idx}"><i class="fas fa-trash"></i></button>`:""}
+            ${srvs.length>1?`<button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-srv-del" data-i="${idx}"><i class="fas fa-trash"></i> حذف</button>`:""}
           </div>
         </div>`
     }).join("");
     c.querySelectorAll(".lcma-srv-def").forEach(b=>b.onclick=()=>cinemaAdmin.patchSettings({defaultServerId:b.dataset.id},"⭐ تم تغيير السيرفر الافتراضي"));
-    c.querySelectorAll(".lcma-srv-sb").forEach(b=>b.onclick=()=>{
-      let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);
-      list[i].sandbox=!list[i].sandbox;
-      cinemaAdmin.patchSettings({servers:list},list[i].sandbox?"🛡️ تم تفعيل الدرع لهذا السيرفر":"تم إيقاف الدرع لهذا السيرفر")
-    });
     c.querySelectorAll(".lcma-srv-del").forEach(b=>b.onclick=()=>{
       let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);
       if(!confirm(`حذف السيرفر (${list[i].name})؟`))return;
@@ -1239,15 +1203,13 @@ const cinemaAdmin={
     let name=(document.getElementById("lcma-nsrv-name")?.value||"").trim();
     let movie=(document.getElementById("lcma-nsrv-movie")?.value||"").trim();
     let tv=(document.getElementById("lcma-nsrv-tv")?.value||"").trim();
-    let sb=document.getElementById("lcma-nsrv-sb")?.checked;
     if(!name||!movie.includes("{id}")||!tv.includes("{id}"))return alert("أدخل اسم السيرفر ورابط الأفلام والمسلسلات وتأكد من وجود {id}.");
     let list=h.getServers().map(x=>Object.assign({},x));
-    list.push({id:"srv_"+Date.now(),name,movie,tv,sandbox:Boolean(sb)});
+    list.push({id:"srv_"+Date.now(),name,movie,tv});
     cinemaAdmin.patchSettings({servers:list},`✅ تم إضافة السيرفر (${name})`);
     document.getElementById("lcma-nsrv-name").value="";
     document.getElementById("lcma-nsrv-movie").value="";
-    document.getElementById("lcma-nsrv-tv").value="";
-    document.getElementById("lcma-nsrv-sb").checked=!1
+    document.getElementById("lcma-nsrv-tv").value=""
   },
   savePlayerSettings(){
     cinemaAdmin.patchSettings({
@@ -1360,7 +1322,6 @@ window.lailCinema={
   currentDetailsItem:null,
   currentVideoData:{id:null,type:null,title:null,s:null,e:null},
   activeServerId:null,
-  shieldOverride:null,
   genres:{movie:[],tv:[]},
   partyCode:null,
   isHost:!1,
@@ -1375,6 +1336,73 @@ window.lailCinema={
     let el=document.getElementById("cinema-toast");
     if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="cinema-toast" class="lail-toast"></div>');el=document.getElementById("cinema-toast")}
     el&&(el.innerHTML=msg,el.classList.add("show"),setTimeout(()=>el.classList.remove("show"),ms))
+  },
+  copyDnsHost:function(){
+    let host="dns.adguard-dns.com";
+    let ok=()=>this.showToast("✅ تم نسخ العنوان: dns.adguard-dns.com");
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(host).then(ok).catch(()=>{
+        let ta=document.createElement("textarea");ta.value=host;ta.style.position="fixed";ta.style.opacity="0";
+        document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch{}ta.remove()
+      })
+    }else{
+      let ta=document.createElement("textarea");ta.value=host;ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch{}ta.remove()
+    }
+  },
+  openAdGuide:function(){
+    let old=document.getElementById("cinema-adguide-modal");
+    old&&old.remove();
+    let isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent||"");
+    let ov=document.createElement("div");
+    ov.id="cinema-adguide-modal";
+    ov.className="lail-ag-ov";
+    ov.innerHTML=`
+      <div class="lail-ag-box">
+        <div class="lail-ag-head">
+          <div style="display:flex;align-items:center;gap:8px;color:#6ee7b7;font-weight:800;font-size:15px;"><i class="fas fa-shield-alt"></i> إيقاف النوافذ الإعلانية المنبثقة</div>
+          <button type="button" class="lail-close-btn" id="lail-ag-close" style="width:30px;height:30px;font-size:13px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="lail-ag-tabs">
+          <button type="button" class="lail-ag-tab ${isIOS?"":"active"}" data-agtab="android">📱 أندرويد وسامسونج</button>
+          <button type="button" class="lail-ag-tab ${isIOS?"active":""}" data-agtab="ios">🍏 آيفون (iOS)</button>
+        </div>
+        <div class="lail-ag-body">
+          <div id="lail-ag-android" style="display:${isIOS?"none":"block"};">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">بدون برامج — بخطوتين فقط من إعدادات جوالك:</div>
+            <div class="lail-ag-dns">
+              <code>dns.adguard-dns.com</code>
+              <button type="button" class="lail-ag-copy" id="lail-ag-copy-btn"><i class="fas fa-copy"></i> نسخ</button>
+            </div>
+            <div class="lail-ag-step"><span class="lail-ag-num">1</span><div>افتح <b>الإعدادات</b> ➔ <b>الاتصالات</b> (أو الشبكة والإنترنت) ➔ <b>المزيد من ضبط الاتصال</b> ➔ <b>DNS الخاص (Private DNS)</b>.</div></div>
+            <div class="lail-ag-step"><span class="lail-ag-num">2</span><div>اختر <b>اسم مضيف مزود DNS الخاص</b>، الصق العنوان الذي نسخته واضغط <b>حفظ</b>.</div></div>
+            <div class="lail-ag-tip">✨ يوقف 99% من النوافذ الإعلانية المنبثقة فوراً بدون التأثير على تشغيل الأفلام أو سرعة الشات.</div>
+          </div>
+          <div id="lail-ag-ios" style="display:${isIOS?"block":"none"};">
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">أسهل طريقتين للآيفون (اختر واحدة فقط):</div>
+            <div class="lail-ag-step"><span class="lail-ag-num">1</span><div><b>داخل متصفح سفاري (Safari):</b> حمّل تطبيق <b>AdGuard</b> المجاني من App Store، ثم افتح <b>الإعدادات</b> ➔ <b>التطبيقات</b> ➔ <b>Safari</b> ➔ <b>الملحقات</b> وفعّل خيارات AdGuard.</div></div>
+            <div class="lail-ag-step"><span class="lail-ag-num">2</span><div><b>أو عبر متصفح Brave:</b> افتح شات ليل من متصفح <b>Brave</b> المجاني (يحجب جميع النوافذ الإعلانية تلقائياً بدون أي إعدادات).</div></div>
+            <div class="lail-ag-tip">✨ تعمل كلتا الطريقتين بصمت دون أن يكتشفها السيرفر أو يتوقف الفيلم.</div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener("click",ev=>{ev.target===ov&&this.closeAdGuide()});
+    document.getElementById("lail-ag-close").onclick=()=>this.closeAdGuide();
+    document.getElementById("lail-ag-copy-btn").onclick=()=>this.copyDnsHost();
+    ov.querySelectorAll("[data-agtab]").forEach(btn=>{
+      btn.onclick=()=>{
+        let t=btn.dataset.agtab;
+        ov.querySelectorAll("[data-agtab]").forEach(x=>x.classList.toggle("active",x===btn));
+        document.getElementById("lail-ag-android").style.display="android"===t?"block":"none";
+        document.getElementById("lail-ag-ios").style.display="ios"===t?"block":"none"
+      }
+    });
+    requestAnimationFrame(()=>ov.classList.add("active"))
+  },
+  closeAdGuide:function(){
+    let m=document.getElementById("cinema-adguide-modal");
+    m&&(m.classList.remove("active"),setTimeout(()=>m.remove(),200))
   },
   updateIdentity:function(u){
     if(!u||!u.trim())return;
@@ -1396,43 +1424,15 @@ window.lailCinema={
     ref.onDisconnect().remove();
     ref.set({name:this.myUsername,watching:watchingText,ts:Date.now()}).catch(()=>{})
   },
-  mountIframe:function(url){
-    let host=document.getElementById("lail-iframe-host");if(!host)return;
-    let old=document.getElementById("cinema-iframe");
-    old&&old.remove();
-    let srv=h.getServerObj(this.activeServerId);
-    let useSandbox=null!==this.shieldOverride?this.shieldOverride:Boolean(st.settings.globalSandbox||srv?.sandbox);
-    let ifr=document.createElement("iframe");
-    ifr.id="cinema-iframe";
-    ifr.setAttribute("allowfullscreen","");
-    ifr.setAttribute("allow","autoplay; fullscreen");
-    ifr.setAttribute("referrerpolicy","no-referrer");
-    if(useSandbox)ifr.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");
-    ifr.src=url||"";
-    let blocker=document.getElementById("iframe-blocker");
-    blocker?blocker.insertAdjacentElement("afterend",ifr):host.appendChild(ifr);
-    let sbBtn=document.getElementById("lail-shield-btn"),sbLbl=document.getElementById("lail-shield-lbl");
-    if(sbBtn){
-      sbBtn.classList.toggle("lail-p-shield-on",useSandbox);
-      sbLbl&&(sbLbl.textContent=useSandbox?"الدرع: مفعّل":"الدرع: متوقف")
-    }
-  },
-  togglePlayerShield:function(){
-    let srv=h.getServerObj(this.activeServerId);
-    let cur=null!==this.shieldOverride?this.shieldOverride:Boolean(st.settings.globalSandbox||srv?.sandbox);
-    this.shieldOverride=!cur;
-    let v=this.currentVideoData;
-    if(v&&v.id){
-      this.mountIframe(h.buildEmbedUrl(v.type,v.id,v.s,v.e,this.activeServerId));
-      this.showToast(this.shieldOverride?"🛡️ تم تفعيل درع منع النوافذ المنبثقة":"⚠️ تم إيقاف الدرع (للسيرفرات التي ترفض sandbox)")
-    }
+  setIframeUrl:function(url){
+    let ifr=document.getElementById("cinema-iframe");
+    ifr&&(ifr.src=url||"")
   },
   switchPlayerServer:function(srvId){
     this.activeServerId=srvId;
-    this.shieldOverride=null;
     let v=this.currentVideoData;
     if(v&&v.id){
-      this.mountIframe(h.buildEmbedUrl(v.type,v.id,v.s,v.e,srvId));
+      this.setIframeUrl(h.buildEmbedUrl(v.type,v.id,v.s,v.e,srvId));
       this.showToast("🔄 تم تبديل السيرفر")
     }
   },
@@ -1514,8 +1514,6 @@ window.lailCinema={
     detP&&(detP.style.display=!1===s.allowParties&&!adm?"none":"flex");
     let pipB=document.getElementById("lail-pip-btn");
     pipB&&(pipB.style.display=!1===s.allowMiniPlayer?"none":"flex");
-    let shB=document.getElementById("lail-shield-btn");
-    shB&&(shB.style.display=(!1!==s.allowUserShieldToggle||adm)?"flex":"none");
     let srvSel=document.getElementById("lail-player-server-sel");
     if(srvSel){
       let srvs=h.getServers();
@@ -1594,6 +1592,7 @@ window.lailCinema={
     nv&&""===nv.innerHTML.trim()&&this.switchMainTab(this.currentType)
   },
   close:function(){
+    this.closeAdGuide();
     let ifr=document.getElementById("cinema-iframe"),pl=document.getElementById("cinema-player"),ico=document.querySelector("#lail-pip-btn i"),app=document.getElementById("lail-cinema-app");
     if(st.countdownTimer){clearInterval(st.countdownTimer);st.countdownTimer=null}
     if(pl&&"flex"===pl.style.display&&ifr&&ifr.src&&""!==ifr.src&&"about:blank"!==ifr.src&&!1!==st.settings.allowMiniPlayer){
@@ -1763,16 +1762,23 @@ window.lailCinema={
     this.currentDetailsId=id;
     let det=document.getElementById("cinema-details");if(!det)return;
     det.style.display="flex";det.scrollTop=0;
-    let tvB=document.getElementById("tv-episodes-container"),rcB=document.getElementById("recs-container"),dt=document.getElementById("details-title"),bd=document.getElementById("details-backdrop"),ps=document.getElementById("details-poster");
-    tvB&&(tvB.style.display="none");rcB&&(rcB.style.display="none");dt&&(dt.innerText="جاري التحميل...");bd&&(bd.src="");ps&&(ps.src="");
+    let tvB=document.getElementById("tv-episodes-container"),rcB=document.getElementById("recs-container"),dt=document.getElementById("details-title"),bd=document.getElementById("details-backdrop"),ps=document.getElementById("details-poster"),pw=document.getElementById("details-poster-wrap");
+    tvB&&(tvB.style.display="none");rcB&&(rcB.style.display="none");dt&&(dt.innerText="جاري التحميل...");
+    bd&&(bd.removeAttribute("src"),bd.style.opacity="0");
+    ps&&ps.removeAttribute("src");
+    pw&&(pw.style.display="none");
     document.getElementById("details-genres")&&(document.getElementById("details-genres").innerHTML="");
     document.getElementById("details-cast")&&(document.getElementById("details-cast").innerHTML="");
     this.applyAdminSettings();
     try{
       let o=await (await fetch(`https://api.themoviedb.org/3/${tp}/${id}?api_key=${TMDB_KEY}&language=ar&append_to_response=recommendations,release_dates,content_ratings,credits`)).json();
       this.currentDetailsItem=o;this.checkIfFavorite(id);
-      let title=o.title||o.name,date=o.release_date||o.first_air_date||"",bg=o.backdrop_path?`https://image.tmdb.org/t/p/w1280${o.backdrop_path}`:`https://image.tmdb.org/t/p/w500${o.poster_path}`,pos=o.poster_path?`https://image.tmdb.org/t/p/w500${o.poster_path}`:"";
-      bd&&(bd.src=bg,bd.style.opacity="0.6");ps&&(ps.src=pos);dt&&(dt.innerText=title);
+      let title=o.title||o.name,date=o.release_date||o.first_air_date||"";
+      let bg=o.backdrop_path?`https://image.tmdb.org/t/p/w1280${o.backdrop_path}`:(o.poster_path?`https://image.tmdb.org/t/p/w500${o.poster_path}`:"");
+      let pos=o.poster_path?`https://image.tmdb.org/t/p/w500${o.poster_path}`:(o.backdrop_path?`https://image.tmdb.org/t/p/w500${o.backdrop_path}`:"");
+      bd&&(bg?(bd.src=bg,bd.style.opacity="0.6"):(bd.removeAttribute("src"),bd.style.opacity="0"));
+      if(ps&&pw){pos?(ps.src=pos,pw.style.display="block"):(ps.removeAttribute("src"),pw.style.display="none")}
+      dt&&(dt.innerText=title);
       document.getElementById("details-overview")&&(document.getElementById("details-overview").innerText=o.overview||"القصة غير متوفرة باللغة العربية حالياً.");
       document.getElementById("details-rate")&&(document.getElementById("details-rate").innerHTML=`<i class="fas fa-star"></i> ${o.vote_average?o.vote_average.toFixed(1):"N/A"}`);
       document.getElementById("details-date")&&(document.getElementById("details-date").innerText=date.split("-")[0]);
@@ -1834,7 +1840,7 @@ window.lailCinema={
     pt&&(pt.innerText=fullTitle);
     ["party-sync-btn","party-pause-btn","party-reactions"].forEach(k=>{let el=document.getElementById(k);el&&(el.style.display="none")});
     this.applyAdminSettings();
-    this.mountIframe(h.buildEmbedUrl(tp,id,s,ep,this.activeServerId));
+    this.setIframeUrl(h.buildEmbedUrl(tp,id,s,ep,this.activeServerId));
     let pl=document.getElementById("cinema-player");pl&&(pl.classList.remove("mini-mode"),pl.style.display="flex");
     this.setPresence(`يشاهد: ${fullTitle}`);
     this.saveHistoryToFirebase(id,tp,title,s,ep)
@@ -1855,7 +1861,7 @@ window.lailCinema={
   },
   closePlayer:function(){
     let pl=document.getElementById("cinema-player");pl&&(pl.style.display="none",pl.classList.remove("mini-mode"));
-    let ifr=document.getElementById("cinema-iframe");ifr&&(ifr.src="");
+    this.setIframeUrl("");
     this.leaveParty();
     let app=document.getElementById("lail-cinema-app");
     app&&"flex"===app.style.display?this.setPresence("يتصفح السينما"):this.setPresence(null)
@@ -1953,7 +1959,7 @@ window.lailCinema={
     sb&&(sb.style.display="flex");rb&&(rb.style.display=!1===st.settings.allowReactions?"none":"flex");
     pb&&(this.isHost?(pb.style.display="flex",pb.innerHTML='<i class="fas fa-pause"></i> إيقاف للكل'):pb.style.display="none");
     this.applyAdminSettings();
-    this.mountIframe(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
+    this.setIframeUrl(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
     let pl=document.getElementById("cinema-player");pl&&(pl.classList.remove("mini-mode"),pl.style.display="flex");
     this.setPresence(`غرفة #${this.partyCode}: ${rm.title}`);
     if(!this.reactionListenerSetup&&!1!==st.settings.allowReactions){
@@ -1970,7 +1976,7 @@ window.lailCinema={
     })
   },
   handlePartyPause:function(){
-    let ifr=document.getElementById("cinema-iframe");ifr&&(ifr.src="");
+    this.setIframeUrl("");
     if(this.isHost){let pb=document.getElementById("party-pause-btn");pb&&(pb.innerHTML='<i class="fas fa-play"></i> استئناف')}
     this.showToast("⏸️ تم إيقاف الفيلم مؤقتاً من قبل المضيف...",5e3)
   },
@@ -1979,7 +1985,7 @@ window.lailCinema={
       let rm=sn.val();if(!rm)return;
       let ms="playing"===rm.status?Date.now()-rm.startTime:"paused"===rm.status?rm.pauseElapsed:0;
       let sec=Math.floor(ms/1e3),rem=sec%60,str=`${Math.floor(sec/60)}:${rem<10?"0"+rem:rem}`;
-      this.mountIframe(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
+      this.setIframeUrl(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
       this.showToast(`🔄 للمزامنة مع المجموعة: قم بتقديم الفيلم للدقيقة <b>${str}</b>`,8e3)
     })
   },
