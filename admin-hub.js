@@ -38,6 +38,15 @@ const PANELS = [
     bg: "linear-gradient(135deg, #3b2604, #784c08)",
     color: "#fbbc04",
     fallback: () => window.LaylCal?.openAdminDashboard?.()
+  },
+  {
+    id: "btn-lail-cinema-admin",
+    title: "لوحة تحكم السينما",
+    desc: "الغرف، الرادار، السهرة والتصويت، السيرفرات والدرع",
+    icon: "fas fa-film",
+    bg: "linear-gradient(135deg, #450a0a, #991b1b)",
+    color: "#fbbf24",
+    fallback: () => window.lailCinema?.openAdmin?.()
   }
 ];
 
