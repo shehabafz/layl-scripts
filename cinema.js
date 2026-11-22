@@ -10,7 +10,8 @@ const DEFAULT_SERVERS=[
     id:"srv_default",
     name:"السيرفر الأساسي",
     movie:"https://vidsrc.me/embed/movie?tmdb={id}",
-    tv:"https://vidsrc.me/embed/tv?tmdb={id}&season={s}&episode={e}"
+    tv:"https://vidsrc.me/embed/tv?tmdb={id}&season={s}&episode={e}",
+    enabled:!0
   }
 ];
 
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS={
   enabled:!0,
   disabledMsg:"سينما ليل متوقفة مؤقتاً للصيانة. نعود قريباً 🍿",
   allowParties:!0,
+  partiesVipOnly:!1,
   allowReactions:!0,
   allowMiniPlayer:!0,
   allowGuests:!0,
@@ -29,9 +31,23 @@ const DEFAULT_SETTINGS={
   reactionCooldown:1,
   customReactions:"😂,😱,❤️,🔥",
   bannerText:"",
+  bannerTheme:"gold",
+  welcomePopupText:"",
+  welcomePopupVersion:0,
+  featuredTitle:"👑 اختيارات إدارة ليل",
+  showArabicRows:!0,
+  showMovieTab:!0,
+  showTvTab:!0,
+  showFavTab:!0,
+  showAdGuideBtn:!0,
+  showRecs:!0,
+  showHistoryRow:!0,
+  defaultTab:"movie",
   safeMode:!1,
   minRating:0,
-  blockedGenres:[]
+  blockedGenres:[],
+  blockedWords:[],
+  vipUsers:[]
 };
 
 if(!document.getElementById("lail-cinema-style")){
@@ -58,10 +74,13 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-btn-party{color:#3b82f6;border-color:rgba(59,130,246,0.3)}
 .lail-btn-party:hover{background:rgba(59,130,246,0.1)}
 .lail-c-search-area{display:flex;gap:10px;align-items:center;position:relative}
-.lail-c-search-area input{height:40px;padding:0 15px 0 40px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;outline:none;transition:.3s;width:220px;font-family:inherit}
+.lail-c-search-area input{height:40px;padding:0 15px 0 40px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;outline:none;transition:.3s;width:220px;font-family:inherit;box-sizing:border-box}
 .lail-c-search-area input:focus{border-color:#e50914;width:280px;background:rgba(0,0,0,0.6);box-shadow:0 0 15px rgba(229,9,20,0.2)}
 .lail-search-icon{position:absolute;left:15px;color:#aaa;pointer-events:none}
 .lail-cinema-banner{margin:14px 30px 0;padding:11px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(229,9,20,0.18),rgba(212,175,55,0.16));border:1px solid rgba(212,175,55,0.38);color:#fef3c7;font-size:.93rem;font-weight:600;display:none;align-items:center;gap:10px;line-height:1.5}
+.lail-cinema-banner.th-red{background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.45);color:#fecaca}
+.lail-cinema-banner.th-blue{background:rgba(59,130,246,0.18);border-color:rgba(59,130,246,0.45);color:#bfdbfe}
+.lail-cinema-banner.th-green{background:rgba(16,185,129,0.18);border-color:rgba(16,185,129,0.45);color:#a7f3d0}
 .lail-cinema-off-banner{margin:10px 30px 0;padding:8px 14px;border-radius:10px;background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.45);color:#fecaca;font-size:.86rem;font-weight:bold;text-align:center;display:none}
 .lail-event-strip{margin:16px 30px 22px;padding:14px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(74,9,26,0.55),rgba(18,20,36,0.92));border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;box-shadow:0 10px 25px rgba(0,0,0,0.4)}
 .lail-event-cd{background:rgba(0,0,0,0.45);border:1px solid rgba(212,175,55,0.35);color:#D4AF37;padding:7px 14px;border-radius:10px;font-weight:900;font-size:1.05rem;direction:ltr;white-space:nowrap}
@@ -81,7 +100,7 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-genre-list{flex:1;overflow-y:auto;padding:15px 0;scroll-behavior:smooth}
 .lail-genre-list::-webkit-scrollbar{width:6px}
 .lail-genre-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-.lail-genre-item{padding:14px 30px;color:#999;cursor:pointer;transition:.2s;border-right:3px solid transparent;font-size:1rem;display:flex;align-items:center;gap:12px}
+.lail-genre-item{padding:13px 26px;color:#999;cursor:pointer;transition:.2s;border-right:3px solid transparent;font-size:.96rem;display:flex;align-items:center;gap:12px}
 .lail-genre-item:hover{background:rgba(255,255,255,0.03);color:#fff}
 .lail-genre-item.active{background:linear-gradient(90deg,rgba(229,9,20,0.1) 0%,transparent 100%);color:#e50914;border-right-color:#e50914;font-weight:bold}
 .lail-cinema-main{display:flex;flex:1;overflow:hidden;position:relative}
@@ -89,8 +108,8 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-cinema-body::-webkit-scrollbar{width:8px}
 .lail-cinema-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
 .lail-netflix-view{display:block;padding-top:20px}
-.lail-row-container{margin-bottom:40px;padding:0 30px}
-.lail-row-title{font-size:1.3rem;font-weight:bold;margin-bottom:18px;color:#fff;display:flex;align-items:center;gap:10px;border-right:4px solid #e50914;padding-right:12px;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+.lail-row-container{margin-bottom:38px;padding:0 30px}
+.lail-row-title{font-size:1.25rem;font-weight:bold;margin-bottom:16px;color:#fff;display:flex;align-items:center;gap:10px;border-right:4px solid #e50914;padding-right:12px;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
 .lail-row-scroller{display:flex;gap:18px;overflow-x:auto;padding-bottom:20px;scroll-behavior:smooth;scrollbar-width:none}
 .lail-row-scroller::-webkit-scrollbar{display:none}
 .lail-grid-view{display:none}
@@ -183,10 +202,11 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-user-chip.is-host{border-color:#fbbf24;color:#fbbf24;background:rgba(251,191,36,0.1)}
 .lail-share-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
 .lail-share-btn:hover{background:rgba(255,255,255,0.2)}
-.lail-ag-ov{position:fixed;inset:0;background:rgba(8,10,18,0.9);z-index:2147483644;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;direction:rtl;font-family:'Segoe UI',tahoma,sans-serif}
-.lail-ag-ov.active{opacity:1}
+.lail-ag-ov,.lail-welc-ov{position:fixed;inset:0;background:rgba(8,10,18,0.9);z-index:2147483644;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .22s ease;direction:rtl;font-family:'Segoe UI',tahoma,sans-serif}
+.lail-ag-ov.active,.lail-welc-ov.active{opacity:1}
 .lail-ag-box{background:linear-gradient(180deg,rgba(26,29,52,0.99) 0%,rgba(14,16,30,0.99) 100%);border:1px solid rgba(16,185,129,0.42);border-radius:20px;width:93%;max-width:450px;max-height:86vh;max-height:86dvh;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,0.88);transform:scale(0.95) translateY(12px);transition:transform .25s ease;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#f8fafc}
 .lail-ag-ov.active .lail-ag-box{transform:scale(1) translateY(0)}
+.lail-welc-box{background:linear-gradient(180deg,#1c1f38,#101222);border:1px solid rgba(212,175,55,0.45);border-radius:18px;width:90%;max-width:400px;padding:22px 20px;text-align:center;color:#f8fafc;box-shadow:0 20px 50px rgba(0,0,0,0.85)}
 .lail-ag-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08)}
 .lail-ag-tabs{display:flex;gap:6px;margin-bottom:12px}
 .lail-ag-tab{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:#94a3b8;padding:9px 8px;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
@@ -202,6 +222,8 @@ if(!document.getElementById("lail-cinema-style")){
 #party-restore-btn:hover{transform:scale(1.1)}
 @keyframes pulse-red{0%{box-shadow:0 0 0 0 rgba(229,9,20,0.7)}70%{box-shadow:0 0 0 10px rgba(229,9,20,0)}100%{box-shadow:0 0 0 0 rgba(229,9,20,0)}}
 .lail-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#121424;border:1px solid #3b82f6;color:#fff;padding:12px 25px;border-radius:30px;font-size:.95rem;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.7);z-index:2147483647;opacity:0;pointer-events:none;transition:all .4s cubic-bezier(0.2,0.8,0.2,1);text-align:center;max-width:88vw}
+.lail-toast.th-gold{border-color:#D4AF37;background:linear-gradient(135deg,#241e0d,#121424);color:#fde68a}
+.lail-toast.th-red{border-color:#ef4444;background:linear-gradient(135deg,#331014,#121424);color:#fecaca}
 .lail-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .lail-continue-card{border:2px solid #e50914}
 .lail-ep-badge{position:absolute;top:10px;right:10px;background:#e50914;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8rem;font-weight:bold;z-index:2}
@@ -211,7 +233,7 @@ if(!document.getElementById("lail-cinema-style")){
 .lail-floating-emoji{position:absolute;bottom:60px;font-size:2rem;z-index:45;pointer-events:none;animation:floatUp 3s ease-out forwards}
 @keyframes floatUp{0%{transform:translateY(0) scale(1) rotate(0deg);opacity:1}100%{transform:translateY(-200px) scale(1.5) rotate(20deg);opacity:0}}
 @media (max-width:899px){.lail-details-hero{height:38vh}.lail-details-layout{flex-direction:column;align-items:center;text-align:center;padding:0 22px;margin-top:-20vh;gap:18px;margin-bottom:32px}.lail-details-poster-wrap{width:155px;margin:0 auto}.lail-details-title{font-size:1.85rem;margin-bottom:10px}.lail-details-meta,.lail-details-genres{justify-content:center}.lail-details-overview{font-size:.98rem;text-align:center}}
-@media (max-width:768px){.lail-cinema-content{width:100%;height:100%;border-radius:0;border:none}.lail-cinema-header{padding:13px 16px}.lail-cinema-header h3{font-size:1.25rem}.lail-adguide-btn{height:33px;padding:0 10px;font-size:.76rem}.lail-cinema-nav{flex-direction:column;align-items:stretch;padding:15px 20px;gap:15px}.lail-cinema-tabs{justify-content:center;gap:10px}.lail-c-tab{padding:10px 5px;font-size:.95rem}.lail-c-actions{flex-direction:row;flex-wrap:nowrap;width:100%;gap:10px}.lail-btn-sidebar,.lail-btn-party{flex:0 0 auto;padding:10px;font-size:.9rem}.lail-c-search-area{flex:1}.lail-c-search-area input{width:100%;max-width:none}.lail-cinema-banner,.lail-cinema-off-banner,.lail-event-strip,.lail-poll-box{margin-left:18px;margin-right:18px}.lail-recs-section,.lail-episodes-section{padding:0 20px 30px}.lail-player-header{padding:10px 12px;gap:8px;opacity:1}.lail-player-header h4{font-size:.9rem}.lail-player-actions{gap:6px}.lail-p-btn{width:34px;height:34px;font-size:.9rem}.lail-p-btn-party{height:34px;padding:0 9px;font-size:.78rem}.lail-server-select{height:34px;font-size:.76rem;max-width:105px;padding:0 6px}.lail-player-modal.mini-mode{width:280px;height:160px;left:10px;bottom:90px}.lail-cinema-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:15px 20px}.lail-row-scroller .lail-movie-card{width:130px}.lail-actions-row{flex-direction:column}.lail-actions-row button{width:100%;justify-content:center}}`;
+@media (max-width:768px){.lail-cinema-content{width:100%;height:100%;border-radius:0;border:none}.lail-cinema-header{padding:13px 16px}.lail-cinema-header h3{font-size:1.25rem}.lail-adguide-btn{height:33px;padding:0 10px;font-size:.76rem}.lail-cinema-nav{flex-direction:column;align-items:stretch;padding:12px 16px;gap:10px}.lail-cinema-tabs{justify-content:center;gap:16px}.lail-c-tab{padding:10px 5px;font-size:.95rem}.lail-c-actions{flex-direction:row;flex-wrap:wrap;width:100%;gap:8px}.lail-btn-sidebar,.lail-btn-party{flex:1;justify-content:center;padding:9px 10px;font-size:.88rem}.lail-c-search-area{flex:1 0 100%;width:100%;min-width:0}.lail-c-search-area input,.lail-c-search-area input:focus{width:100%;max-width:100%;box-sizing:border-box}.lail-cinema-banner,.lail-cinema-off-banner,.lail-event-strip,.lail-poll-box{margin-left:16px;margin-right:16px}.lail-recs-section,.lail-episodes-section{padding:0 20px 30px}.lail-player-header{padding:10px 12px;gap:8px;opacity:1}.lail-player-header h4{font-size:.9rem}.lail-player-actions{gap:6px}.lail-p-btn{width:34px;height:34px;font-size:.9rem}.lail-p-btn-party{height:34px;padding:0 9px;font-size:.78rem}.lail-server-select{height:34px;font-size:.76rem;max-width:105px;padding:0 6px}.lail-player-modal.mini-mode{width:280px;height:160px;left:10px;bottom:90px}.lail-cinema-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:15px 16px}.lail-row-container{padding:0 16px}.lail-row-scroller .lail-movie-card{width:130px}.lail-actions-row{flex-direction:column}.lail-actions-row button{width:100%;justify-content:center}}`;
   (document.head||document.documentElement).appendChild(c)
 }
 
@@ -224,6 +246,7 @@ let st={
   poll:null,
   myBan:null,
   listenedBanUser:null,
+  listenedCmdUser:null,
   globalBound:!1,
   roomsCache:{},
   presenceCache:{},
@@ -246,6 +269,12 @@ const h={
     let s=h.san(u);
     return st.adminUsers.includes(u)||(s&&st.adminUsers.includes(s))
   },
+  isVip(){
+    let list=st.settings.vipUsers;
+    if(!Array.isArray(list)||!list.length)return!1;
+    let u=window.lailCinema?.myUsername||"",s=h.san(u);
+    return list.some(x=>x===u||h.san(x)===s)
+  },
   getActiveBan(){
     let b=st.myBan;
     if(!b)return null;
@@ -253,7 +282,7 @@ const h={
     return b
   },
   banMsg(b){
-    let map={full:"تم منعك من استخدام سينما ليل من قبل الإدارة 🚫",party_only:"تم منعك من غرف المشاهدة الجماعية من قبل الإدارة 🚫",reactions_only:"تم كتم التفاعلات عنك داخل السينما 🚫"};
+    let map={full:"تم منعك من استخدام سينما ليل من قبل الإدارة 🚫",party_only:"تم منعك من غرف المشاهدة الجماعية من قبل الإدارة 🚫",reactions_only:"تم كتم التفاعلات عنك داخل السينما 🚫",search_only:"تم إيقاف البحث عنك داخل السينما من قبل الإدارة 🚫"};
     let msg=map[b.scope]||map.full;
     if(b.reason)msg+=`\nالسبب: ${b.reason}`;
     if(b.expiresAt)msg+=`\nالوقت المتبقي: ${h.formatRemaining(b.expiresAt)}`;
@@ -269,12 +298,22 @@ const h={
     if(!bg.length||!Array.isArray(genreIds))return!1;
     return genreIds.some(gid=>bg.includes(Number(gid)))
   },
+  isWordBlocked(q){
+    let bw=st.settings.blockedWords||[];
+    if(!bw.length||!q)return!1;
+    let low=String(q).toLowerCase();
+    return bw.some(w=>w&&low.includes(String(w).toLowerCase()))
+  },
   getServers(){
     let list=st.settings.servers;
     return Array.isArray(list)&&list.length?list:DEFAULT_SERVERS
   },
+  getActiveServers(){
+    let act=h.getServers().filter(x=>!1!==x.enabled);
+    return act.length?act:h.getServers()
+  },
   getServerObj(srvId){
-    let list=h.getServers();
+    let list=h.getActiveServers();
     return list.find(x=>x.id===srvId)||list.find(x=>x.id===st.settings.defaultServerId)||list[0]
   },
   buildEmbedUrl(type,id,s=1,e=1,srvId=null){
@@ -299,7 +338,7 @@ const h={
   }
 };
 
-let APP_HTML=`<div id="lail-cinema-app" class="lail-cinema-overlay"><div class="lail-cinema-content"><div class="lail-cinema-header"><h3><i class="fas fa-film"></i> سينما ليل</h3><div class="lail-header-controls"><button type="button" class="lail-adguide-btn" onclick="window.lailCinema.openAdGuide()"><i class="fas fa-shield-alt"></i><span>إيقاف الإعلانات</span></button><button class="lail-close-btn" onclick="window.lailCinema.close()"><i class="fas fa-times"></i></button></div></div><div class="lail-cinema-nav"><div class="lail-cinema-tabs"><div id="tab-movie" class="lail-c-tab active" onclick="window.lailCinema.switchMainTab('movie')">الأفلام</div><div id="tab-tv" class="lail-c-tab" onclick="window.lailCinema.switchMainTab('tv')">المسلسلات</div><div id="tab-fav" class="lail-c-tab" style="color:#ef4444;" onclick="window.lailCinema.switchMainTab('fav')"><i class="fas fa-heart"></i> مفضلاتي</div></div><div class="lail-c-actions"><button class="lail-btn-sidebar" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-filter"></i> الأقسام</button><button id="cinema-nav-party-btn" class="lail-btn-party" onclick="window.lailCinema.openPartyJoin()"><i class="fas fa-users"></i> غرف المشاهدة</button><div class="lail-c-search-area"><i class="fas fa-search lail-search-icon"></i><input id="cinema-search-input" type="text" placeholder="بحث سريع..." onkeydown="if(event.key==='Enter') window.lailCinema.executeSearch()"></div></div></div><div id="cinema-admin-off-banner" class="lail-cinema-off-banner">🛑 سينما ليل متوقفة حالياً عن جميع الأعضاء (مفتوحة لك بصلاحية الإدارة فقط)</div><div id="cinema-announcement-banner" class="lail-cinema-banner"><i class="fas fa-bullhorn" style="color:#D4AF37;"></i><span id="cinema-announcement-text"></span></div><div class="lail-cinema-main"><div id="sidebar-overlay" class="lail-sidebar-overlay" onclick="window.lailCinema.toggleSidebar()"></div><div id="cinema-sidebar" class="lail-cinema-sidebar"><div class="lail-sidebar-header"><h4><i class="fas fa-list-ul"></i> التصنيفات</h4><button class="lail-close-btn" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-times"></i></button></div><div id="sidebar-genres" class="lail-genre-list"></div></div><div id="cinema-main-body" class="lail-cinema-body"><div id="cinema-event-area"></div><div id="cinema-poll-area"></div><div id="cinema-netflix-view" class="lail-netflix-view"></div><div id="cinema-grid-view" class="lail-grid-view"><div id="grid-header" class="lail-grid-header"></div><div id="cinema-grid" class="lail-cinema-grid"></div><div id="cinema-loader" class="lail-loader" style="display:none;"><div class="lail-spinner"></div></div></div></div></div><div id="cinema-details" class="lail-details-modal"><button class="lail-close-btn" style="position:fixed; top:25px; right:25px; z-index:30; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);" onclick="window.lailCinema.closeDetails()"><i class="fas fa-arrow-right"></i></button><div class="lail-details-hero"><img id="details-backdrop" class="lail-details-backdrop" src=""></div><div class="lail-details-layout"><div id="details-poster-wrap" class="lail-details-poster-wrap"><img id="details-poster" src=""></div><div class="lail-details-content-wrap"><h1 id="details-title" class="lail-details-title"></h1><div class="lail-details-meta"><span class="lail-match-score" id="details-score"></span> <span id="details-date"></span> <span class="lail-age-rating" id="details-age"></span> <span class="lail-runtime" id="details-runtime"></span> <span id="details-rate" style="color:#fbbf24; font-weight:bold;"><i class="fas fa-star"></i></span></div><div id="details-genres" class="lail-details-genres"></div><p id="details-overview" class="lail-details-overview"></p><div id="details-cast" class="lail-details-cast"></div><div class="lail-actions-row"><button id="details-play-btn" class="lail-play-btn"><i class="fas fa-play"></i> تشغيل</button> <button id="details-fav-btn" class="lail-fav-btn" onclick="window.lailCinema.toggleFavorite()"><i class="far fa-heart"></i> أضف للمفضلة</button> <button id="details-party-btn" class="lail-party-btn" onclick="window.lailCinema.createParty()"><i class="fas fa-video"></i> إنشاء مشاهدة جماعية</button></div></div></div><div id="tv-episodes-container" class="lail-episodes-section" style="display:none;"><div class="lail-section-title">الحلقات والمواسم</div><select id="season-selector" class="lail-season-selector" onchange="window.lailCinema.loadSeason(this.value)"></select><div id="episodes-list" class="lail-episode-list"></div></div><div id="recs-container" class="lail-recs-section" style="display:none;"><div class="lail-section-title">قد يعجبك أيضاً</div><div id="recs-scroller" class="lail-row-scroller"></div></div></div><div id="cinema-party-modal" class="lail-party-modal"><div class="lail-party-box"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h2 id="party-modal-title"><i class="fas fa-users"></i> الانضمام لغرفة</h2><div><button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex;" onclick="window.lailCinema.minimizeParty()" title="تصغير للذهاب للشات"><i class="fas fa-minus"></i></button> <button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex; margin-right:5px;" onclick="window.lailCinema.leaveParty(true)" title="إغلاق الغرفة"><i class="fas fa-times"></i></button></div></div><div id="party-join-ui"><p>أدخل كود الغرفة الذي أرسله المضيف للانضمام للمشاهدة الجماعية.</p><input type="text" id="party-code-input" class="lail-party-input" placeholder="مثال: 4921" maxlength="6" autocomplete="off"> <button class="lail-party-btn" style="width:100%; justify-content:center;" onclick="window.lailCinema.joinParty()">انضمام للغرفة</button></div><div id="party-wait-ui" style="display:none;"><p id="party-wait-msg">تم إنشاء غرفتك! شارك الكود مع الأعضاء:</p><div id="party-code-display" class="lail-party-code-display">----</div><div style="display:flex; gap:10px; margin-bottom:20px;"><button class="lail-share-btn" onclick="window.lailCinema.copyPartyCode()"><i class="fas fa-copy"></i> انسخ الكود وصغر النافذة لإرساله بالدردشة</button></div><p style="font-size:0.85rem; color:#64748b; margin-bottom:5px;">الأعضاء المتواجدون:</p><div id="party-users-list" class="lail-users-list"></div><button id="party-start-btn" class="lail-play-btn" style="width:100%; justify-content:center; display:none;" onclick="window.lailCinema.startParty()">🚀 بدء العرض للجميع</button><p id="party-guest-wait" style="font-size:0.9rem; color:#fbbf24; display:none;"><i class="fas fa-hourglass-half fa-spin"></i> بانتظار المضيف لبدء الفيلم...</p></div></div></div></div></div><div id="cinema-player" class="lail-player-modal"><div id="player-drag-header" class="lail-player-header"><h4 id="player-title"></h4><div class="lail-player-actions"><select id="lail-player-server-sel" class="lail-server-select" style="display:none;" onchange="window.lailCinema.switchPlayerServer(this.value)" title="تبديل السيرفر"></select><button id="party-sync-btn" class="lail-p-btn lail-p-btn-party" style="display:none;" onclick="window.lailCinema.syncPartyTime()" title="تزامن مع المجموعة"><i class="fas fa-sync-alt"></i> مزامنة</button><button id="party-pause-btn" class="lail-p-btn lail-p-btn-party" style="display:none; color:#fbbf24; border-color:#fbbf24;" onclick="window.lailCinema.hostTogglePause()" title="إيقاف مؤقت للجميع"><i class="fas fa-pause"></i> إيقاف للكل</button><button id="lail-pip-btn" class="lail-p-btn" title="تصغير/تكبير المشغل" onclick="window.lailCinema.toggleMiniPlayer()"><i class="fas fa-compress-arrows-alt"></i></button><button class="lail-p-btn lail-p-btn-danger" title="إغلاق المشغل" onclick="window.lailCinema.closePlayer()"><i class="fas fa-times"></i></button></div></div><div class="lail-iframe-container" id="lail-iframe-host"><div id="iframe-blocker" class="lail-iframe-blocker"></div><iframe id="cinema-iframe" src="" allowfullscreen allow="autoplay; fullscreen"></iframe><div id="party-reactions" class="lail-reactions-bar" style="display:none;"></div></div><div id="lail-resize-handle" class="lail-resize-handle" title="اسحب لتغيير الحجم"></div></div><div id="cinema-toast" class="lail-toast"></div><div id="party-restore-btn" onclick="window.lailCinema.restoreParty()" title="العودة لغرفة المشاهدة"><i class="fas fa-users"></i></div>`;
+let APP_HTML=`<div id="lail-cinema-app" class="lail-cinema-overlay"><div class="lail-cinema-content"><div class="lail-cinema-header"><h3><i class="fas fa-film"></i> سينما ليل</h3><div class="lail-header-controls"><button type="button" class="lail-adguide-btn" onclick="window.lailCinema.openAdGuide()"><i class="fas fa-shield-alt"></i><span>إيقاف الإعلانات</span></button><button class="lail-close-btn" onclick="window.lailCinema.close()"><i class="fas fa-times"></i></button></div></div><div class="lail-cinema-nav"><div class="lail-cinema-tabs"><div id="tab-movie" class="lail-c-tab active" onclick="window.lailCinema.switchMainTab('movie')">الأفلام</div><div id="tab-tv" class="lail-c-tab" onclick="window.lailCinema.switchMainTab('tv')">المسلسلات</div><div id="tab-fav" class="lail-c-tab" style="color:#ef4444;" onclick="window.lailCinema.switchMainTab('fav')"><i class="fas fa-heart"></i> مفضلاتي</div></div><div class="lail-c-actions"><button class="lail-btn-sidebar" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-filter"></i> الأقسام</button><button id="cinema-nav-party-btn" class="lail-btn-party" onclick="window.lailCinema.openPartyJoin()"><i class="fas fa-users"></i> غرف المشاهدة</button><div class="lail-c-search-area"><i class="fas fa-search lail-search-icon"></i><input id="cinema-search-input" type="text" placeholder="بحث سريع..." onkeydown="if(event.key==='Enter') window.lailCinema.executeSearch()"></div></div></div><div id="cinema-admin-off-banner" class="lail-cinema-off-banner">🛑 سينما ليل متوقفة حالياً عن الأعضاء (مفتوحة لك بصلاحية الإدارة / VIP)</div><div id="cinema-announcement-banner" class="lail-cinema-banner"><i class="fas fa-bullhorn" style="color:#D4AF37;"></i><span id="cinema-announcement-text"></span></div><div class="lail-cinema-main"><div id="sidebar-overlay" class="lail-sidebar-overlay" onclick="window.lailCinema.toggleSidebar()"></div><div id="cinema-sidebar" class="lail-cinema-sidebar"><div class="lail-sidebar-header"><h4><i class="fas fa-list-ul"></i> الأقسام والتصنيفات</h4><button class="lail-close-btn" onclick="window.lailCinema.toggleSidebar()"><i class="fas fa-times"></i></button></div><div id="sidebar-genres" class="lail-genre-list"></div></div><div id="cinema-main-body" class="lail-cinema-body"><div id="cinema-event-area"></div><div id="cinema-poll-area"></div><div id="cinema-netflix-view" class="lail-netflix-view"></div><div id="cinema-grid-view" class="lail-grid-view"><div id="grid-header" class="lail-grid-header"></div><div id="cinema-grid" class="lail-cinema-grid"></div><div id="cinema-loader" class="lail-loader" style="display:none;"><div class="lail-spinner"></div></div></div></div></div><div id="cinema-details" class="lail-details-modal"><button class="lail-close-btn" style="position:fixed; top:25px; right:25px; z-index:30; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);" onclick="window.lailCinema.closeDetails()"><i class="fas fa-arrow-right"></i></button><div class="lail-details-hero"><img id="details-backdrop" class="lail-details-backdrop" src=""></div><div class="lail-details-layout"><div id="details-poster-wrap" class="lail-details-poster-wrap"><img id="details-poster" src=""></div><div class="lail-details-content-wrap"><h1 id="details-title" class="lail-details-title"></h1><div class="lail-details-meta"><span class="lail-match-score" id="details-score"></span> <span id="details-date"></span> <span class="lail-age-rating" id="details-age"></span> <span class="lail-runtime" id="details-runtime"></span> <span id="details-rate" style="color:#fbbf24; font-weight:bold;"><i class="fas fa-star"></i></span></div><div id="details-genres" class="lail-details-genres"></div><p id="details-overview" class="lail-details-overview"></p><div id="details-cast" class="lail-details-cast"></div><div class="lail-actions-row"><button id="details-play-btn" class="lail-play-btn"><i class="fas fa-play"></i> تشغيل</button> <button id="details-fav-btn" class="lail-fav-btn" onclick="window.lailCinema.toggleFavorite()"><i class="far fa-heart"></i> أضف للمفضلة</button> <button id="details-party-btn" class="lail-party-btn" onclick="window.lailCinema.createParty()"><i class="fas fa-video"></i> إنشاء مشاهدة جماعية</button></div></div></div><div id="tv-episodes-container" class="lail-episodes-section" style="display:none;"><div class="lail-section-title">الحلقات والمواسم</div><select id="season-selector" class="lail-season-selector" onchange="window.lailCinema.loadSeason(this.value)"></select><div id="episodes-list" class="lail-episode-list"></div></div><div id="recs-container" class="lail-recs-section" style="display:none;"><div class="lail-section-title">قد يعجبك أيضاً</div><div id="recs-scroller" class="lail-row-scroller"></div></div></div><div id="cinema-party-modal" class="lail-party-modal"><div class="lail-party-box"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h2 id="party-modal-title"><i class="fas fa-users"></i> الانضمام لغرفة</h2><div><button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex;" onclick="window.lailCinema.minimizeParty()" title="تصغير للذهاب للشات"><i class="fas fa-minus"></i></button> <button class="lail-close-btn" style="width:30px;height:30px;font-size:1rem; display:inline-flex; margin-right:5px;" onclick="window.lailCinema.leaveParty(true)" title="إغلاق الغرفة"><i class="fas fa-times"></i></button></div></div><div id="party-join-ui"><p>أدخل كود الغرفة الذي أرسله المضيف للانضمام للمشاهدة الجماعية.</p><input type="text" id="party-code-input" class="lail-party-input" placeholder="مثال: 4921" maxlength="6" autocomplete="off"> <button class="lail-party-btn" style="width:100%; justify-content:center;" onclick="window.lailCinema.joinParty()">انضمام للغرفة</button></div><div id="party-wait-ui" style="display:none;"><p id="party-wait-msg">تم إنشاء غرفتك! شارك الكود مع الأعضاء:</p><div id="party-code-display" class="lail-party-code-display">----</div><div style="display:flex; gap:10px; margin-bottom:20px;"><button class="lail-share-btn" onclick="window.lailCinema.copyPartyCode()"><i class="fas fa-copy"></i> انسخ الكود وصغر النافذة لإرساله بالدردشة</button></div><p style="font-size:0.85rem; color:#64748b; margin-bottom:5px;">الأعضاء المتواجدون:</p><div id="party-users-list" class="lail-users-list"></div><button id="party-start-btn" class="lail-play-btn" style="width:100%; justify-content:center; display:none;" onclick="window.lailCinema.startParty()">🚀 بدء العرض للجميع</button><p id="party-guest-wait" style="font-size:0.9rem; color:#fbbf24; display:none;"><i class="fas fa-hourglass-half fa-spin"></i> بانتظار المضيف لبدء الفيلم...</p></div></div></div></div></div><div id="cinema-player" class="lail-player-modal"><div id="player-drag-header" class="lail-player-header"><h4 id="player-title"></h4><div class="lail-player-actions"><select id="lail-player-server-sel" class="lail-server-select" style="display:none;" onchange="window.lailCinema.switchPlayerServer(this.value)" title="تبديل السيرفر"></select><button id="party-sync-btn" class="lail-p-btn lail-p-btn-party" style="display:none;" onclick="window.lailCinema.syncPartyTime()" title="تزامن مع المجموعة"><i class="fas fa-sync-alt"></i> مزامنة</button><button id="party-pause-btn" class="lail-p-btn lail-p-btn-party" style="display:none; color:#fbbf24; border-color:#fbbf24;" onclick="window.lailCinema.hostTogglePause()" title="إيقاف مؤقت للجميع"><i class="fas fa-pause"></i> إيقاف للكل</button><button id="lail-pip-btn" class="lail-p-btn" title="تصغير/تكبير المشغل" onclick="window.lailCinema.toggleMiniPlayer()"><i class="fas fa-compress-arrows-alt"></i></button><button class="lail-p-btn lail-p-btn-danger" title="إغلاق المشغل" onclick="window.lailCinema.closePlayer()"><i class="fas fa-times"></i></button></div></div><div class="lail-iframe-container" id="lail-iframe-host"><div id="iframe-blocker" class="lail-iframe-blocker"></div><iframe id="cinema-iframe" src="" allowfullscreen allow="autoplay; fullscreen"></iframe><div id="party-reactions" class="lail-reactions-bar" style="display:none;"></div></div><div id="lail-resize-handle" class="lail-resize-handle" title="اسحب لتغيير الحجم"></div></div><div id="cinema-toast" class="lail-toast"></div><div id="party-restore-btn" onclick="window.lailCinema.restoreParty()" title="العودة لغرفة المشاهدة"><i class="fas fa-users"></i></div>`;
 
 function injectCinemaBtn(){
   let list=document.querySelector(".modern-classic-list");
@@ -395,7 +434,7 @@ const cinemaAdmin={
       .lcma-sw input:checked+.lcma-sl{background:#10b981}
       .lcma-sw input:checked+.lcma-sl:before{transform:translateX(-20px)}
       .lcma-subtabs{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap}
-      .lcma-subtab{flex:1;min-width:85px;background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:7px 6px;font-size:11px;font-weight:bold;cursor:pointer;font-family:inherit}
+      .lcma-subtab{flex:1;min-width:72px;background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:7px 5px;font-size:11px;font-weight:bold;cursor:pointer;font-family:inherit}
       .lcma-subtab.active{background:rgba(212,175,55,0.16);color:#D4AF37;border-color:rgba(212,175,55,0.45)}
       .lcma-mrow{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:7px 9px;margin-bottom:6px}
       .lcma-mrow img{width:38px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#1e293b}
@@ -446,6 +485,7 @@ const cinemaAdmin={
           <button type="button" class="lcma-tab" data-mtab="settings"><i class="fas fa-cog"></i> إعدادات وسجل</button>
         </div>
         <div class="lcma-body">
+          <!-- TAB 1: ROOMS & RADAR -->
           <div id="lcma-v-rooms" class="lcma-view active">
             <div class="lcma-card" style="border-color:rgba(16,185,129,0.3);">
               <div class="lcma-card-t" style="color:#6ee7b7;"><span><i class="fas fa-eye"></i> المتواجدون داخل السينما الآن</span><span id="lcma-pres-cnt" class="lcma-tag lcma-t-green">0</span></div>
@@ -454,10 +494,11 @@ const cinemaAdmin={
             <div class="lcma-card" style="border-color:rgba(212,175,55,0.3);">
               <div class="lcma-card-t"><span><i class="fas fa-crown"></i> إنشاء غرفة سهرة رسمية من الإدارة</span></div>
               <div class="lcma-row" style="margin-bottom:6px;">
+                <input type="text" id="lcma-oroom-code" class="lcma-inp" style="width:110px;text-align:center;" maxlength="6" placeholder="كود اختياري">
                 <input type="text" id="lcma-oroom-q" class="lcma-inp" style="flex:1;" placeholder="ابحث عن فيلم/مسلسل لبدء غرفة سهرة رسمية..." autocomplete="off">
                 <button type="button" id="lcma-oroom-search" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i> بحث</button>
               </div>
-              <div id="lcma-oroom-res" style="max-height:170px; overflow-y:auto;"></div>
+              <div id="lcma-oroom-res" style="max-height:160px; overflow-y:auto;"></div>
             </div>
             <div class="lcma-card">
               <div class="lcma-card-t">
@@ -466,21 +507,41 @@ const cinemaAdmin={
               </div>
               <div id="lcma-rooms-list"></div>
             </div>
+            <div class="lcma-card" style="border-color:rgba(56,189,248,0.3);">
+              <div class="lcma-card-t" style="color:#7dd3fc;"><span><i class="fas fa-exchange-alt"></i> تبديل الفيلم/الحلقة داخل غرفة قائمة</span></div>
+              <select id="lcma-rmsw-sel" class="lcma-inp" style="margin-bottom:6px;"></select>
+              <div class="lcma-row" style="margin-bottom:6px;">
+                <input type="text" id="lcma-rmsw-q" class="lcma-inp" style="flex:1;" placeholder="ابحث عن العمل البديل...">
+                <button type="button" id="lcma-rmsw-btn" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i></button>
+              </div>
+              <div id="lcma-rmsw-res" style="max-height:150px; overflow-y:auto;"></div>
+            </div>
           </div>
 
+          <!-- TAB 2: EVENTS, BANNER, WELCOME & POLL -->
           <div id="lcma-v-events" class="lcma-view">
             <div class="lcma-card" style="border-color:rgba(229,9,20,0.4);">
               <div class="lcma-card-t" style="color:#fca5a5;"><span><i class="fas fa-bullhorn"></i> بث إشعار فوري لجميع زوار السينما الآن</span></div>
               <div class="lcma-row">
                 <input type="text" id="lcma-live-bc-inp" class="lcma-inp" style="flex:1;" placeholder="مثلاً: 🍿 تبدأ السهرة الآن! كود الغرفة: 4820">
-                <button type="button" id="lcma-live-bc-send" class="lcma-btn lcma-btn-red lcma-mini" style="padding:8px 14px;"><i class="fas fa-paper-plane"></i> بث</button>
+                <select id="lcma-live-bc-th" class="lcma-inp" style="width:92px;"><option value="blue">عادي</option><option value="gold">ذهبي VIP</option><option value="red">عاجل</option></select>
+                <button type="button" id="lcma-live-bc-send" class="lcma-btn lcma-btn-red lcma-mini" style="padding:8px 13px;"><i class="fas fa-paper-plane"></i> بث</button>
               </div>
             </div>
             <div class="lcma-card" style="border-color:rgba(212,175,55,0.35);">
               <div class="lcma-card-t"><span><i class="fas fa-ribbon"></i> شريط الإعلان الدائم بأعلى السينما</span></div>
               <div class="lcma-row">
                 <input type="text" id="lcma-banner-inp" class="lcma-inp" style="flex:1;" placeholder="اتركه فارغاً لإخفاء الشريط...">
+                <select id="lcma-banner-th" class="lcma-inp" style="width:88px;"><option value="gold">ذهبي</option><option value="red">أحمر</option><option value="blue">أزرق</option><option value="green">أخضر</option></select>
                 <button type="button" id="lcma-banner-save" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 13px;">حفظ</button>
+              </div>
+            </div>
+            <div class="lcma-card">
+              <div class="lcma-card-t"><span><i class="fas fa-comment-alt"></i> رسالة الترحيب المنبثقة عند دخول السينما</span></div>
+              <textarea id="lcma-welc-inp" class="lcma-inp" rows="2" style="resize:vertical;margin-bottom:7px;" placeholder="رسالة إعلان أو قوانين تظهر للعضو فور فتح السينما..."></textarea>
+              <div class="lcma-row" style="gap:6px;">
+                <button type="button" id="lcma-welc-save" class="lcma-btn lcma-btn-ok" style="flex:1;"><i class="fas fa-paper-plane"></i> حفظ وإظهار للجميع</button>
+                <button type="button" id="lcma-welc-off" class="lcma-btn lcma-btn-danger lcma-mini">تعطيل</button>
               </div>
             </div>
             <div class="lcma-card">
@@ -493,17 +554,21 @@ const cinemaAdmin={
                 <input type="text" id="lcma-sched-q" class="lcma-inp" style="flex:1;" placeholder="ابحث عن فيلم السهرة...">
                 <button type="button" id="lcma-sched-search" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 11px;"><i class="fas fa-search"></i></button>
               </div>
-              <div id="lcma-sched-res" style="max-height:150px; overflow-y:auto; margin-bottom:6px;"></div>
-              <div class="lcma-g2" style="margin-bottom:7px;">
+              <div id="lcma-sched-res" style="max-height:140px; overflow-y:auto; margin-bottom:6px;"></div>
+              <div class="lcma-g3" style="margin-bottom:7px;">
                 <div><label class="lcma-lbl">موعد السهرة</label><input type="datetime-local" id="lcma-sched-time" class="lcma-inp" dir="ltr"></div>
-                <div><label class="lcma-lbl">عنوان/ملاحظة السهرة</label><input type="text" id="lcma-sched-note" class="lcma-inp" placeholder="سهرة الجمعة الملكية 🍿"></div>
+                <div><label class="lcma-lbl">عنوان السهرة</label><input type="text" id="lcma-sched-note" class="lcma-inp" placeholder="سهرة الجمعة 🍿"></div>
+                <div><label class="lcma-lbl">كود الغرفة (اختياري)</label><input type="text" id="lcma-sched-code" class="lcma-inp" maxlength="6" placeholder="مثال: 4444"></div>
               </div>
               <button type="button" id="lcma-sched-save" class="lcma-btn lcma-btn-gold"><i class="fas fa-calendar-check"></i> تفعيل العدّاد التنازلي للجميع</button>
             </div>
             <div class="lcma-card">
               <div class="lcma-card-t">
                 <span><i class="fas fa-poll"></i> تصويت «فيلم السهرة» التفاعلي</span>
-                <button type="button" id="lcma-poll-end" class="lcma-btn lcma-btn-danger lcma-mini">إنهاء التصويت</button>
+                <div class="lcma-row" style="gap:4px;">
+                  <button type="button" id="lcma-poll-reset" class="lcma-btn lcma-btn-warn lcma-mini">تصفير الأصوات</button>
+                  <button type="button" id="lcma-poll-end" class="lcma-btn lcma-btn-danger lcma-mini">إنهاء</button>
+                </div>
               </div>
               <div id="lcma-poll-cur" style="margin-bottom:8px;"></div>
               <input type="text" id="lcma-poll-qtxt" class="lcma-inp" style="margin-bottom:6px;" value="🗳️ صوّت لفيلم سهرة الليلة:" placeholder="سؤال التصويت...">
@@ -511,21 +576,33 @@ const cinemaAdmin={
                 <input type="text" id="lcma-poll-sq" class="lcma-inp" style="flex:1;" placeholder="أضف فيلم/مسلسل لخيارات التصويت (2 إلى 4)...">
                 <button type="button" id="lcma-poll-sbtn" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 11px;"><i class="fas fa-plus"></i> بحث</button>
               </div>
-              <div id="lcma-poll-sres" style="max-height:150px; overflow-y:auto; margin-bottom:6px;"></div>
+              <div id="lcma-poll-sres" style="max-height:140px; overflow-y:auto; margin-bottom:6px;"></div>
               <div id="lcma-poll-draft" style="margin-bottom:7px;"></div>
               <button type="button" id="lcma-poll-publish" class="lcma-btn lcma-btn-ok" style="width:100%;"><i class="fas fa-rocket"></i> نشر التصويت داخل السينما</button>
             </div>
           </div>
 
+          <!-- TAB 3: FEATURED & ARABIC ROWS -->
           <div id="lcma-v-featured" class="lcma-view">
+            <div class="lcma-card" style="border-color:rgba(212,175,55,0.35);">
+              <div class="lcma-card-t"><span><i class="fas fa-heading"></i> تخصيص صف اختيارات الإدارة والصفوف العربية</span></div>
+              <div class="lcma-row" style="margin-bottom:7px;">
+                <input type="text" id="lcma-feat-title-inp" class="lcma-inp" style="flex:1;" placeholder="عنوان الصف (مثلاً: 👑 اختيارات إدارة ليل)">
+                <button type="button" id="lcma-feat-title-save" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 12px;">حفظ</button>
+              </div>
+              <div class="lcma-srow" style="margin-bottom:0;">
+                <div><div style="font-size:12px;font-weight:bold;">إظهار صفوف المسلسلات والأفلام الخليجية والعربية</div><div style="font-size:10.5px;color:#94a3b8;">داخل قسم المسلسلات وقسم الأفلام</div></div>
+                <label class="lcma-sw"><input type="checkbox" id="lcma-set-ar-rows"><span class="lcma-sl"></span></label>
+              </div>
+            </div>
             <div class="lcma-card">
-              <div class="lcma-card-t"><span><i class="fas fa-plus-circle"></i> تثبيت عمل في «👑 اختيارات إدارة ليل»</span></div>
+              <div class="lcma-card-t"><span><i class="fas fa-plus-circle"></i> تثبيت عمل في اختيارات الإدارة</span></div>
               <div class="lcma-row" style="margin-bottom:6px;">
                 <input type="text" id="lcma-feat-q" class="lcma-inp" style="flex:1;" placeholder="ابحث بالاسم أو رقم TMDB ID..." autocomplete="off">
                 <button type="button" id="lcma-feat-search" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i> بحث</button>
               </div>
               <input type="text" id="lcma-feat-badge" class="lcma-inp" style="margin-bottom:7px;" placeholder="شارة فوق البوستر (مثلاً: ترشيح الإدارة ⭐ / سهرة الليلة 🍿)">
-              <div id="lcma-feat-results" style="max-height:200px; overflow-y:auto;"></div>
+              <div id="lcma-feat-results" style="max-height:190px; overflow-y:auto;"></div>
             </div>
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-crown"></i> الأعمال المثبّتة حالياً</span></div>
@@ -533,16 +610,21 @@ const cinemaAdmin={
             </div>
           </div>
 
+          <!-- TAB 4: MODERATION, BLACKLIST, GENRES, INSPECT & VIP -->
           <div id="lcma-v-moderation" class="lcma-view">
             <div class="lcma-subtabs">
               <button type="button" class="lcma-subtab active" data-msub="bans"><i class="fas fa-user-slash"></i> الحظر</button>
-              <button type="button" class="lcma-subtab" data-msub="blacklist"><i class="fas fa-eye-slash"></i> حجب أعمال</button>
-              <button type="button" class="lcma-subtab" data-msub="genres"><i class="fas fa-tags"></i> حجب تصنيفات</button>
+              <button type="button" class="lcma-subtab" data-msub="blacklist"><i class="fas fa-eye-slash"></i> الحجب</button>
+              <button type="button" class="lcma-subtab" data-msub="genres"><i class="fas fa-tags"></i> التصنيفات</button>
               <button type="button" class="lcma-subtab" data-msub="inspect"><i class="fas fa-user-check"></i> فحص عضو</button>
+              <button type="button" class="lcma-subtab" data-msub="vip"><i class="fas fa-crown"></i> VIP</button>
             </div>
             <div id="lcma-msub-bans">
               <div class="lcma-card">
-                <div class="lcma-card-t"><span>حظر عضو (مؤقت أو دائم)</span></div>
+                <div class="lcma-card-t">
+                  <span>حظر عضو (مؤقت أو دائم)</span>
+                  <button type="button" id="lcma-clean-expbans" class="lcma-btn lcma-btn-ok lcma-mini">تنظيف المنتهي</button>
+                </div>
                 <div class="lcma-g2" style="margin-bottom:6px;">
                   <div><label class="lcma-lbl">اسم المستخدم (Username)</label><input type="text" id="lcma-ban-user" class="lcma-inp" placeholder="Username"></div>
                   <div>
@@ -551,6 +633,7 @@ const cinemaAdmin={
                       <option value="full">حظر كامل من السينما</option>
                       <option value="party_only">منع غرف المشاهدة فقط</option>
                       <option value="reactions_only">كتم التفاعلات فقط</option>
+                      <option value="search_only">منع البحث فقط</option>
                     </select>
                   </div>
                 </div>
@@ -580,9 +663,16 @@ const cinemaAdmin={
                   <input type="text" id="lcma-bl-q" class="lcma-inp" style="flex:1;" placeholder="اسم العمل أو رقم TMDB ID...">
                   <button type="button" id="lcma-bl-search" class="lcma-btn lcma-btn-danger lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i></button>
                 </div>
-                <div id="lcma-bl-results" style="max-height:180px; overflow-y:auto;"></div>
+                <div id="lcma-bl-results" style="max-height:160px; overflow-y:auto;"></div>
               </div>
               <div class="lcma-card"><div class="lcma-card-t"><span>الأعمال المحجوبة حالياً</span></div><div id="lcma-bl-list"></div></div>
+              <div class="lcma-card">
+                <div class="lcma-card-t"><span><i class="fas fa-filter"></i> كلمات بحث محظورة (افصل بفاصلة ,)</span></div>
+                <div class="lcma-row">
+                  <input type="text" id="lcma-bwords-inp" class="lcma-inp" style="flex:1;" placeholder="كلمة1, كلمة2...">
+                  <button type="button" id="lcma-bwords-save" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 12px;">حفظ</button>
+                </div>
+              </div>
             </div>
             <div id="lcma-msub-genres" style="display:none;">
               <div class="lcma-card">
@@ -593,7 +683,7 @@ const cinemaAdmin={
             </div>
             <div id="lcma-msub-inspect" style="display:none;">
               <div class="lcma-card">
-                <div class="lcma-card-t"><span>فحص وتنظيف سجل ومفضلة عضو معيّن</span></div>
+                <div class="lcma-card-t"><span>فحص شامل وتنظيف بيانات عضو معيّن</span></div>
                 <div class="lcma-row" style="margin-bottom:8px;">
                   <input type="text" id="lcma-insp-user" class="lcma-inp" style="flex:1;" placeholder="اكتب اسم المستخدم...">
                   <button type="button" id="lcma-insp-btn" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i> فحص</button>
@@ -601,11 +691,22 @@ const cinemaAdmin={
                 <div id="lcma-insp-res"></div>
               </div>
             </div>
+            <div id="lcma-msub-vip" style="display:none;">
+              <div class="lcma-card" style="border-color:rgba(212,175,55,0.35);">
+                <div class="lcma-card-t"><span><i class="fas fa-crown"></i> قائمة VIP (تجاوز الصيانة وقيود الغرف والضيوف)</span></div>
+                <div class="lcma-row" style="margin-bottom:8px;">
+                  <input type="text" id="lcma-vip-inp" class="lcma-inp" style="flex:1;" placeholder="اسم المستخدم (Username)...">
+                  <button type="button" id="lcma-vip-add" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 13px;">إضافة VIP</button>
+                </div>
+                <div id="lcma-vip-list"></div>
+              </div>
+            </div>
           </div>
 
+          <!-- TAB 5: SERVERS & PLAYER -->
           <div id="lcma-v-servers" class="lcma-view">
             <div class="lcma-card" style="border-color:rgba(56,189,248,0.3);">
-              <div class="lcma-card-t" style="color:#7dd3fc;"><span><i class="fas fa-server"></i> مدير سيرفرات التشغيل (إضافة / حذف / افتراضي)</span></div>
+              <div class="lcma-card-t" style="color:#7dd3fc;"><span><i class="fas fa-server"></i> مدير سيرفرات التشغيل (افتراضي / تفعيل / ترتيب / حذف)</span></div>
               <div id="lcma-servers-list" style="margin-bottom:10px;"></div>
               <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:8px;">
                 <div style="font-size:11.5px; font-weight:bold; color:#D4AF37; margin-bottom:6px;">+ إضافة سيرفر جديد</div>
@@ -617,22 +718,11 @@ const cinemaAdmin={
             </div>
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-sliders-h"></i> صلاحيات المشغّل وغرف المشاهدة</span></div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">مبدّل السيرفرات للعضو داخل المشغّل</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-uswitch"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">غرف المشاهدة الجماعية</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-parties"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">التفاعلات العائمة داخل الغرف</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-reacts"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">المشغّل المصغّر (PiP)</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-pip"><span class="lcma-sl"></span></label>
-              </div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">مبدّل السيرفرات للعضو داخل المشغّل</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-uswitch"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">تفعيل غرف المشاهدة الجماعية</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-parties"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-srow"><div><div style="font-size:12px;font-weight:bold;">حصر إنشاء الغرف بـ الإدارة والـ VIP فقط</div><div style="font-size:10.5px;color:#94a3b8;">الأعضاء العاديون ينضمون للغرف فقط</div></div><label class="lcma-sw"><input type="checkbox" id="lcma-set-pvip"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">التفاعلات العائمة داخل الغرف</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-reacts"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">المشغّل المصغّر (PiP)</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-pip"><span class="lcma-sl"></span></label></div>
               <div class="lcma-g3" style="margin-bottom:7px;">
                 <div><label class="lcma-lbl">أقصى غرف (0=مفتوح)</label><input type="number" id="lcma-set-maxr" class="lcma-inp" min="0" max="100"></div>
                 <div><label class="lcma-lbl">أقصى أعضاء بالغرفة</label><input type="number" id="lcma-set-maxp" class="lcma-inp" min="0" max="200"></div>
@@ -646,43 +736,57 @@ const cinemaAdmin={
             </div>
           </div>
 
+          <!-- TAB 6: ANALYTICS -->
           <div id="lcma-v-analytics" class="lcma-view">
             <div class="lcma-card" style="text-align:center;">
               <div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">تحليل عند الطلب لسجلات المشاهدة والمفضلات بدون أي استهلاك مستمر.</div>
-              <button type="button" id="lcma-run-analytics" class="lcma-btn lcma-btn-gold"><i class="fas fa-chart-pie"></i> توليد التقرير الإحصائي الآن</button>
+              <div class="lcma-g2">
+                <button type="button" id="lcma-run-analytics" class="lcma-btn lcma-btn-gold"><i class="fas fa-chart-pie"></i> توليد التقرير الإحصائي</button>
+                <button type="button" id="lcma-copy-stars" class="lcma-btn lcma-btn-info"><i class="fas fa-trophy"></i> نسخ «نجوم السينما»</button>
+              </div>
             </div>
             <div id="lcma-analytics-body"></div>
           </div>
 
+          <!-- TAB 7: SETTINGS, MAINTENANCE & LOGS -->
           <div id="lcma-v-settings" class="lcma-view">
             <div class="lcma-card">
               <div class="lcma-card-t"><span><i class="fas fa-power-off"></i> التحكم العام والقيود</span></div>
               <div class="lcma-srow">
-                <div><div style="font-size:12.5px; font-weight:bold;">تفعيل سينما ليل للجميع</div><div style="font-size:10.5px; color:#94a3b8;">إيقافها يغلقها عن الأعضاء وتبقى مفتوحة للإدارة</div></div>
+                <div><div style="font-size:12.5px; font-weight:bold;">تفعيل سينما ليل للجميع</div><div style="font-size:10.5px; color:#94a3b8;">إيقافها يغلقها عن الأعضاء وتبقى مفتوحة للإدارة والـ VIP</div></div>
                 <label class="lcma-sw"><input type="checkbox" id="lcma-set-enabled"><span class="lcma-sl"></span></label>
               </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">السماح للضيوف بدخول السينما</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-guests"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-srow">
-                <div><div style="font-size:12px; font-weight:bold;">الوضع العائلي الصارم في البحث</div></div>
-                <label class="lcma-sw"><input type="checkbox" id="lcma-set-safe"><span class="lcma-sl"></span></label>
-              </div>
-              <div class="lcma-g2" style="margin-bottom:8px;">
-                <div><label class="lcma-lbl">أدنى تقييم للعرض (0 = الكل)</label><input type="number" id="lcma-set-minrate" class="lcma-inp" min="0" max="9" step="0.5"></div>
-                <div><label class="lcma-lbl">رسالة التوقف للصيانة</label><input type="text" id="lcma-set-offmsg" class="lcma-inp"></div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">السماح للضيوف بدخول السينما</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-guests"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">الوضع العائلي الصارم في البحث</div><label class="lcma-sw"><input type="checkbox" id="lcma-set-safe"><span class="lcma-sl"></span></label></div>
+              <div class="lcma-g3" style="margin-bottom:8px;">
+                <div><label class="lcma-lbl">التبويب الافتراضي</label><select id="lcma-set-deftab" class="lcma-inp"><option value="movie">الأفلام</option><option value="tv">المسلسلات</option></select></div>
+                <div><label class="lcma-lbl">أدنى تقييم (0=الكل)</label><input type="number" id="lcma-set-minrate" class="lcma-inp" min="0" max="9" step="0.5"></div>
+                <div><label class="lcma-lbl">رسالة الصيانة</label><input type="text" id="lcma-set-offmsg" class="lcma-inp"></div>
               </div>
               <button type="button" id="lcma-save-gen" class="lcma-btn lcma-btn-gold"><i class="fas fa-save"></i> حفظ الإعدادات العامة</button>
             </div>
             <div class="lcma-card">
-              <div class="lcma-card-t" style="color:#cbd5e1;"><span><i class="fas fa-broom"></i> الصيانة وتخفيف الفايربيس</span></div>
+              <div class="lcma-card-t"><span><i class="fas fa-eye"></i> إظهار وإخفاء عناصر الواجهة</span></div>
+              <div class="lcma-g2" style="margin-bottom:8px;">
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-tmov"> تبويب الأفلام</label>
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-ttv"> تبويب المسلسلات</label>
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-tfav"> تبويب مفضلاتي</label>
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-tadg"> زر إيقاف الإعلانات</label>
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-thist"> صف استمر في المشاهدة</label>
+                <label class="lcma-chip-chk"><input type="checkbox" id="lcma-v-trecs"> صف قد يعجبك أيضاً</label>
+              </div>
+              <button type="button" id="lcma-save-vis" class="lcma-btn lcma-btn-dark" style="width:100%;"><i class="fas fa-save"></i> حفظ إعدادات الواجهة</button>
+            </div>
+            <div class="lcma-card">
+              <div class="lcma-card-t" style="color:#cbd5e1;"><span><i class="fas fa-broom"></i> الصيانة العميقة والنسخ الاحتياطي</span></div>
               <div class="lcma-g2" style="margin-bottom:7px;">
                 <button type="button" id="lcma-clean-rooms" class="lcma-btn lcma-btn-dark"><i class="fas fa-door-closed"></i> تنظيف الغرف الخاملة</button>
                 <button type="button" id="lcma-clean-hist" class="lcma-btn lcma-btn-dark"><i class="fas fa-history"></i> حذف السجل (+30 يوم)</button>
                 <button type="button" id="lcma-clean-pres" class="lcma-btn lcma-btn-dark"><i class="fas fa-ghost"></i> تنظيف الرادار العالق</button>
-                <button type="button" id="lcma-reset-srvs" class="lcma-btn lcma-btn-warn"><i class="fas fa-undo"></i> استعادة السيرفر الافتراضي</button>
-                <button type="button" id="lcma-export" class="lcma-btn lcma-btn-info"><i class="fas fa-download"></i> نسخ احتياطي JSON</button>
+                <button type="button" id="lcma-reset-srvs" class="lcma-btn lcma-btn-warn"><i class="fas fa-undo"></i> استعادة السيرفر الأساسي</button>
+                <button type="button" id="lcma-wipe-hist" class="lcma-btn lcma-btn-danger"><i class="fas fa-trash"></i> تصفير سجل المشاهدة</button>
+                <button type="button" id="lcma-wipe-favs" class="lcma-btn lcma-btn-danger"><i class="fas fa-heart-broken"></i> تصفير كل المفضلات</button>
+                <button type="button" id="lcma-export" class="lcma-btn lcma-btn-info"><i class="fas fa-download"></i> تصدير JSON</button>
                 <button type="button" id="lcma-import" class="lcma-btn lcma-btn-ok"><i class="fas fa-upload"></i> استيراد JSON</button>
               </div>
               <input type="file" id="lcma-import-file" accept=".json,application/json" style="display:none;">
@@ -707,48 +811,84 @@ const cinemaAdmin={
     ov.querySelectorAll("[data-msub]").forEach(b=>b.onclick=()=>{
       let sub=b.dataset.msub;
       ov.querySelectorAll("[data-msub]").forEach(x=>x.classList.toggle("active",x===b));
-      ["bans","blacklist","genres","inspect"].forEach(k=>{document.getElementById(`lcma-msub-${k}`).style.display=k===sub?"block":"none"});
-      if("genres"===sub)cinemaAdmin.renderGenreBlocker()
+      ["bans","blacklist","genres","inspect","vip"].forEach(k=>{document.getElementById(`lcma-msub-${k}`).style.display=k===sub?"block":"none"});
+      if("genres"===sub)cinemaAdmin.renderGenreBlocker();
+      else if("vip"===sub)cinemaAdmin.renderVipList()
     });
 
+    // Tab 1 bindings
     document.getElementById("lcma-close-all-rooms").onclick=()=>cinemaAdmin.closeAllRooms();
     document.getElementById("lcma-oroom-search").onclick=()=>cinemaAdmin.searchTMDB("oroom");
     document.getElementById("lcma-oroom-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("oroom"))});
+    document.getElementById("lcma-rmsw-btn").onclick=()=>cinemaAdmin.searchTMDB("rmsw");
+    document.getElementById("lcma-rmsw-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("rmsw"))});
 
+    // Tab 2 bindings
     document.getElementById("lcma-live-bc-send").onclick=()=>cinemaAdmin.sendLiveBroadcast();
     document.getElementById("lcma-banner-save").onclick=()=>{
-      let txt=(document.getElementById("lcma-banner-inp").value||"").trim();
-      cinemaAdmin.patchSettings({bannerText:txt},txt?"📢 تم تحديث شريط الإعلان":"تم إخفاء شريط الإعلان")
+      let txt=(document.getElementById("lcma-banner-inp").value||"").trim(),th=document.getElementById("lcma-banner-th").value||"gold";
+      cinemaAdmin.patchSettings({bannerText:txt,bannerTheme:th},txt?"📢 تم تحديث شريط الإعلان":"تم إخفاء شريط الإعلان")
+    };
+    document.getElementById("lcma-welc-save").onclick=()=>{
+      let txt=(document.getElementById("lcma-welc-inp").value||"").trim();
+      cinemaAdmin.patchSettings({welcomePopupText:txt,welcomePopupVersion:Date.now()},txt?"✅ تم تفعيل رسالة الترحيب للجميع":"تم تعطيل الرسالة")
+    };
+    document.getElementById("lcma-welc-off").onclick=()=>{
+      document.getElementById("lcma-welc-inp").value="";
+      cinemaAdmin.patchSettings({welcomePopupText:""},"تم تعطيل رسالة الترحيب")
     };
     document.getElementById("lcma-sched-search").onclick=()=>cinemaAdmin.searchTMDB("sched");
     document.getElementById("lcma-sched-save").onclick=()=>cinemaAdmin.saveSchedule();
     document.getElementById("lcma-sched-clear").onclick=()=>cinemaAdmin.clearSchedule();
     document.getElementById("lcma-poll-sbtn").onclick=()=>cinemaAdmin.searchTMDB("poll");
     document.getElementById("lcma-poll-publish").onclick=()=>cinemaAdmin.publishPoll();
+    document.getElementById("lcma-poll-reset").onclick=()=>cinemaAdmin.resetPollVotes();
     document.getElementById("lcma-poll-end").onclick=()=>cinemaAdmin.endPoll();
 
+    // Tab 3 bindings
+    document.getElementById("lcma-feat-title-save").onclick=()=>{
+      let ttl=(document.getElementById("lcma-feat-title-inp").value||"").trim()||DEFAULT_SETTINGS.featuredTitle;
+      cinemaAdmin.patchSettings({featuredTitle:ttl},"✅ تم تحديث عنوان الصف")
+    };
+    document.getElementById("lcma-set-ar-rows").onchange=function(){
+      cinemaAdmin.patchSettings({showArabicRows:this.checked},this.checked?"🌙 تم تفعيل الصفوف العربية والخليجية":"تم إخفاء الصفوف العربية")
+    };
     document.getElementById("lcma-feat-search").onclick=()=>cinemaAdmin.searchTMDB("feat");
     document.getElementById("lcma-feat-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("feat"))});
 
+    // Tab 4 bindings
     document.getElementById("lcma-btn-ban").onclick=()=>cinemaAdmin.banUser();
+    document.getElementById("lcma-clean-expbans").onclick=()=>cinemaAdmin.cleanExpiredBans();
     document.getElementById("lcma-bl-search").onclick=()=>cinemaAdmin.searchTMDB("bl");
     document.getElementById("lcma-bl-q").addEventListener("keydown",ev=>{"Enter"===ev.key&&(ev.preventDefault(),cinemaAdmin.searchTMDB("bl"))});
+    document.getElementById("lcma-bwords-save").onclick=()=>{
+      let arr=(document.getElementById("lcma-bwords-inp").value||"").split(/[,،]+/).map(x=>x.trim()).filter(Boolean);
+      cinemaAdmin.patchSettings({blockedWords:arr},`✅ تم تحديث الكلمات المحظورة (${arr.length})`)
+    };
     document.getElementById("lcma-save-genres").onclick=()=>cinemaAdmin.saveBlockedGenres();
     document.getElementById("lcma-insp-btn").onclick=()=>cinemaAdmin.inspectUser();
+    document.getElementById("lcma-vip-add").onclick=()=>cinemaAdmin.addVip();
 
+    // Tab 5 bindings
     document.getElementById("lcma-nsrv-add").onclick=()=>cinemaAdmin.addServer();
     document.getElementById("lcma-save-player").onclick=()=>cinemaAdmin.savePlayerSettings();
 
+    // Tab 6 bindings
     document.getElementById("lcma-run-analytics").onclick=()=>cinemaAdmin.runAnalytics();
+    document.getElementById("lcma-copy-stars").onclick=()=>cinemaAdmin.copyCinemaStars();
 
+    // Tab 7 bindings
     document.getElementById("lcma-set-enabled").onchange=function(){cinemaAdmin.patchSettings({enabled:this.checked},this.checked?"✅ تم تفعيل سينما ليل":"🛑 تم إيقاف سينما ليل عن الأعضاء")};
     document.getElementById("lcma-set-guests").onchange=function(){cinemaAdmin.patchSettings({allowGuests:this.checked},this.checked?"✅ تم السماح للضيوف":"🔒 السينما للأعضاء فقط")};
     document.getElementById("lcma-set-safe").onchange=function(){cinemaAdmin.patchSettings({safeMode:this.checked},this.checked?"🛡️ تم تفعيل الوضع العائلي":"تم إيقاف الوضع العائلي")};
     document.getElementById("lcma-save-gen").onclick=()=>cinemaAdmin.saveGeneralSettings();
+    document.getElementById("lcma-save-vis").onclick=()=>cinemaAdmin.saveVisibilitySettings();
     document.getElementById("lcma-clean-rooms").onclick=()=>cinemaAdmin.cleanIdleRooms();
     document.getElementById("lcma-clean-hist").onclick=()=>cinemaAdmin.cleanOldHistory(30);
     document.getElementById("lcma-clean-pres").onclick=()=>{window.lailCinema.db?.ref("lail_cinema/presence").remove().then(()=>window.lailCinema.showToast("🧹 تم تنظيف الرادار"))};
-    document.getElementById("lcma-reset-srvs").onclick=()=>{confirm("استعادة السيرفر الافتراضي فقط؟")&&cinemaAdmin.patchSettings({servers:DEFAULT_SERVERS,defaultServerId:"srv_default"},"✅ تمت الاستعادة")};
+    document.getElementById("lcma-reset-srvs").onclick=()=>{confirm("استعادة السيرفر الأساسي فقط؟")&&cinemaAdmin.patchSettings({servers:DEFAULT_SERVERS,defaultServerId:"srv_default"},"✅ تمت الاستعادة")};
+    document.getElementById("lcma-wipe-hist").onclick=()=>{if(confirm("⚠️ حذف سجل المشاهدة لكل الأعضاء؟")&&confirm("تأكيد نهائي؟ لا يمكن التراجع!"))window.lailCinema.db?.ref("lail_cinema/history").remove().then(()=>{cinemaAdmin.log("تصفير سجل المشاهدة","الجميع","");window.lailCinema.showToast("🗑️ تم التصفير")})};
+    document.getElementById("lcma-wipe-favs").onclick=()=>{if(confirm("⚠️ حذف مفضلات كل الأعضاء؟")&&confirm("تأكيد نهائي؟ لا يمكن التراجع!"))window.lailCinema.db?.ref("lail_cinema/favorites").remove().then(()=>{cinemaAdmin.log("تصفير المفضلات","الجميع","");window.lailCinema.showToast("🗑️ تم التصفير")})};
     document.getElementById("lcma-export").onclick=()=>cinemaAdmin.exportBackup();
     document.getElementById("lcma-import").onclick=()=>document.getElementById("lcma-import-file").click();
     document.getElementById("lcma-import-file").onchange=ev=>cinemaAdmin.importBackup(ev);
@@ -779,8 +919,8 @@ const cinemaAdmin={
     let v=document.getElementById(`lcma-v-${tab}`);v&&v.classList.add("active");
     if("rooms"===tab){cinemaAdmin.renderPresence();cinemaAdmin.renderRooms()}
     else if("events"===tab){cinemaAdmin.populateInputs();cinemaAdmin.renderEventStatus()}
-    else if("featured"===tab)cinemaAdmin.renderFeatured();
-    else if("moderation"===tab){cinemaAdmin.renderBanned();cinemaAdmin.renderBlacklist()}
+    else if("featured"===tab){cinemaAdmin.populateInputs();cinemaAdmin.renderFeatured()}
+    else if("moderation"===tab){cinemaAdmin.populateInputs();cinemaAdmin.renderBanned();cinemaAdmin.renderBlacklist();cinemaAdmin.renderVipList()}
     else if("servers"===tab){cinemaAdmin.populateInputs();cinemaAdmin.renderServers()}
     else if("settings"===tab){cinemaAdmin.populateInputs();cinemaAdmin.loadLogs()}
   },
@@ -800,10 +940,8 @@ const cinemaAdmin={
     if(stEl){stEl.textContent=!1===s.enabled?"صيانة":"مفعّلة";stEl.style.color=!1===s.enabled?"#f87171":"#34d399"}
     let presCnt=Object.values(st.presenceCache||{}).filter(x=>x&&Date.now()-(x.ts||0)<18e5).length;
     let rmCnt=Object.keys(st.roomsCache||{}).length;
-    let onEl=document.getElementById("lcma-st-online");
-    onEl&&(onEl.textContent=`${presCnt} / ${rmCnt}`);
-    let ftEl=document.getElementById("lcma-st-feat");
-    ftEl&&(ftEl.textContent=Object.keys(st.featured||{}).length);
+    let onEl=document.getElementById("lcma-st-online");onEl&&(onEl.textContent=`${presCnt} / ${rmCnt}`);
+    let ftEl=document.getElementById("lcma-st-feat");ftEl&&(ftEl.textContent=Object.keys(st.featured||{}).length);
     let mdEl=document.getElementById("lcma-st-mod");
     if(mdEl){
       let bCnt=Object.values(st.bannedCache||{}).filter(x=>x&&(!x.expiresAt||Date.now()<x.expiresAt)).length;
@@ -812,27 +950,29 @@ const cinemaAdmin={
     if("rooms"===cinemaAdmin.activeTab){cinemaAdmin.renderPresence();cinemaAdmin.renderRooms()}
     else if("events"===cinemaAdmin.activeTab)cinemaAdmin.renderEventStatus();
     else if("featured"===cinemaAdmin.activeTab)cinemaAdmin.renderFeatured();
-    else if("moderation"===cinemaAdmin.activeTab){cinemaAdmin.renderBanned();cinemaAdmin.renderBlacklist()}
+    else if("moderation"===cinemaAdmin.activeTab){cinemaAdmin.renderBanned();cinemaAdmin.renderBlacklist();cinemaAdmin.renderVipList()}
     else if("servers"===cinemaAdmin.activeTab)cinemaAdmin.renderServers()
   },
   populateInputs(){
     let s=st.settings;
-    let setChk=(id,val)=>{let el=document.getElementById(id);el&&(el.checked=Boolean(val))};
-    let setVal=(id,val)=>{let el=document.getElementById(id);el&&(el.value=val)};
-    setVal("lcma-banner-inp",s.bannerText||"");
-    setChk("lcma-set-uswitch",!1!==s.allowUserServerSwitch);
-    setChk("lcma-set-parties",!1!==s.allowParties);
-    setChk("lcma-set-reacts",!1!==s.allowReactions);
-    setChk("lcma-set-pip",!1!==s.allowMiniPlayer);
-    setVal("lcma-set-maxr",Number(s.maxRooms)||0);
-    setVal("lcma-set-maxp",Number(s.maxPlayersPerRoom)||0);
-    setVal("lcma-set-rcd",Number(s.reactionCooldown)||1);
-    setVal("lcma-set-remojis",s.customReactions||"😂,😱,❤️,🔥");
-    setChk("lcma-set-enabled",!1!==s.enabled);
-    setChk("lcma-set-guests",!1!==s.allowGuests);
-    setChk("lcma-set-safe",s.safeMode);
-    setVal("lcma-set-minrate",Number(s.minRating)||0);
-    setVal("lcma-set-offmsg",s.disabledMsg||"")
+    let sc=(id,v)=>{let el=document.getElementById(id);el&&(el.checked=Boolean(v))};
+    let sv=(id,v)=>{let el=document.getElementById(id);el&&(el.value=v)};
+    sv("lcma-banner-inp",s.bannerText||"");sv("lcma-banner-th",s.bannerTheme||"gold");
+    sv("lcma-welc-inp",s.welcomePopupText||"");
+    sv("lcma-feat-title-inp",s.featuredTitle||DEFAULT_SETTINGS.featuredTitle);
+    sc("lcma-set-ar-rows",!1!==s.showArabicRows);
+    sv("lcma-bwords-inp",(s.blockedWords||[]).join(", "));
+    sc("lcma-set-uswitch",!1!==s.allowUserServerSwitch);
+    sc("lcma-set-parties",!1!==s.allowParties);
+    sc("lcma-set-pvip",Boolean(s.partiesVipOnly));
+    sc("lcma-set-reacts",!1!==s.allowReactions);
+    sc("lcma-set-pip",!1!==s.allowMiniPlayer);
+    sv("lcma-set-maxr",Number(s.maxRooms)||0);sv("lcma-set-maxp",Number(s.maxPlayersPerRoom)||0);
+    sv("lcma-set-rcd",Number(s.reactionCooldown)||1);sv("lcma-set-remojis",s.customReactions||"😂,😱,❤️,🔥");
+    sc("lcma-set-enabled",!1!==s.enabled);sc("lcma-set-guests",!1!==s.allowGuests);sc("lcma-set-safe",s.safeMode);
+    sv("lcma-set-deftab",s.defaultTab||"movie");sv("lcma-set-minrate",Number(s.minRating)||0);sv("lcma-set-offmsg",s.disabledMsg||"");
+    sc("lcma-v-tmov",!1!==s.showMovieTab);sc("lcma-v-ttv",!1!==s.showTvTab);sc("lcma-v-tfav",!1!==s.showFavTab);
+    sc("lcma-v-tadg",!1!==s.showAdGuideBtn);sc("lcma-v-thist",!1!==s.showHistoryRow);sc("lcma-v-trecs",!1!==s.showRecs)
   },
   patchSettings(partial,toastMsg){
     if(!window.lailCinema.db)return;
@@ -844,33 +984,43 @@ const cinemaAdmin={
       toastMsg&&window.lailCinema.showToast(toastMsg)
     }).catch(()=>alert("❌ فشل الحفظ في Firebase."))
   },
+  sendUserCmd(sanUser,cmd,text=""){
+    if(!window.lailCinema.db||!sanUser)return;
+    window.lailCinema.db.ref(`${ADMIN_PATH}/cmds/${sanUser}`).set({cmd,text,ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"}).then(()=>{
+      cinemaAdmin.log("kick"===cmd?"إخراج فوري":"تنبيه خاص",sanUser,text||cmd);
+      window.lailCinema.showToast("kick"===cmd?"⚡ تم إخراج العضو من السينما":"📩 تم إرسال التنبيه للعضو")
+    })
+  },
   renderPresence(){
-    let c=document.getElementById("lcma-presence-list"),cntEl=document.getElementById("lcma-pres-cnt");
-    if(!c)return;
+    let c=document.getElementById("lcma-presence-list"),cntEl=document.getElementById("lcma-pres-cnt");if(!c)return;
     let active=Object.entries(st.presenceCache||{}).filter(([,v])=>v&&Date.now()-(v.ts||0)<18e5);
     cntEl&&(cntEl.textContent=active.length);
     if(!active.length){c.innerHTML='<div style="color:#64748b; font-size:11.5px; text-align:center; padding:8px;">لا يوجد أعضاء داخل السينما حالياً.</div>';return}
     c.innerHTML=active.map(([k,v])=>`
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:rgba(0,0,0,0.22); border-radius:8px; margin-bottom:4px; font-size:11.5px; gap:6px;">
-        <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b style="color:#34d399;">●</b> <b>${h.esc(v.name||k)}</b> <span style="color:#94a3b8;">— ${h.esc(v.watching||"يتصفح السينما")}</span></div>
-        <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-qban" data-u="${h.esc(v.name||k)}" style="padding:3px 7px;">حظر</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:rgba(0,0,0,0.22); border-radius:8px; margin-bottom:4px; font-size:11.5px; gap:5px;">
+        <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;"><b style="color:#34d399;">●</b> <b>${h.esc(v.name||k)}</b> <span style="color:#94a3b8;">— ${h.esc(v.watching||"يتصفح")}</span></div>
+        <div class="lcma-row" style="gap:3px; flex-shrink:0;">
+          <button type="button" class="lcma-btn lcma-btn-info lcma-mini lcma-qmsg" data-k="${h.esc(k)}" title="تنبيه خاص" style="padding:3px 6px;"><i class="fas fa-bell"></i></button>
+          <button type="button" class="lcma-btn lcma-btn-warn lcma-mini lcma-qkick" data-k="${h.esc(k)}" title="إخراج فوري" style="padding:3px 6px;"><i class="fas fa-sign-out-alt"></i></button>
+          <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-qban" data-u="${h.esc(v.name||k)}" style="padding:3px 7px;">حظر</button>
+        </div>
       </div>`).join("");
-    c.querySelectorAll(".lcma-qban").forEach(b=>b.onclick=()=>{
-      cinemaAdmin.switchTab("moderation");
-      let inp=document.getElementById("lcma-ban-user");
-      if(inp){inp.value=b.dataset.u;inp.focus()}
-    })
+    c.querySelectorAll(".lcma-qmsg").forEach(b=>b.onclick=()=>{let t=prompt("اكتب رسالة تنبيه تظهر للعضو داخل السينما:");t&&t.trim()&&cinemaAdmin.sendUserCmd(b.dataset.k,"alert",t.trim())});
+    c.querySelectorAll(".lcma-qkick").forEach(b=>b.onclick=()=>{if(confirm("إخراج هذا العضو وإغلاق السينما عنده الآن؟"))cinemaAdmin.sendUserCmd(b.dataset.k,"kick","تم إغلاق السينما من قبل الإدارة.")});
+    c.querySelectorAll(".lcma-qban").forEach(b=>b.onclick=()=>{cinemaAdmin.switchTab("moderation");let inp=document.getElementById("lcma-ban-user");if(inp){inp.value=b.dataset.u;inp.focus()}})
   },
   renderRooms(){
-    let c=document.getElementById("lcma-rooms-list");if(!c)return;
+    let c=document.getElementById("lcma-rooms-list"),sel=document.getElementById("lcma-rmsw-sel");
     let entries=Object.entries(st.roomsCache||{});
+    if(sel)sel.innerHTML=entries.length?entries.map(([code,rm])=>`<option value="${h.esc(code)}">#${h.esc(code)} — ${h.esc(rm.title||"غرفة")}</option>`).join(""):'<option value="">لا توجد غرف نشطة حالياً</option>';
+    if(!c)return;
     if(!entries.length){c.innerHTML='<div style="text-align:center; color:#64748b; padding:18px; font-size:12px;">لا توجد غرف مشاهدة نشطة حالياً.</div>';return}
     c.innerHTML=entries.map(([code,rm])=>{
       let players=Object.keys(rm.players||{});
       let stTag="playing"===rm.status?'<span class="lcma-tag lcma-t-green">▶️ قيد العرض</span>':"paused"===rm.status?'<span class="lcma-tag lcma-t-gold">⏸️ متوقف</span>':'<span class="lcma-tag lcma-t-blue">⏳ انتظار</span>';
       let epStr=rm.season?` (S${rm.season} E${rm.episode})`:"";
       let elapsed="playing"===rm.status&&rm.startTime?` • د ${Math.max(0,Math.floor((Date.now()-rm.startTime)/6e4))}`:"";
-      let chips=players.map(p=>`<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,0.07); padding:2px 7px; border-radius:12px; font-size:10.5px;">${p===rm.host?"👑 ":""}${h.esc(p)}${p!==rm.host?` <i class="fas fa-crown lcma-mkhost" data-code="${h.esc(code)}" data-u="${h.esc(p)}" style="color:#fbbf24; cursor:pointer;" title="نقل المضيف له"></i> <i class="fas fa-times lcma-kick" data-code="${h.esc(code)}" data-u="${h.esc(p)}" style="color:#f87171; cursor:pointer;" title="طرد"></i>`:""}</span>`).join(" ");
+      let chips=players.map(p=>`<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,0.07); padding:2px 7px; border-radius:12px; font-size:10.5px;">${p===rm.host?"👑 ":""}${h.esc(p)}${p!==rm.host?` <i class="fas fa-crown lcma-mkhost" data-code="${h.esc(code)}" data-u="${h.esc(p)}" style="color:#fbbf24; cursor:pointer;" title="نقل المضيف"></i> <i class="fas fa-times lcma-kick" data-code="${h.esc(code)}" data-u="${h.esc(p)}" style="color:#f87171; cursor:pointer;" title="طرد"></i>`:""}</span>`).join(" ");
       return`
         <div class="lcma-card" style="background:rgba(0,0,0,0.25);">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px; flex-wrap:wrap;">
@@ -882,134 +1032,82 @@ const cinemaAdmin={
           <div class="lcma-row" style="gap:5px;">
             <button type="button" class="lcma-btn lcma-btn-info lcma-mini lcma-rm-join" data-code="${h.esc(code)}"><i class="fas fa-sign-in-alt"></i> دخول</button>
             ${"playing"!==rm.status?`<button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-rm-play" data-code="${h.esc(code)}"><i class="fas fa-play"></i> تشغيل</button>`:`<button type="button" class="lcma-btn lcma-btn-warn lcma-mini lcma-rm-pause" data-code="${h.esc(code)}"><i class="fas fa-pause"></i> إيقاف</button>`}
-            <button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-rm-bc" data-code="${h.esc(code)}" data-title="${h.esc(rm.title||"")}" style="width:auto;"><i class="fas fa-bullhorn"></i> بث الكود</button>
+            <button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-rm-seek" data-code="${h.esc(code)}" title="ضبط دقيقة المزامنة"><i class="fas fa-clock"></i></button>
+            <button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-rm-bc" data-code="${h.esc(code)}" data-title="${h.esc(rm.title||"")}" style="width:auto;"><i class="fas fa-bullhorn"></i> بث</button>
             <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-rm-close" data-code="${h.esc(code)}"><i class="fas fa-trash"></i></button>
           </div>
         </div>`
     }).join("");
-    c.querySelectorAll(".lcma-rm-join").forEach(b=>b.onclick=()=>{
-      let code=b.dataset.code;cinemaAdmin.close();
-      window.lailCinema.init().then(()=>{window.lailCinema.openPartyJoin();let i=document.getElementById("party-code-input");if(i){i.value=code;window.lailCinema.joinParty()}})
-    });
-    c.querySelectorAll(".lcma-rm-play").forEach(b=>b.onclick=()=>{
-      let code=b.dataset.code,rm=st.roomsCache[code];
-      let sTime=rm&&"paused"===rm.status?Date.now()-(rm.pauseElapsed||0):Date.now();
-      window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({status:"playing",startTime:sTime}).then(()=>{cinemaAdmin.log("تشغيل غرفة",`#${code}`,rm?.title||"");window.lailCinema.showToast(`▶️ تم تشغيل الغرفة #${code}`)})
-    });
-    c.querySelectorAll(".lcma-rm-pause").forEach(b=>b.onclick=()=>{
-      let code=b.dataset.code,rm=st.roomsCache[code];
-      window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({status:"paused",pauseElapsed:rm?.startTime?Date.now()-rm.startTime:0}).then(()=>{cinemaAdmin.log("إيقاف غرفة",`#${code}`,rm?.title||"");window.lailCinema.showToast(`⏸️ تم إيقاف الغرفة #${code}`)})
-    });
-    c.querySelectorAll(".lcma-rm-bc").forEach(b=>b.onclick=()=>{
-      let txt=`🍿 انضم الآن لغرفة السهرة (${b.dataset.title}) — كود الغرفة: ${b.dataset.code}`;
-      window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:txt,ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"}).then(()=>{cinemaAdmin.log("بث كود غرفة",`#${b.dataset.code}`,txt);window.lailCinema.showToast("📢 تم بث كود الغرفة لزوار السينما")})
-    });
-    c.querySelectorAll(".lcma-rm-close").forEach(b=>b.onclick=()=>{
-      let code=b.dataset.code;
-      if(!confirm(`إغلاق الغرفة #${code}؟`))return;
-      window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).remove().then(()=>{cinemaAdmin.log("إغلاق غرفة",`#${code}`,"");window.lailCinema.showToast(`🗑️ تم إغلاق #${code}`)})
-    });
-    c.querySelectorAll(".lcma-kick").forEach(el=>el.onclick=()=>{
-      let code=el.dataset.code,u=el.dataset.u;
-      if(!confirm(`طرد (${u}) من الغرفة #${code}؟`))return;
-      window.lailCinema.db.ref(`lail_cinema/rooms/${code}/players/${u}`).remove().then(()=>{cinemaAdmin.log("طرد من غرفة",u,`#${code}`);window.lailCinema.showToast(`🚫 تم طرد ${u}`)})
-    });
-    c.querySelectorAll(".lcma-mkhost").forEach(el=>el.onclick=()=>{
-      let code=el.dataset.code,u=el.dataset.u;
-      if(!confirm(`نقل صلاحية المضيف في الغرفة #${code} إلى (${u})؟`))return;
-      window.lailCinema.db.ref(`lail_cinema/rooms/${code}/host`).set(u).then(()=>{cinemaAdmin.log("نقل مضيف غرفة",u,`#${code}`);window.lailCinema.showToast(`👑 أصبح ${u} مضيف الغرفة`)})
-    })
+    c.querySelectorAll(".lcma-rm-join").forEach(b=>b.onclick=()=>{let code=b.dataset.code;cinemaAdmin.close();window.lailCinema.init().then(()=>{window.lailCinema.openPartyJoin();let i=document.getElementById("party-code-input");if(i){i.value=code;window.lailCinema.joinParty()}})});
+    c.querySelectorAll(".lcma-rm-play").forEach(b=>b.onclick=()=>{let code=b.dataset.code,rm=st.roomsCache[code];window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({status:"playing",startTime:rm&&"paused"===rm.status?Date.now()-(rm.pauseElapsed||0):Date.now()}).then(()=>{cinemaAdmin.log("تشغيل غرفة",`#${code}`,rm?.title||"");window.lailCinema.showToast(`▶️ تم تشغيل #${code}`)})});
+    c.querySelectorAll(".lcma-rm-pause").forEach(b=>b.onclick=()=>{let code=b.dataset.code,rm=st.roomsCache[code];window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({status:"paused",pauseElapsed:rm?.startTime?Date.now()-rm.startTime:0}).then(()=>{cinemaAdmin.log("إيقاف غرفة",`#${code}`,rm?.title||"");window.lailCinema.showToast(`⏸️ تم إيقاف #${code}`)})});
+    c.querySelectorAll(".lcma-rm-seek").forEach(b=>b.onclick=()=>{let m=parseInt(prompt("ضبط وقت مزامنة الغرفة على الدقيقة:","0"));if(isNaN(m)||m<0)return;window.lailCinema.db.ref(`lail_cinema/rooms/${b.dataset.code}`).update({startTime:Date.now()-m*6e4,pauseElapsed:m*6e4}).then(()=>{cinemaAdmin.log("ضبط وقت غرفة",`#${b.dataset.code}`,`الدقيقة ${m}`);window.lailCinema.showToast(`⏱️ تم الضبط على الدقيقة ${m}`)})});
+    c.querySelectorAll(".lcma-rm-bc").forEach(b=>b.onclick=()=>{let txt=`🍿 انضم الآن لغرفة السهرة (${b.dataset.title}) — كود الغرفة: ${b.dataset.code}`;window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:txt,theme:"gold",ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"}).then(()=>{cinemaAdmin.log("بث كود غرفة",`#${b.dataset.code}`,txt);window.lailCinema.showToast("📢 تم بث كود الغرفة")})});
+    c.querySelectorAll(".lcma-rm-close").forEach(b=>b.onclick=()=>{if(confirm(`إغلاق الغرفة #${b.dataset.code}؟`))window.lailCinema.db.ref(`lail_cinema/rooms/${b.dataset.code}`).remove().then(()=>{cinemaAdmin.log("إغلاق غرفة",`#${b.dataset.code}`,"");window.lailCinema.showToast("🗑️ تم الإغلاق")})});
+    c.querySelectorAll(".lcma-kick").forEach(el=>el.onclick=()=>{if(confirm(`طرد (${el.dataset.u}) من #${el.dataset.code}؟`))window.lailCinema.db.ref(`lail_cinema/rooms/${el.dataset.code}/players/${el.dataset.u}`).remove().then(()=>{cinemaAdmin.log("طرد من غرفة",el.dataset.u,`#${el.dataset.code}`);window.lailCinema.showToast(`🚫 تم طرد ${el.dataset.u}`)})});
+    c.querySelectorAll(".lcma-mkhost").forEach(el=>el.onclick=()=>{if(confirm(`نقل المضيف في #${el.dataset.code} إلى (${el.dataset.u})؟`))window.lailCinema.db.ref(`lail_cinema/rooms/${el.dataset.code}/host`).set(el.dataset.u).then(()=>{cinemaAdmin.log("نقل مضيف",el.dataset.u,`#${el.dataset.code}`);window.lailCinema.showToast(`👑 أصبح ${el.dataset.u} مضيف الغرفة`)})})
   },
   closeAllRooms(){
-    let cnt=Object.keys(st.roomsCache||{}).length;
-    if(!cnt)return window.lailCinema.showToast("لا توجد غرف نشطة");
-    if(!confirm(`إغلاق جميع الغرف (${cnt})؟`))return;
-    window.lailCinema.db.ref("lail_cinema/rooms").remove().then(()=>{cinemaAdmin.log("إغلاق كل الغرف",`${cnt} غرفة`,"");window.lailCinema.showToast(`🧹 تم إغلاق ${cnt} غرفة`)})
+    let cnt=Object.keys(st.roomsCache||{}).length;if(!cnt)return window.lailCinema.showToast("لا توجد غرف نشطة");
+    if(confirm(`إغلاق جميع الغرف (${cnt})؟`))window.lailCinema.db.ref("lail_cinema/rooms").remove().then(()=>{cinemaAdmin.log("إغلاق كل الغرف",`${cnt} غرفة`,"");window.lailCinema.showToast(`🧹 تم إغلاق ${cnt} غرفة`)})
   },
   sendLiveBroadcast(){
-    let inp=document.getElementById("lcma-live-bc-inp"),txt=(inp?.value||"").trim();
+    let inp=document.getElementById("lcma-live-bc-inp"),txt=(inp?.value||"").trim(),th=document.getElementById("lcma-live-bc-th")?.value||"blue";
     if(!txt||!window.lailCinema.db)return alert("اكتب نص الإشعار أولاً.");
-    window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:txt,ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"}).then(()=>{
-      cinemaAdmin.log("بث فوري","الجميع",txt);
-      inp.value="";
-      window.lailCinema.showToast("📢 تم إرسال البث الفوري")
-    })
+    window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:txt,theme:th,ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"}).then(()=>{cinemaAdmin.log("بث فوري","الجميع",txt);inp.value="";window.lailCinema.showToast("📢 تم إرسال البث الفوري")})
   },
   renderEventStatus(){
     let sc=document.getElementById("lcma-sched-cur");
     if(sc){
       let sch=st.schedule;
-      sc.innerHTML=sch&&sch.active?`<div class="lcma-mrow">${sch.poster_path?`<img src="https://image.tmdb.org/t/p/w200${sch.poster_path}">`:""}<div style="flex:1;"><div style="font-size:12.5px; font-weight:bold; color:#D4AF37;">🎬 ${h.esc(sch.title)}</div><div style="font-size:11px; color:#cbd5e1;">${h.esc(sch.note||"")} • ${h.formatDate(sch.time)}</div></div></div>`:'<div style="font-size:11.5px; color:#64748b;">لا توجد سهرة مجدولة حالياً.</div>'
+      sc.innerHTML=sch&&sch.active?`<div class="lcma-mrow">${sch.poster_path?`<img src="https://image.tmdb.org/t/p/w200${sch.poster_path}">`:""}<div style="flex:1;"><div style="font-size:12.5px;font-weight:bold;color:#D4AF37;">🎬 ${h.esc(sch.title)}</div><div style="font-size:11px;color:#cbd5e1;">${h.esc(sch.note||"")} • ${h.formatDate(sch.time)}${sch.roomCode?` • كود #${h.esc(sch.roomCode)}`:""}</div></div></div>`:'<div style="font-size:11.5px;color:#64748b;">لا توجد سهرة مجدولة حالياً.</div>'
     }
     let pc=document.getElementById("lcma-poll-cur");
     if(pc){
       let p=st.poll;
       if(p&&p.active&&Array.isArray(p.options)&&p.options.length){
         let votes=Object.values(p.votes||{}),tot=votes.length;
-        let rows=p.options.map((o,idx)=>{
-          let cnt=votes.filter(v=>Number(v)===idx).length,pct=tot?Math.round(cnt/tot*100):0;
-          return`<div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:rgba(0,0,0,0.22); border-radius:8px; margin-bottom:4px; font-size:11.5px;"><span><b>${h.esc(o.title)}</b></span><div class="lcma-row" style="gap:5px;"><span class="lcma-tag lcma-t-gold">${cnt} صوت (${pct}%)</span><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-pin-win" data-idx="${idx}" style="padding:2px 7px;">تثبيت كفائز</button></div></div>`
-        }).join("");
-        pc.innerHTML=`<div style="font-size:12px; font-weight:bold; color:#6ee7b7; margin-bottom:5px;">التصويت النشط (${tot} صوت): ${h.esc(p.question||"")}</div>${rows}`;
-        pc.querySelectorAll(".lcma-pin-win").forEach(b=>b.onclick=()=>{
-          let win=p.options[Number(b.dataset.idx)];
-          if(!win)return;
-          cinemaAdmin.addFeatured(win,"فائز التصويت 🏆");
-          cinemaAdmin.endPoll()
-        })
-      }else pc.innerHTML='<div style="font-size:11.5px; color:#64748b;">لا يوجد تصويت نشط حالياً.</div>'
+        let rows=p.options.map((o,idx)=>{let cnt=votes.filter(v=>Number(v)===idx).length,pct=tot?Math.round(cnt/tot*100):0;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:rgba(0,0,0,0.22);border-radius:8px;margin-bottom:4px;font-size:11.5px;"><span><b>${h.esc(o.title)}</b></span><div class="lcma-row" style="gap:5px;"><span class="lcma-tag lcma-t-gold">${cnt} (${pct}%)</span><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-pin-win" data-idx="${idx}" style="padding:2px 7px;">تثبيت كفائز</button></div></div>`}).join("");
+        pc.innerHTML=`<div style="font-size:12px;font-weight:bold;color:#6ee7b7;margin-bottom:5px;">التصويت النشط (${tot} صوت): ${h.esc(p.question||"")}</div>${rows}`;
+        pc.querySelectorAll(".lcma-pin-win").forEach(b=>b.onclick=()=>{let win=p.options[Number(b.dataset.idx)];win&&(cinemaAdmin.addFeatured(win,"فائز التصويت 🏆"),cinemaAdmin.endPoll())})
+      }else pc.innerHTML='<div style="font-size:11.5px;color:#64748b;">لا يوجد تصويت نشط حالياً.</div>'
     }
     cinemaAdmin.renderPollDraft()
   },
   renderPollDraft(){
     let box=document.getElementById("lcma-poll-draft");if(!box)return;
     if(!cinemaAdmin.pollDraft.length){box.innerHTML="";return}
-    box.innerHTML='<div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">مسودة التصويت الجديد:</div>'+cinemaAdmin.pollDraft.map((x,idx)=>`<span class="lcma-tag lcma-t-gold" style="margin:2px;">${h.esc(x.title)} <i class="fas fa-times lcma-pd-rm" data-i="${idx}" style="cursor:pointer; color:#f87171;"></i></span>`).join("");
+    box.innerHTML='<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">مسودة التصويت:</div>'+cinemaAdmin.pollDraft.map((x,idx)=>`<span class="lcma-tag lcma-t-gold" style="margin:2px;">${h.esc(x.title)} <i class="fas fa-times lcma-pd-rm" data-i="${idx}" style="cursor:pointer;color:#f87171;"></i></span>`).join("");
     box.querySelectorAll(".lcma-pd-rm").forEach(el=>el.onclick=()=>{cinemaAdmin.pollDraft.splice(Number(el.dataset.i),1);cinemaAdmin.renderPollDraft()})
   },
   saveSchedule(){
     if(!window.lailCinema.db)return;
-    let d=cinemaAdmin.schedDraft;
-    if(!d)return alert("ابحث واختر فيلم/مسلسل السهرة أولاً.");
-    let dtVal=document.getElementById("lcma-sched-time")?.value;
-    if(!dtVal)return alert("حدد تاريخ ووقت السهرة.");
-    let ts=new Date(dtVal).getTime();
-    if(isNaN(ts))return alert("وقت غير صالح.");
+    let d=cinemaAdmin.schedDraft;if(!d)return alert("ابحث واختر عمل السهرة أولاً.");
+    let dtVal=document.getElementById("lcma-sched-time")?.value;if(!dtVal)return alert("حدد وقت السهرة.");
+    let ts=new Date(dtVal).getTime();if(isNaN(ts))return alert("وقت غير صالح.");
     let note=(document.getElementById("lcma-sched-note")?.value||"").trim()||"سهرة سينما ليل 🍿";
-    window.lailCinema.db.ref(`${ADMIN_PATH}/schedule`).set({
-      active:!0,id:d.id,media_type:d.media_type,title:d.title||d.name,poster_path:d.poster_path||"",time:ts,note
-    }).then(()=>{
-      cinemaAdmin.log("جدولة سهرة",d.title||d.name,note);
-      cinemaAdmin.schedDraft=null;
-      document.getElementById("lcma-sched-res").innerHTML="";
-      window.lailCinema.showToast("🗓️ تم تفعيل عدّاد السهرة للجميع")
+    let roomCode=(document.getElementById("lcma-sched-code")?.value||"").trim();
+    window.lailCinema.db.ref(`${ADMIN_PATH}/schedule`).set({active:!0,id:d.id,media_type:d.media_type,title:d.title||d.name,poster_path:d.poster_path||"",time:ts,note,roomCode:roomCode||null}).then(()=>{
+      cinemaAdmin.log("جدولة سهرة",d.title||d.name,note);cinemaAdmin.schedDraft=null;document.getElementById("lcma-sched-res").innerHTML="";window.lailCinema.showToast("🗓️ تم تفعيل عدّاد السهرة")
     })
   },
-  clearSchedule(){
-    window.lailCinema.db?.ref(`${ADMIN_PATH}/schedule`).remove().then(()=>{cinemaAdmin.log("إلغاء سهرة","النظام","");window.lailCinema.showToast("تم إلغاء السهرة المجدولة")})
-  },
+  clearSchedule(){window.lailCinema.db?.ref(`${ADMIN_PATH}/schedule`).remove().then(()=>{cinemaAdmin.log("إلغاء سهرة","النظام","");window.lailCinema.showToast("تم إلغاء السهرة")})},
   publishPoll(){
     if(!window.lailCinema.db)return;
-    if(cinemaAdmin.pollDraft.length<2)return alert("أضف عملين على الأقل للتصويت (بحد أقصى 4).");
+    if(cinemaAdmin.pollDraft.length<2)return alert("أضف عملين على الأقل (حتى 4).");
     let q=(document.getElementById("lcma-poll-qtxt")?.value||"").trim()||"🗳️ صوّت لفيلم سهرة الليلة:";
-    window.lailCinema.db.ref(`${ADMIN_PATH}/poll`).set({
-      active:!0,question:q,options:cinemaAdmin.pollDraft,votes:{},createdAt:Date.now()
-    }).then(()=>{
-      cinemaAdmin.log("نشر تصويت",`${cinemaAdmin.pollDraft.length} خيارات`,q);
-      cinemaAdmin.pollDraft=[];
-      cinemaAdmin.renderPollDraft();
-      window.lailCinema.showToast("🗳️ تم نشر التصويت داخل السينما")
+    window.lailCinema.db.ref(`${ADMIN_PATH}/poll`).set({active:!0,question:q,options:cinemaAdmin.pollDraft,votes:{},createdAt:Date.now()}).then(()=>{
+      cinemaAdmin.log("نشر تصويت",`${cinemaAdmin.pollDraft.length} خيارات`,q);cinemaAdmin.pollDraft=[];cinemaAdmin.renderPollDraft();window.lailCinema.showToast("🗳️ تم نشر التصويت")
     })
   },
-  endPoll(){
-    window.lailCinema.db?.ref(`${ADMIN_PATH}/poll`).remove().then(()=>{cinemaAdmin.log("إنهاء تصويت","النظام","");window.lailCinema.showToast("تم إنهاء التصويت")})
-  },
+  resetPollVotes(){if(confirm("تصفير أصوات التصويت الحالي؟"))window.lailCinema.db?.ref(`${ADMIN_PATH}/poll/votes`).remove().then(()=>{cinemaAdmin.log("تصفير أصوات","التصويت","");window.lailCinema.showToast("🔄 تم تصفير الأصوات")})},
+  endPoll(){window.lailCinema.db?.ref(`${ADMIN_PATH}/poll`).remove().then(()=>{cinemaAdmin.log("إنهاء تصويت","النظام","");window.lailCinema.showToast("تم إنهاء التصويت")})},
   async searchTMDB(mode){
-    let qMap={feat:"lcma-feat-q",bl:"lcma-bl-q",oroom:"lcma-oroom-q",sched:"lcma-sched-q",poll:"lcma-poll-sq"};
-    let rMap={feat:"lcma-feat-results",bl:"lcma-bl-results",oroom:"lcma-oroom-res",sched:"lcma-sched-res",poll:"lcma-poll-sres"};
+    let qMap={feat:"lcma-feat-q",bl:"lcma-bl-q",oroom:"lcma-oroom-q",rmsw:"lcma-rmsw-q",sched:"lcma-sched-q",poll:"lcma-poll-sq"};
+    let rMap={feat:"lcma-feat-results",bl:"lcma-bl-results",oroom:"lcma-oroom-res",rmsw:"lcma-rmsw-res",sched:"lcma-sched-res",poll:"lcma-poll-sres"};
     let q=(document.getElementById(qMap[mode])?.value||"").trim(),resBox=document.getElementById(rMap[mode]);
     if(!q||!resBox)return;
-    resBox.innerHTML='<div style="text-align:center; color:#D4AF37; padding:10px;"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
+    resBox.innerHTML='<div style="text-align:center;color:#D4AF37;padding:10px;"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
     try{
       let items=[];
       if(/^\d+$/.test(q)){
@@ -1017,61 +1115,54 @@ const cinemaAdmin={
           fetch(`https://api.themoviedb.org/3/movie/${q}?api_key=${TMDB_KEY}&language=ar`).then(x=>x.ok?x.json():null).catch(()=>null),
           fetch(`https://api.themoviedb.org/3/tv/${q}?api_key=${TMDB_KEY}&language=ar`).then(x=>x.ok?x.json():null).catch(()=>null)
         ]);
-        mr?.id&&items.push(Object.assign({media_type:"movie"},mr));
-        tr?.id&&items.push(Object.assign({media_type:"tv"},tr))
+        mr?.id&&items.push(Object.assign({media_type:"movie"},mr));tr?.id&&items.push(Object.assign({media_type:"tv"},tr))
       }else{
         let data=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar&query=${encodeURIComponent(q)}`).then(x=>x.json());
         items=(data.results||[]).filter(x=>"movie"===x.media_type||"tv"===x.media_type).slice(0,7)
       }
-      if(!items.length){resBox.innerHTML='<div style="text-align:center; color:#94a3b8; padding:8px; font-size:11.5px;">لا توجد نتائج.</div>';return}
-      let btnLbl={feat:"تثبيت ⭐",bl:"حجب 🚫",oroom:"إنشاء غرفة 👑",sched:"اختيار 🗓️",poll:"+ إضافة"}[mode];
+      if(!items.length){resBox.innerHTML='<div style="text-align:center;color:#94a3b8;padding:8px;font-size:11.5px;">لا توجد نتائج.</div>';return}
+      let btnLbl={feat:"تثبيت ⭐",bl:"حجب 🚫",oroom:"إنشاء غرفة 👑",rmsw:"تبديل الآن 🔄",sched:"اختيار 🗓️",poll:"+ إضافة"}[mode];
       let btnCls="bl"===mode?"lcma-btn-danger":"lcma-btn-gold";
       resBox.innerHTML=items.map((it,idx)=>{
         let ttl=it.title||it.name||"بدون اسم",yr=(it.release_date||it.first_air_date||"").slice(0,4);
         let ps=it.poster_path?`https://image.tmdb.org/t/p/w200${it.poster_path}`:"";
-        return`<div class="lcma-mrow">${ps?`<img src="${ps}">`:""}<div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${h.esc(ttl)}</div><div style="font-size:10.5px; color:#94a3b8;">${"movie"===it.media_type?"🎬 فيلم":"📺 مسلسل"} • ${yr||"-"} • #${it.id}</div></div><button type="button" class="lcma-btn ${btnCls} lcma-mini lcma-spick" data-idx="${idx}">${btnLbl}</button></div>`
+        return`<div class="lcma-mrow">${ps?`<img src="${ps}">`:""}<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(ttl)}</div><div style="font-size:10.5px;color:#94a3b8;">${"movie"===it.media_type?"🎬 فيلم":"📺 مسلسل"} • ${yr||"-"} • #${it.id}</div></div><button type="button" class="lcma-btn ${btnCls} lcma-mini lcma-spick" data-idx="${idx}">${btnLbl}</button></div>`
       }).join("");
       resBox.querySelectorAll(".lcma-spick").forEach(b=>b.onclick=()=>{
-        let it=items[Number(b.dataset.idx)];
+        let it=items[Number(b.dataset.idx)],ttl=it.title||it.name;
         if("feat"===mode)cinemaAdmin.addFeatured(it);
         else if("bl"===mode)cinemaAdmin.addBlacklist(it);
-        else if("sched"===mode){
-          cinemaAdmin.schedDraft=it;
-          resBox.innerHTML=`<div style="color:#34d399; font-size:11.5px; padding:5px;">✅ تم اختيار: <b>${h.esc(it.title||it.name)}</b> — حدد الوقت ثم اضغط تفعيل</div>`
-        }else if("poll"===mode){
+        else if("sched"===mode){cinemaAdmin.schedDraft=it;resBox.innerHTML=`<div style="color:#34d399;font-size:11.5px;padding:5px;">✅ تم اختيار: <b>${h.esc(ttl)}</b></div>`}
+        else if("poll"===mode){
           if(cinemaAdmin.pollDraft.length>=4)return alert("الحد الأقصى 4 خيارات.");
-          if(!cinemaAdmin.pollDraft.some(x=>x.id===it.id)){
-            cinemaAdmin.pollDraft.push({id:it.id,media_type:it.media_type,title:it.title||it.name,poster_path:it.poster_path||""});
-            cinemaAdmin.renderPollDraft()
-          }
-          resBox.innerHTML=""
+          cinemaAdmin.pollDraft.some(x=>x.id===it.id)||cinemaAdmin.pollDraft.push({id:it.id,media_type:it.media_type,title:ttl,poster_path:it.poster_path||""});
+          cinemaAdmin.renderPollDraft();resBox.innerHTML=""
         }else if("oroom"===mode){
-          let sNum=0,eNum=0;
-          if("tv"===it.media_type){sNum=parseInt(prompt("رقم الموسم:","1"))||1;eNum=parseInt(prompt("رقم الحلقة:","1"))||1}
-          let code=Math.floor(1e3+9e3*Math.random()).toString(),me=h.san(window.lailCinema.myUsername);
-          let ttl=it.title||it.name;
-          window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).set({
-            host:me,official:!0,movieId:it.id,type:it.media_type,title:ttl,season:sNum,episode:eNum,status:"waiting",startTime:0,pauseElapsed:0,createdAt:Date.now(),players:{[me]:!0}
-          }).then(()=>{
-            cinemaAdmin.log("غرفة سهرة رسمية",`#${code}`,ttl);
-            resBox.innerHTML="";
-            if(confirm(`✅ تم إنشاء غرفة السهرة الرسمية #${code} لـ (${ttl}).\nهل تريد بث الكود فوراً لزوار السينما؟`)){
-              window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:`👑 غرفة سهرة رسمية مفتوحة الآن لـ (${ttl}) — كود الانضمام: ${code}`,ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"})
+          let sN=0,eN=0;if("tv"===it.media_type){sN=parseInt(prompt("رقم الموسم:","1"))||1;eN=parseInt(prompt("رقم الحلقة:","1"))||1}
+          let custCode=(document.getElementById("lcma-oroom-code")?.value||"").trim().replace(/[^a-zA-Z0-9]/g,"");
+          let code=custCode.length>=3?custCode:Math.floor(1e3+9e3*Math.random()).toString(),me=h.san(window.lailCinema.myUsername);
+          window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).set({host:me,official:!0,movieId:it.id,type:it.media_type,title:ttl,season:sN,episode:eN,status:"waiting",startTime:0,pauseElapsed:0,createdAt:Date.now(),players:{[me]:!0}}).then(()=>{
+            cinemaAdmin.log("غرفة سهرة رسمية",`#${code}`,ttl);resBox.innerHTML="";document.getElementById("lcma-oroom-code").value="";
+            if(confirm(`✅ تم إنشاء الغرفة الرسمية #${code} لـ (${ttl}). بث الكود الآن لزوار السينما؟`)){
+              window.lailCinema.db.ref(`${ADMIN_PATH}/broadcast`).set({text:`👑 غرفة سهرة رسمية مفتوحة الآن لـ (${ttl}) — كود الانضمام: ${code}`,theme:"gold",ts:Date.now(),by:window.lailCinema.myUsername||"الإدارة"})
             }
+          })
+        }else if("rmsw"===mode){
+          let code=document.getElementById("lcma-rmsw-sel")?.value;if(!code)return alert("اختر غرفة نشطة أولاً.");
+          let sN=0,eN=0;if("tv"===it.media_type){sN=parseInt(prompt("رقم الموسم:","1"))||1;eN=parseInt(prompt("رقم الحلقة:","1"))||1}
+          window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({movieId:it.id,type:it.media_type,title:ttl,season:sN,episode:eN,startTime:Date.now(),pauseElapsed:0}).then(()=>{
+            cinemaAdmin.log("تبديل عرض غرفة",`#${code}`,ttl);resBox.innerHTML="";window.lailCinema.showToast(`🔄 تم تبديل عرض الغرفة #${code}`)
           })
         }
       })
-    }catch{resBox.innerHTML='<div style="text-align:center; color:#ef4444; padding:8px;">خطأ في الاتصال.</div>'}
+    }catch{resBox.innerHTML='<div style="text-align:center;color:#ef4444;padding:8px;">خطأ اتصال.</div>'}
   },
   addFeatured(it,customBadge){
     if(!window.lailCinema.db||!it)return;
-    let key=`${it.media_type}_${it.id}`;
-    let badge=customBadge||(document.getElementById("lcma-feat-badge")?.value||"").trim()||"اختيار الإدارة ⭐";
-    window.lailCinema.db.ref(`${ADMIN_PATH}/featured/${key}`).set({
-      id:it.id,media_type:it.media_type,title:it.title||it.name||"",poster_path:it.poster_path||"",vote_average:it.vote_average||0,badge,timestamp:Date.now()
-    }).then(()=>{
+    let key=`${it.media_type}_${it.id}`,badge=customBadge||(document.getElementById("lcma-feat-badge")?.value||"").trim()||"اختيار الإدارة ⭐";
+    window.lailCinema.db.ref(`${ADMIN_PATH}/featured/${key}`).set({id:it.id,media_type:it.media_type,title:it.title||it.name||"",poster_path:it.poster_path||"",vote_average:it.vote_average||0,badge,timestamp:Date.now()}).then(()=>{
       cinemaAdmin.log("تثبيت عمل",it.title||it.name,badge);
-      let bInp=document.getElementById("lcma-feat-badge");bInp&&(bInp.value="");
+      let bi=document.getElementById("lcma-feat-badge");bi&&(bi.value="");
       let fr=document.getElementById("lcma-feat-results");fr&&(fr.innerHTML="");
       window.lailCinema.showToast(`⭐ تم تثبيت «${it.title||it.name}»`)
     })
@@ -1079,43 +1170,40 @@ const cinemaAdmin={
   renderFeatured(){
     let c=document.getElementById("lcma-feat-list");if(!c)return;
     let items=Object.entries(st.featured||{}).sort((x,y)=>(y[1].timestamp||0)-(x[1].timestamp||0));
-    if(!items.length){c.innerHTML='<div style="text-align:center; color:#64748b; padding:14px; font-size:12px;">لا توجد أعمال مثبّتة.</div>';return}
+    if(!items.length){c.innerHTML='<div style="text-align:center;color:#64748b;padding:14px;font-size:12px;">لا توجد أعمال مثبّتة.</div>';return}
     c.innerHTML=items.map(([k,it])=>`
       <div class="lcma-mrow">
         ${it.poster_path?`<img src="https://image.tmdb.org/t/p/w200${it.poster_path}">`:""}
-        <div style="flex:1; min-width:0;">
-          <div style="font-size:12.5px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${h.esc(it.title)}</div>
-          <div class="lcma-row" style="gap:4px; margin-top:3px;"><span class="lcma-tag lcma-t-gold">${h.esc(it.badge||"اختيار الإدارة")}</span><span class="lcma-tag lcma-t-gray">${"movie"===it.media_type?"فيلم":"مسلسل"}</span></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(it.title)}</div>
+          <div class="lcma-row" style="gap:4px;margin-top:3px;"><span class="lcma-tag lcma-t-gold">${h.esc(it.badge||"اختيار الإدارة")}</span><span class="lcma-tag lcma-t-gray">${"movie"===it.media_type?"فيلم":"مسلسل"}</span></div>
         </div>
+        <button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-ed-feat" data-k="${h.esc(k)}" title="تعديل الشارة"><i class="fas fa-pen"></i></button>
         <button type="button" class="lcma-btn lcma-btn-info lcma-mini lcma-top-feat" data-k="${h.esc(k)}" title="رفع للأول"><i class="fas fa-arrow-up"></i></button>
         <button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-del-feat" data-k="${h.esc(k)}"><i class="fas fa-trash"></i></button>
       </div>`).join("");
+    c.querySelectorAll(".lcma-ed-feat").forEach(b=>b.onclick=()=>{let k=b.dataset.k,nb=prompt("الشارة الجديدة:",st.featured[k]?.badge||"");nb&&nb.trim()&&window.lailCinema.db.ref(`${ADMIN_PATH}/featured/${k}/badge`).set(nb.trim()).then(()=>window.lailCinema.showToast("✅ تم تعديل الشارة"))});
     c.querySelectorAll(".lcma-top-feat").forEach(b=>b.onclick=()=>{window.lailCinema.db.ref(`${ADMIN_PATH}/featured/${b.dataset.k}/timestamp`).set(Date.now()).then(()=>window.lailCinema.showToast("⬆️ تم الرفع للمقدمة"))});
     c.querySelectorAll(".lcma-del-feat").forEach(b=>b.onclick=()=>{let k=b.dataset.k;window.lailCinema.db.ref(`${ADMIN_PATH}/featured/${k}`).remove().then(()=>{cinemaAdmin.log("حذف اختيار",st.featured[k]?.title||k,"");window.lailCinema.showToast("تمت الإزالة")})})
   },
   addBlacklist(it){
     if(!window.lailCinema.db||!it)return;
     let key=`${it.media_type}_${it.id}`;
-    window.lailCinema.db.ref(`${ADMIN_PATH}/blacklist/${key}`).set({
-      id:it.id,media_type:it.media_type,title:it.title||it.name||`#${it.id}`,poster_path:it.poster_path||"",by:window.lailCinema.myUsername||"الإدارة",timestamp:Date.now()
-    }).then(()=>{
-      cinemaAdmin.log("حجب عمل",it.title||it.name,`#${it.id}`);
-      document.getElementById("lcma-bl-results").innerHTML="";
-      window.lailCinema.showToast(`🚫 تم حجب «${it.title||it.name}»`)
+    window.lailCinema.db.ref(`${ADMIN_PATH}/blacklist/${key}`).set({id:it.id,media_type:it.media_type,title:it.title||it.name||`#${it.id}`,poster_path:it.poster_path||"",by:window.lailCinema.myUsername||"الإدارة",timestamp:Date.now()}).then(()=>{
+      cinemaAdmin.log("حجب عمل",it.title||it.name,`#${it.id}`);document.getElementById("lcma-bl-results").innerHTML="";window.lailCinema.showToast(`🚫 تم حجب «${it.title||it.name}»`)
     })
   },
   renderBlacklist(){
     let c=document.getElementById("lcma-bl-list");if(!c)return;
     let items=Object.entries(st.blacklist||{}).sort((x,y)=>(y[1].timestamp||0)-(x[1].timestamp||0));
-    if(!items.length){c.innerHTML='<div style="text-align:center; color:#64748b; padding:14px; font-size:12px;">لا توجد أعمال محجوبة.</div>';return}
-    c.innerHTML=items.map(([k,it])=>`<div class="lcma-mrow">${it.poster_path?`<img src="https://image.tmdb.org/t/p/w200${it.poster_path}">`:""}<div style="flex:1; min-width:0;"><div style="font-size:12px; font-weight:bold; color:#fecaca;">${h.esc(it.title||k)}</div><div style="font-size:10.5px; color:#94a3b8;">#${it.id} • بواسطة ${h.esc(it.by||"-")}</div></div><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-del-bl" data-k="${h.esc(k)}">فك الحجب</button></div>`).join("");
+    if(!items.length){c.innerHTML='<div style="text-align:center;color:#64748b;padding:14px;font-size:12px;">لا توجد أعمال محجوبة.</div>';return}
+    c.innerHTML=items.map(([k,it])=>`<div class="lcma-mrow">${it.poster_path?`<img src="https://image.tmdb.org/t/p/w200${it.poster_path}">`:""}<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:bold;color:#fecaca;">${h.esc(it.title||k)}</div><div style="font-size:10.5px;color:#94a3b8;">#${it.id} • بواسطة ${h.esc(it.by||"-")}</div></div><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-del-bl" data-k="${h.esc(k)}">فك الحجب</button></div>`).join("");
     c.querySelectorAll(".lcma-del-bl").forEach(b=>b.onclick=()=>{let k=b.dataset.k;window.lailCinema.db.ref(`${ADMIN_PATH}/blacklist/${k}`).remove().then(()=>{cinemaAdmin.log("فك حجب",st.blacklist[k]?.title||k,"");window.lailCinema.showToast("✅ تم فك الحجب")})})
   },
   async renderGenreBlocker(){
     let box=document.getElementById("lcma-genres-box");if(!box)return;
     if(!window.lailCinema.genres.movie.length)await window.lailCinema.fetchGenres();
-    let map=new Map;
-    [...window.lailCinema.genres.movie,...window.lailCinema.genres.tv].forEach(g=>map.set(g.id,g.name));
+    let map=new Map;[...window.lailCinema.genres.movie,...window.lailCinema.genres.tv].forEach(g=>map.set(g.id,g.name));
     let blocked=st.settings.blockedGenres||[];
     box.innerHTML=Array.from(map.entries()).map(([id,name])=>`<label class="lcma-chip-chk"><input type="checkbox" class="lcma-gb-chk" value="${id}" ${blocked.includes(id)?"checked":""}> ${h.esc(name)}</label>`).join("")
   },
@@ -1123,34 +1211,43 @@ const cinemaAdmin={
     let ids=Array.from(document.querySelectorAll(".lcma-gb-chk:checked")).map(x=>Number(x.value));
     cinemaAdmin.patchSettings({blockedGenres:ids},`✅ تم تحديث التصنيفات المحجوبة (${ids.length})`)
   },
+  addVip(){
+    let inp=document.getElementById("lcma-vip-inp"),u=(inp?.value||"").trim();if(!u)return;
+    let next=Array.from(new Set([...(st.settings.vipUsers||[]),u]));
+    inp.value="";cinemaAdmin.patchSettings({vipUsers:next},`👑 تمت إضافة (${u}) لقائمة VIP`)
+  },
+  renderVipList(){
+    let c=document.getElementById("lcma-vip-list");if(!c)return;
+    let list=Array.isArray(st.settings.vipUsers)?st.settings.vipUsers:[];
+    c.innerHTML=list.length?list.map((u,i)=>`<span class="lcma-tag lcma-t-gold" style="margin:3px;">👑 ${h.esc(u)} <i class="fas fa-times lcma-vip-rm" data-i="${i}" style="cursor:pointer;color:#f87171;"></i></span>`).join(""):'<div style="text-align:center;color:#64748b;font-size:11.5px;padding:8px;">لا يوجد أعضاء VIP مضافون.</div>';
+    c.querySelectorAll(".lcma-vip-rm").forEach(el=>el.onclick=()=>{let next=(st.settings.vipUsers||[]).slice();next.splice(Number(el.dataset.i),1);cinemaAdmin.patchSettings({vipUsers:next},"تمت الإزالة من VIP")})
+  },
   async inspectUser(){
     let raw=(document.getElementById("lcma-insp-user")?.value||"").trim(),san=h.san(raw),box=document.getElementById("lcma-insp-res");
     if(!san||!box||!window.lailCinema.db)return;
-    box.innerHTML='<div style="text-align:center; color:#D4AF37; padding:12px;"><i class="fas fa-spinner fa-spin"></i></div>';
-    let [hs,fs]=await Promise.all([
-      window.lailCinema.db.ref(`lail_cinema/history/${san}`).once("value"),
-      window.lailCinema.db.ref(`lail_cinema/favorites/${san}`).once("value")
-    ]);
-    let hList=Object.values(hs.val()||{}),fList=Object.values(fs.val()||{});
+    box.innerHTML='<div style="text-align:center;color:#D4AF37;padding:12px;"><i class="fas fa-spinner fa-spin"></i></div>';
+    let [hs,fs]=await Promise.all([window.lailCinema.db.ref(`lail_cinema/history/${san}`).once("value"),window.lailCinema.db.ref(`lail_cinema/favorites/${san}`).once("value")]);
+    let hList=Object.values(hs.val()||{}).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)),fList=Object.values(fs.val()||{});
+    let recent=hList.slice(0,5).map(x=>`<div style="font-size:11px;color:#cbd5e1;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);">🎬 ${h.esc(x.title)} <span style="color:#64748b;">(${h.formatDate(x.timestamp)})</span></div>`).join("");
     box.innerHTML=`
-      <div class="lcma-g2" style="margin-bottom:8px; text-align:center;">
+      <div class="lcma-g2" style="margin-bottom:8px;text-align:center;">
         <div class="lcma-stat"><div class="lcma-stat-v">${hList.length}</div><div class="lcma-stat-l">سجل المشاهدة</div></div>
         <div class="lcma-stat"><div class="lcma-stat-v">${fList.length}</div><div class="lcma-stat-l">المفضلة</div></div>
       </div>
-      <div class="lcma-row" style="gap:6px;">
-        <button type="button" id="lcma-clr-uhist" class="lcma-btn lcma-btn-danger lcma-mini" style="flex:1;">مسح سجل مشاهدته</button>
+      ${recent?`<div style="background:rgba(0,0,0,0.25);padding:7px 9px;border-radius:9px;margin-bottom:8px;"><div style="font-size:11px;color:#D4AF37;font-weight:bold;margin-bottom:4px;">آخر المشاهدات:</div>${recent}</div>`:""}
+      <div class="lcma-row" style="gap:5px;">
+        <button type="button" id="lcma-clr-uhist" class="lcma-btn lcma-btn-danger lcma-mini" style="flex:1;">مسح سجله</button>
         <button type="button" id="lcma-clr-ufav" class="lcma-btn lcma-btn-danger lcma-mini" style="flex:1;">مسح مفضلته</button>
+        <button type="button" id="lcma-insp-vip" class="lcma-btn lcma-btn-gold lcma-mini" style="width:auto;">+ VIP</button>
       </div>`;
-    document.getElementById("lcma-clr-uhist").onclick=()=>{if(confirm(`مسح سجل مشاهدة (${raw})؟`))window.lailCinema.db.ref(`lail_cinema/history/${san}`).remove().then(()=>{cinemaAdmin.log("مسح سجل عضو",raw,"");cinemaAdmin.inspectUser();window.lailCinema.showToast("تم المسح")})};
-    document.getElementById("lcma-clr-ufav").onclick=()=>{if(confirm(`مسح مفضلة (${raw})؟`))window.lailCinema.db.ref(`lail_cinema/favorites/${san}`).remove().then(()=>{cinemaAdmin.log("مسح مفضلة عضو",raw,"");cinemaAdmin.inspectUser();window.lailCinema.showToast("تم المسح")})}
+    document.getElementById("lcma-clr-uhist").onclick=()=>{if(confirm(`مسح سجل (${raw})؟`))window.lailCinema.db.ref(`lail_cinema/history/${san}`).remove().then(()=>{cinemaAdmin.log("مسح سجل عضو",raw,"");cinemaAdmin.inspectUser();window.lailCinema.showToast("تم المسح")})};
+    document.getElementById("lcma-clr-ufav").onclick=()=>{if(confirm(`مسح مفضلة (${raw})؟`))window.lailCinema.db.ref(`lail_cinema/favorites/${san}`).remove().then(()=>{cinemaAdmin.log("مسح مفضلة عضو",raw,"");cinemaAdmin.inspectUser();window.lailCinema.showToast("تم المسح")})};
+    document.getElementById("lcma-insp-vip").onclick=()=>{let next=Array.from(new Set([...(st.settings.vipUsers||[]),raw]));cinemaAdmin.patchSettings({vipUsers:next},`👑 أضيف (${raw}) لـ VIP`)}
   },
-  loadBanned(){
-    window.lailCinema.db?.ref(`${ADMIN_PATH}/banned`).once("value").then(snap=>{st.bannedCache=snap.val()||{};cinemaAdmin.refreshUI()}).catch(()=>{})
-  },
+  loadBanned(){window.lailCinema.db?.ref(`${ADMIN_PATH}/banned`).once("value").then(snap=>{st.bannedCache=snap.val()||{};cinemaAdmin.refreshUI()}).catch(()=>{})},
   banUser(){
     if(!window.lailCinema.db)return;
-    let u=(document.getElementById("lcma-ban-user")?.value||"").trim(),san=h.san(u);
-    if(!san)return alert("أدخل اسم المستخدم.");
+    let u=(document.getElementById("lcma-ban-user")?.value||"").trim(),san=h.san(u);if(!san)return alert("أدخل اسم المستخدم.");
     let scope=document.getElementById("lcma-ban-scope").value,dur=document.getElementById("lcma-ban-dur").value,reason=(document.getElementById("lcma-ban-reason").value||"").trim();
     let dMap={"1h":36e5,"6h":216e5,"24h":864e5,"3d":2592e5,"7d":6048e5,"30d":2592e6};
     let exp=dMap[dur]?Date.now()+dMap[dur]:null;
@@ -1160,14 +1257,20 @@ const cinemaAdmin={
       cinemaAdmin.loadBanned();window.lailCinema.showToast(`🚫 تم حظر (${u})`)
     })
   },
+  cleanExpiredBans(){
+    let up={},cnt=0;
+    Object.entries(st.bannedCache||{}).forEach(([k,d])=>{if(d&&d.expiresAt&&Date.now()>=d.expiresAt){up[k]=null;cnt++}});
+    if(!cnt)return window.lailCinema.showToast("لا يوجد حظر منتهي");
+    window.lailCinema.db.ref(`${ADMIN_PATH}/banned`).update(up).then(()=>{cinemaAdmin.log("تنظيف الحظر المنتهي",`${cnt} عضو`,"");cinemaAdmin.loadBanned();window.lailCinema.showToast(`🧹 تم تنظيف ${cnt} حظر`)})
+  },
   renderBanned(){
     let c=document.getElementById("lcma-banned-list");if(!c)return;
     let entries=Object.entries(st.bannedCache||{});
-    if(!entries.length){c.innerHTML='<div style="text-align:center; color:#64748b; padding:16px; font-size:12px;">لا يوجد محظورون حالياً.</div>';return}
-    let sMap={full:"كامل",party_only:"غرف فقط",reactions_only:"تفاعلات فقط"};
+    if(!entries.length){c.innerHTML='<div style="text-align:center;color:#64748b;padding:16px;font-size:12px;">لا يوجد محظورون حالياً.</div>';return}
+    let sMap={full:"كامل",party_only:"غرف فقط",reactions_only:"تفاعلات فقط",search_only:"بحث فقط"};
     c.innerHTML=entries.map(([k,d])=>{
       let exp=d.expiresAt&&Date.now()>=d.expiresAt;
-      return`<div class="lcma-card" style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div style="min-width:0; flex:1;"><div class="lcma-row" style="gap:5px; margin-bottom:3px;"><b style="font-size:12.5px;">${h.esc(d.originalName||k)}</b><span class="lcma-tag ${exp?"lcma-t-gray":"lcma-t-red"}">${exp?"منتهي":d.expiresAt?h.formatRemaining(d.expiresAt):"دائم"}</span><span class="lcma-tag lcma-t-blue">${sMap[d.scope]||"كامل"}</span></div><div style="font-size:10.5px; color:#94a3b8;">${d.reason?h.esc(d.reason):"بدون سبب"} • ${h.formatDate(d.timestamp)}</div></div><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-unban" data-k="${h.esc(k)}">${exp?"إزالة":"فك الحظر"}</button></div>`
+      return`<div class="lcma-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="min-width:0;flex:1;"><div class="lcma-row" style="gap:5px;margin-bottom:3px;"><b style="font-size:12.5px;">${h.esc(d.originalName||k)}</b><span class="lcma-tag ${exp?"lcma-t-gray":"lcma-t-red"}">${exp?"منتهي":d.expiresAt?h.formatRemaining(d.expiresAt):"دائم"}</span><span class="lcma-tag lcma-t-blue">${sMap[d.scope]||"كامل"}</span></div><div style="font-size:10.5px;color:#94a3b8;">${d.reason?h.esc(d.reason):"بدون سبب"} • ${h.formatDate(d.timestamp)}</div></div><button type="button" class="lcma-btn lcma-btn-ok lcma-mini lcma-unban" data-k="${h.esc(k)}">${exp?"إزالة":"فك الحظر"}</button></div>`
     }).join("");
     c.querySelectorAll(".lcma-unban").forEach(b=>b.onclick=()=>{let k=b.dataset.k;if(confirm(`فك الحظر عن (${k})؟`))window.lailCinema.db.ref(`${ADMIN_PATH}/banned/${k}`).remove().then(()=>{cinemaAdmin.log("فك حظر",k,"");cinemaAdmin.loadBanned();window.lailCinema.showToast("✅ تم فك الحظر")})})
   },
@@ -1175,46 +1278,39 @@ const cinemaAdmin={
     let c=document.getElementById("lcma-servers-list");if(!c)return;
     let srvs=h.getServers(),defId=st.settings.defaultServerId||srvs[0]?.id;
     c.innerHTML=srvs.map((srv,idx)=>{
-      let isDef=srv.id===defId;
+      let isDef=srv.id===defId,en=!1!==srv.enabled;
       return`
-        <div class="lcma-card" style="background:rgba(0,0,0,0.25); ${isDef?"border-color:rgba(212,175,55,0.5);":""}">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:5px; flex-wrap:wrap;">
+        <div class="lcma-card" style="background:rgba(0,0,0,0.25);${isDef?"border-color:rgba(212,175,55,0.5);":""}${en?"":"opacity:0.6;"}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
             <b style="font-size:12.5px;">${h.esc(srv.name)}</b>
-            ${isDef?'<span class="lcma-tag lcma-t-gold">الافتراضي ★</span>':""}
+            <div class="lcma-row" style="gap:4px;">${isDef?'<span class="lcma-tag lcma-t-gold">الافتراضي ★</span>':""}<span class="lcma-tag ${en?"lcma-t-green":"lcma-t-red"}">${en?"مفعّل":"معطّل"}</span></div>
           </div>
-          <div style="font-size:10px; color:#94a3b8; direction:ltr; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:7px;">${h.esc(srv.movie)}</div>
+          <div style="font-size:10px;color:#94a3b8;direction:ltr;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px;">${h.esc(srv.movie)}</div>
           <div class="lcma-row" style="gap:5px;">
-            ${!isDef?`<button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-srv-def" data-id="${h.esc(srv.id)}" style="width:auto;">تعيين كافتراضي</button>`:""}
-            ${srvs.length>1?`<button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-srv-del" data-i="${idx}"><i class="fas fa-trash"></i> حذف</button>`:""}
+            ${!isDef&&en?`<button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-srv-def" data-id="${h.esc(srv.id)}" style="width:auto;">تعيين افتراضي</button>`:""}
+            <button type="button" class="lcma-btn ${en?"lcma-btn-warn":"lcma-btn-ok"} lcma-mini lcma-srv-tog" data-i="${idx}">${en?"تعطيل":"تفعيل"}</button>
+            ${idx>0?`<button type="button" class="lcma-btn lcma-btn-dark lcma-mini lcma-srv-up" data-i="${idx}" title="رفع"><i class="fas fa-arrow-up"></i></button>`:""}
+            ${srvs.length>1?`<button type="button" class="lcma-btn lcma-btn-danger lcma-mini lcma-srv-del" data-i="${idx}"><i class="fas fa-trash"></i></button>`:""}
           </div>
         </div>`
     }).join("");
     c.querySelectorAll(".lcma-srv-def").forEach(b=>b.onclick=()=>cinemaAdmin.patchSettings({defaultServerId:b.dataset.id},"⭐ تم تغيير السيرفر الافتراضي"));
-    c.querySelectorAll(".lcma-srv-del").forEach(b=>b.onclick=()=>{
-      let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);
-      if(!confirm(`حذف السيرفر (${list[i].name})؟`))return;
-      let removedId=list[i].id;list.splice(i,1);
-      let patch={servers:list};
-      if(st.settings.defaultServerId===removedId)patch.defaultServerId=list[0].id;
-      cinemaAdmin.patchSettings(patch,"🗑️ تم حذف السيرفر")
-    })
+    c.querySelectorAll(".lcma-srv-tog").forEach(b=>b.onclick=()=>{let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);list[i].enabled=!1===list[i].enabled;cinemaAdmin.patchSettings({servers:list},list[i].enabled?"✅ تم تفعيل السيرفر":"⏸️ تم تعطيل السيرفر")});
+    c.querySelectorAll(".lcma-srv-up").forEach(b=>b.onclick=()=>{let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);[list[i-1],list[i]]=[list[i],list[i-1]];cinemaAdmin.patchSettings({servers:list},"⬆️ تم تعديل الترتيب")});
+    c.querySelectorAll(".lcma-srv-del").forEach(b=>b.onclick=()=>{let list=h.getServers().map(x=>Object.assign({},x)),i=Number(b.dataset.i);if(!confirm(`حذف (${list[i].name})؟`))return;let rmId=list[i].id;list.splice(i,1);let p={servers:list};if(st.settings.defaultServerId===rmId)p.defaultServerId=list[0].id;cinemaAdmin.patchSettings(p,"🗑️ تم حذف السيرفر")})
   },
   addServer(){
-    let name=(document.getElementById("lcma-nsrv-name")?.value||"").trim();
-    let movie=(document.getElementById("lcma-nsrv-movie")?.value||"").trim();
-    let tv=(document.getElementById("lcma-nsrv-tv")?.value||"").trim();
-    if(!name||!movie.includes("{id}")||!tv.includes("{id}"))return alert("أدخل اسم السيرفر ورابط الأفلام والمسلسلات وتأكد من وجود {id}.");
-    let list=h.getServers().map(x=>Object.assign({},x));
-    list.push({id:"srv_"+Date.now(),name,movie,tv});
+    let name=(document.getElementById("lcma-nsrv-name")?.value||"").trim(),movie=(document.getElementById("lcma-nsrv-movie")?.value||"").trim(),tv=(document.getElementById("lcma-nsrv-tv")?.value||"").trim();
+    if(!name||!movie.includes("{id}")||!tv.includes("{id}"))return alert("أدخل الاسم وروابط الأفلام والمسلسلات وتأكد من وجود {id}.");
+    let list=h.getServers().map(x=>Object.assign({},x));list.push({id:"srv_"+Date.now(),name,movie,tv,enabled:!0});
     cinemaAdmin.patchSettings({servers:list},`✅ تم إضافة السيرفر (${name})`);
-    document.getElementById("lcma-nsrv-name").value="";
-    document.getElementById("lcma-nsrv-movie").value="";
-    document.getElementById("lcma-nsrv-tv").value=""
+    document.getElementById("lcma-nsrv-name").value="";document.getElementById("lcma-nsrv-movie").value="";document.getElementById("lcma-nsrv-tv").value=""
   },
   savePlayerSettings(){
     cinemaAdmin.patchSettings({
       allowUserServerSwitch:document.getElementById("lcma-set-uswitch").checked,
       allowParties:document.getElementById("lcma-set-parties").checked,
+      partiesVipOnly:document.getElementById("lcma-set-pvip").checked,
       allowReactions:document.getElementById("lcma-set-reacts").checked,
       allowMiniPlayer:document.getElementById("lcma-set-pip").checked,
       maxRooms:Math.max(0,parseInt(document.getElementById("lcma-set-maxr").value)||0),
@@ -1228,14 +1324,33 @@ const cinemaAdmin={
       enabled:document.getElementById("lcma-set-enabled").checked,
       allowGuests:document.getElementById("lcma-set-guests").checked,
       safeMode:document.getElementById("lcma-set-safe").checked,
+      defaultTab:document.getElementById("lcma-set-deftab").value||"movie",
       minRating:Math.max(0,Math.min(9,parseFloat(document.getElementById("lcma-set-minrate").value)||0)),
       disabledMsg:(document.getElementById("lcma-set-offmsg").value||"").trim()||DEFAULT_SETTINGS.disabledMsg
     },"✅ تم حفظ الإعدادات العامة")
   },
+  saveVisibilitySettings(){
+    cinemaAdmin.patchSettings({
+      showMovieTab:document.getElementById("lcma-v-tmov").checked,
+      showTvTab:document.getElementById("lcma-v-ttv").checked,
+      showFavTab:document.getElementById("lcma-v-tfav").checked,
+      showAdGuideBtn:document.getElementById("lcma-v-tadg").checked,
+      showHistoryRow:document.getElementById("lcma-v-thist").checked,
+      showRecs:document.getElementById("lcma-v-trecs").checked
+    },"✅ تم حفظ إعدادات الواجهة")
+  },
+  async copyCinemaStars(){
+    if(!window.lailCinema.db)return;
+    let snap=await window.lailCinema.db.ref("lail_cinema/history").once("value");
+    let hist=snap.val()||{},uC={},mC={};
+    Object.entries(hist).forEach(([u,m])=>{if(!m||"object"!=typeof m)return;let arr=Object.values(m);uC[u]=arr.length;arr.forEach(it=>{it?.title&&(mC[it.title]=(mC[it.title]||0)+1)})});
+    let topU=Object.entries(uC).sort((a,b)=>b[1]-a[1]).slice(0,5),topM=Object.entries(mC).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    let txt="🎬✨ نجوم سينما ليل ✨🎬\n\n🍿 أكثر الأعضاء مشاهدة:\n"+(topU.map(([u,c],i)=>`${i+1}. ${u} (${c} عمل)`).join("\n")||"-")+"\n\n🔥 أكثر الأعمال مشاهدة:\n"+(topM.map(([t,c],i)=>`${i+1}. ${t} (${c})`).join("\n")||"-");
+    window.lailCinema.copyDnsHost(txt,"📋 تم نسخ تقرير نجوم السينما — جاهز للصق في الشات!")
+  },
   async runAnalytics(){
-    let c=document.getElementById("lcma-analytics-body");
-    if(!c||!window.lailCinema.db)return;
-    c.innerHTML='<div style="text-align:center; color:#D4AF37; padding:22px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+    let c=document.getElementById("lcma-analytics-body");if(!c||!window.lailCinema.db)return;
+    c.innerHTML='<div style="text-align:center;color:#D4AF37;padding:22px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
     try{
       let [hs,fs]=await Promise.all([window.lailCinema.db.ref("lail_cinema/history").once("value"),window.lailCinema.db.ref("lail_cinema/favorites").once("value")]);
       let hist=hs.val()||{},favs=fs.val()||{},wC={},fC={},uC={},totW=0,totF=0;
@@ -1243,13 +1358,13 @@ const cinemaAdmin={
       Object.values(favs).forEach(m=>{if(!m||"object"!=typeof m)return;Object.values(m).forEach(it=>{if(!it?.id)return;totF++;let k=`${it.media_type}_${it.id}`;fC[k]||(fC[k]={title:it.title||`#${it.id}`,count:0});fC[k].count++})});
       let topW=Object.values(wC).sort((a,b)=>b.count-a.count).slice(0,10),topF=Object.values(fC).sort((a,b)=>b.count-a.count).slice(0,10),topU=Object.entries(uC).sort((a,b)=>b[1]-a[1]).slice(0,10);
       let med=i=>0===i?"🥇":1===i?"🥈":2===i?"🥉":`${i+1}.`;
-      let mk=arr=>arr.length?arr.map((x,i)=>`<div style="display:flex; justify-content:space-between; padding:5px 8px; background:rgba(0,0,0,0.22); border-radius:8px; margin-bottom:4px; font-size:12px;"><span>${med(i)} <b>${h.esc(x.title)}</b></span><span class="lcma-tag lcma-t-gold">${x.count}</span></div>`).join(""):'<div style="color:#64748b; text-align:center; font-size:11.5px;">لا توجد بيانات.</div>';
+      let mk=arr=>arr.length?arr.map((x,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;background:rgba(0,0,0,0.22);border-radius:8px;margin-bottom:4px;font-size:12px;"><span>${med(i)} <b>${h.esc(x.title)}</b></span><span class="lcma-tag lcma-t-gold">${x.count}</span></div>`).join(""):'<div style="color:#64748b;text-align:center;font-size:11.5px;">لا توجد بيانات.</div>';
       c.innerHTML=`
         <div class="lcma-card"><div class="lcma-g3" style="text-align:center;"><div class="lcma-stat"><div class="lcma-stat-v">${Object.keys(hist).length}</div><div class="lcma-stat-l">مشاهدون</div></div><div class="lcma-stat"><div class="lcma-stat-v">${totW}</div><div class="lcma-stat-l">مشاهدات</div></div><div class="lcma-stat"><div class="lcma-stat-v">${totF}</div><div class="lcma-stat-l">مفضلات</div></div></div></div>
         <div class="lcma-card"><div class="lcma-card-t"><span>🔥 الأكثر مشاهدة</span></div>${mk(topW)}</div>
         <div class="lcma-card"><div class="lcma-card-t"><span>❤️ الأكثر تفضيلاً</span></div>${mk(topF)}</div>
-        <div class="lcma-card"><div class="lcma-card-t"><span>🍿 أكثر الأعضاء تفاعلاً</span></div>${topU.length?topU.map(([u,cnt],i)=>`<div style="display:flex; justify-content:space-between; padding:5px 8px; background:rgba(0,0,0,0.22); border-radius:8px; margin-bottom:4px; font-size:12px;"><span>${med(i)} <b>${h.esc(u)}</b></span><span class="lcma-tag lcma-t-blue">${cnt}</span></div>`).join(""):'<div style="color:#64748b; text-align:center;">لا توجد بيانات.</div>'}</div>`
-    }catch{c.innerHTML='<div style="text-align:center; color:#ef4444; padding:18px;">تعذر التحليل.</div>'}
+        <div class="lcma-card"><div class="lcma-card-t"><span>🍿 أكثر الأعضاء تفاعلاً</span></div>${topU.length?topU.map(([u,cnt],i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;background:rgba(0,0,0,0.22);border-radius:8px;margin-bottom:4px;font-size:12px;"><span>${med(i)} <b>${h.esc(u)}</b></span><span class="lcma-tag lcma-t-blue">${cnt}</span></div>`).join(""):'<div style="color:#64748b;text-align:center;">لا توجد بيانات.</div>'}</div>`
+    }catch{c.innerHTML='<div style="text-align:center;color:#ef4444;padding:18px;">تعذر التحليل.</div>'}
   },
   cleanIdleRooms(){
     let cut=Date.now()-6*36e5,up={},cnt=0;
@@ -1258,13 +1373,13 @@ const cinemaAdmin={
     if(confirm(`تنظيف (${cnt}) غرفة خاملة؟`))window.lailCinema.db.ref("lail_cinema/rooms").update(up).then(()=>{cinemaAdmin.log("تنظيف غرف",`${cnt} غرفة`,"");window.lailCinema.showToast(`🧹 تم تنظيف ${cnt} غرفة`)})
   },
   cleanOldHistory(days){
-    if(!window.lailCinema.db||!confirm(`حذف سجلات المشاهدة الأقدم من ${days} يوم؟`))return;
+    if(!window.lailCinema.db||!confirm(`حذف السجلات الأقدم من ${days} يوم؟`))return;
     let cut=Date.now()-days*864e5;
     window.lailCinema.db.ref("lail_cinema/history").once("value").then(snap=>{
       let val=snap.val()||{},up={},cnt=0;
       Object.entries(val).forEach(([u,m])=>{if(m&&"object"==typeof m)Object.entries(m).forEach(([id,it])=>{if(!it?.timestamp||it.timestamp<cut){up[`${u}/${id}`]=null;cnt++}})});
       if(!cnt)return window.lailCinema.showToast("لا توجد سجلات قديمة");
-      window.lailCinema.db.ref("lail_cinema/history").update(up).then(()=>{cinemaAdmin.log("تنظيف السجل",`${cnt} سجل`,"");window.lailCinema.showToast(`🧹 تم حذف ${cnt} سجل قديم`)})
+      window.lailCinema.db.ref("lail_cinema/history").update(up).then(()=>{cinemaAdmin.log("تنظيف السجل",`${cnt} سجل`,"");window.lailCinema.showToast(`🧹 تم حذف ${cnt} سجل`)})
     })
   },
   exportBackup(){
@@ -1272,8 +1387,7 @@ const cinemaAdmin={
     let blob=new Blob([JSON.stringify(pack,null,2)],{type:"application/json;charset=utf-8"});
     let url=URL.createObjectURL(blob),a=document.createElement("a");
     a.href=url;a.download=`lail-cinema-backup-${new Date().toISOString().split("T")[0]}.json`;
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1e3);
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1e3);
     window.lailCinema.showToast("💾 تم تحميل النسخة الاحتياطية")
   },
   importBackup(ev){
@@ -1281,11 +1395,9 @@ const cinemaAdmin={
     let rd=new FileReader;
     rd.onload=()=>{
       try{
-        let p=JSON.parse(rd.result);
-        if(!p||"object"!=typeof p)return alert("ملف غير صالح.");
-        if(!confirm("استعادة إعدادات وبيانات إدارة السينما من الملف؟"))return;
-        let up={};
-        ["settings","featured","blacklist","banned","schedule","poll"].forEach(k=>{if(void 0!==p[k])up[k]=p[k]});
+        let p=JSON.parse(rd.result);if(!p||"object"!=typeof p)return alert("ملف غير صالح.");
+        if(!confirm("استعادة بيانات إدارة السينما من الملف؟"))return;
+        let up={};["settings","featured","blacklist","banned","schedule","poll"].forEach(k=>{if(void 0!==p[k])up[k]=p[k]});
         window.lailCinema.db.ref(ADMIN_PATH).update(up).then(()=>{cinemaAdmin.log("استيراد نسخة","النظام","JSON");cinemaAdmin.loadBanned();window.lailCinema.showToast("✅ تم الاستيراد بنجاح")})
       }catch{alert("❌ ملف JSON غير صالح.")}
     };
@@ -1301,20 +1413,19 @@ const cinemaAdmin={
     let c=document.getElementById("lcma-logs-list");if(!c)return;
     let q=(document.getElementById("lcma-log-q")?.value||"").trim().toLowerCase();
     let list=st.logsCache.filter(x=>!q||`${x.admin} ${x.action} ${x.target} ${x.details}`.toLowerCase().includes(q));
-    if(!list.length){c.innerHTML='<div style="text-align:center; color:#64748b; padding:12px; font-size:12px;">لا توجد سجلات.</div>';return}
-    c.innerHTML=list.map(x=>`<div class="lcma-card" style="padding:7px 10px; background:rgba(0,0,0,0.22);"><div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span class="lcma-tag lcma-t-gold">${h.esc(x.action)}</span><span style="font-size:10px; color:#94a3b8;">${h.formatDate(x.timestamp)}</span></div><div style="font-size:11.5px;"><b style="color:#D4AF37;">${h.esc(x.admin)}</b> ➔ <b style="color:#38bdf8;">${h.esc(x.target)}</b></div>${x.details?`<div style="font-size:11px; color:#94a3b8; margin-top:2px;">${h.esc(x.details)}</div>`:""}</div>`).join("")
+    if(!list.length){c.innerHTML='<div style="text-align:center;color:#64748b;padding:12px;font-size:12px;">لا توجد سجلات.</div>';return}
+    c.innerHTML=list.map(x=>`<div class="lcma-card" style="padding:7px 10px;background:rgba(0,0,0,0.22);"><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span class="lcma-tag lcma-t-gold">${h.esc(x.action)}</span><span style="font-size:10px;color:#94a3b8;">${h.formatDate(x.timestamp)}</span></div><div style="font-size:11.5px;"><b style="color:#D4AF37;">${h.esc(x.admin)}</b> ➔ <b style="color:#38bdf8;">${h.esc(x.target)}</b></div>${x.details?`<div style="font-size:11px;color:#94a3b8;margin-top:2px;">${h.esc(x.details)}</div>`:""}</div>`).join("")
   },
-  clearLogs(){
-    if(confirm("مسح سجل العمليات؟"))window.lailCinema.db?.ref(`${ADMIN_PATH}/logs`).remove().then(()=>{st.logsCache=[];cinemaAdmin.renderLogs();window.lailCinema.showToast("🗑️ تم مسح السجل")})
-  }
+  clearLogs(){if(confirm("مسح سجل العمليات؟"))window.lailCinema.db?.ref(`${ADMIN_PATH}/logs`).remove().then(()=>{st.logsCache=[];cinemaAdmin.renderLogs();window.lailCinema.showToast("🗑️ تم مسح السجل")})}
 };
-
-window.lailCinema={
+            window.lailCinema={
   db:null,
   myUsername:localStorage.getItem("pc_username")||"ضيف_"+Math.floor(1e3*Math.random()),
   currentType:"movie",
   currentGenre:null,
   currentQuery:null,
+  currentCustomApi:null,
+  currentCustomKey:null,
   currentPage:1,
   isLoading:!1,
   hasMore:!0,
@@ -1330,16 +1441,23 @@ window.lailCinema={
   reactionRef:null,
   lastReactionTime:0,
   activeReactionsCount:0,
+  _loadedRoomMediaKey:null,
+  _toastTimer:null,
   _uiBound:!1,
 
-  showToast:function(msg,ms=4e3){
+  showToast:function(msg,ms=4e3,theme=""){
     let el=document.getElementById("cinema-toast");
     if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="cinema-toast" class="lail-toast"></div>');el=document.getElementById("cinema-toast")}
-    el&&(el.innerHTML=msg,el.classList.add("show"),setTimeout(()=>el.classList.remove("show"),ms))
+    if(!el)return;
+    clearTimeout(this._toastTimer);
+    el.className="lail-toast"+("gold"===theme?" th-gold":"red"===theme?" th-red":"");
+    el.innerHTML=msg;
+    requestAnimationFrame(()=>el.classList.add("show"));
+    this._toastTimer=setTimeout(()=>el.classList.remove("show"),ms)
   },
-copyDnsHost:function(val){
+  copyDnsHost:function(val,customMsg){
     let host=val||"dns.adguard-dns.com";
-    let ok=()=>this.showToast(`✅ تم النسخ: ${host}`);
+    let ok=()=>this.showToast(customMsg||`✅ تم النسخ: ${host}`);
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(host).then(ok).catch(()=>{
         let ta=document.createElement("textarea");ta.value=host;ta.style.position="fixed";ta.style.opacity="0";
@@ -1353,10 +1471,7 @@ copyDnsHost:function(val){
   openAdGuide:function(){
     let old=document.getElementById("cinema-adguide-modal");
     old&&old.remove();
-    let ua=navigator.userAgent||"";
-    let isIOS=/iPhone|iPad|iPod/i.test(ua);
-    let isAndroid=/Android/i.test(ua);
-    let defTab=isIOS?"ios":isAndroid?"android":"pc";
+    let ua=navigator.userAgent||"",isIOS=/iPhone|iPad|iPod/i.test(ua),isAndroid=/Android/i.test(ua),defTab=isIOS?"ios":isAndroid?"android":"pc";
     let ov=document.createElement("div");
     ov.id="cinema-adguide-modal";
     ov.className="lail-ag-ov";
@@ -1403,17 +1518,12 @@ copyDnsHost:function(val){
     document.body.appendChild(ov);
     ov.addEventListener("click",ev=>{ev.target===ov&&this.closeAdGuide()});
     document.getElementById("lail-ag-close").onclick=()=>this.closeAdGuide();
-    ov.querySelectorAll(".lail-ag-copy").forEach(btn=>{
-      btn.onclick=()=>this.copyDnsHost(btn.dataset.copy)
-    });
+    ov.querySelectorAll(".lail-ag-copy").forEach(btn=>{btn.onclick=()=>this.copyDnsHost(btn.dataset.copy)});
     ov.querySelectorAll("[data-agtab]").forEach(btn=>{
       btn.onclick=()=>{
         let t=btn.dataset.agtab;
         ov.querySelectorAll("[data-agtab]").forEach(x=>x.classList.toggle("active",x===btn));
-        ["android","ios","pc"].forEach(k=>{
-          let el=document.getElementById(`lail-ag-${k}`);
-          el&&(el.style.display=k===t?"block":"none")
-        })
+        ["android","ios","pc"].forEach(k=>{let el=document.getElementById(`lail-ag-${k}`);el&&(el.style.display=k===t?"block":"none")})
       }
     });
     requestAnimationFrame(()=>ov.classList.add("active"))
@@ -1422,12 +1532,42 @@ copyDnsHost:function(val){
     let m=document.getElementById("cinema-adguide-modal");
     m&&(m.classList.remove("active"),setTimeout(()=>m.remove(),200))
   },
+  maybeShowWelcome:function(){
+    let txt=(st.settings.welcomePopupText||"").trim(),ver=String(st.settings.welcomePopupVersion||1);
+    if(!txt||localStorage.getItem("lail_cin_welc_v")===ver)return;
+    let old=document.getElementById("lail-cin-welc");old&&old.remove();
+    let ov=document.createElement("div");ov.id="lail-cin-welc";ov.className="lail-welc-ov";
+    ov.innerHTML=`<div class="lail-welc-box"><div style="font-size:28px;margin-bottom:8px;">🎬</div><h3 style="margin:0 0 10px;color:#D4AF37;font-size:17px;">رسالة من إدارة سينما ليل</h3><p style="margin:0 0 18px;font-size:13.5px;line-height:1.7;color:#e2e8f0;white-space:pre-line;">${h.esc(txt)}</p><button type="button" id="lail-welc-ok" style="background:linear-gradient(135deg,#D4AF37,#b59226);color:#161824;border:none;border-radius:10px;padding:10px 26px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">حسناً، فهمت</button></div>`;
+    document.body.appendChild(ov);
+    let dismiss=()=>{localStorage.setItem("lail_cin_welc_v",ver);ov.classList.remove("active");setTimeout(()=>ov.remove(),200)};
+    ov.onclick=ev=>{ev.target===ov&&dismiss()};
+    document.getElementById("lail-welc-ok").onclick=dismiss;
+    requestAnimationFrame(()=>ov.classList.add("active"))
+  },
+  arabicSections:function(){
+    let today=new Date().toISOString().split("T")[0];
+    return{
+      gulf_tv:{key:"gulf_tv",title:"مسلسلات خليجية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=KW|SA|AE|QA|BH|OM&sort_by=popularity.desc"},
+      egy_tv:{key:"egy_tv",title:"مسلسلات مصرية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=EG&sort_by=popularity.desc"},
+      levant_tv:{key:"levant_tv",title:"مسلسلات شامية وسورية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=SY|LB|JO&sort_by=popularity.desc"},
+      ar_tv_all:{key:"ar_tv_all",title:"كل المسلسلات العربية",icon:"fa-moon",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&sort_by=popularity.desc"},
+      ar_tv_comedy:{key:"ar_tv_comedy",title:"كوميديا خليجية وعربية",icon:"fa-laugh-squint",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_genres=35&sort_by=popularity.desc"},
+      ar_tv_drama:{key:"ar_tv_drama",title:"دراما خليجية وعربية",icon:"fa-theater-masks",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_genres=18&sort_by=popularity.desc"},
+      ar_tv_new:{key:"ar_tv_new",title:"أحدث المسلسلات العربية والخليجية",icon:"fa-clock",path:"discover/tv",mediaType:"tv",params:`with_original_language=ar&sort_by=first_air_date.desc&first_air_date.lte=${today}`},
+      gulf_movie:{key:"gulf_movie",title:"أفلام خليجية وسعودية",icon:"fa-film",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_origin_country=SA|KW|AE|QA|BH|OM&sort_by=popularity.desc"},
+      egy_movie:{key:"egy_movie",title:"أفلام مصرية",icon:"fa-film",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_origin_country=EG&sort_by=popularity.desc"},
+      ar_movie_all:{key:"ar_movie_all",title:"كل الأفلام العربية",icon:"fa-moon",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&sort_by=popularity.desc"},
+      ar_movie_comedy:{key:"ar_movie_comedy",title:"أفلام كوميديا عربية",icon:"fa-laugh-squint",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_genres=35&sort_by=popularity.desc"},
+      ar_movie_action:{key:"ar_movie_action",title:"أفلام أكشن وإثارة عربية",icon:"fa-fist-raised",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_genres=28|53&sort_by=popularity.desc"},
+      ar_movie_new:{key:"ar_movie_new",title:"أحدث الأفلام العربية والخليجية",icon:"fa-clock",path:"discover/movie",mediaType:"movie",params:`with_original_language=ar&sort_by=primary_release_date.desc&primary_release_date.lte=${today}`}
+    }
+  },
   updateIdentity:function(u){
     if(!u||!u.trim())return;
     let clean=u.trim();
     if(this.myUsername!==clean){
       this.myUsername=clean;localStorage.setItem("pc_username",clean);
-      injectAdminBtn();this.bindMyBanListener()
+      injectAdminBtn();this.bindMyBanListener();this.bindUserCmdListener()
     }
   },
   setPresence:function(watchingText){
@@ -1466,18 +1606,20 @@ copyDnsHost:function(val){
     if(evArea){
       let sch=st.schedule;
       if(sch&&sch.active&&sch.time){
+        let joinBtn=sch.roomCode?`<button type="button" class="lail-party-btn" style="padding:8px 14px;font-size:.88rem;" onclick="window.lailCinema.quickJoinCode('${h.esc(sch.roomCode)}')"><i class="fas fa-users"></i> غرفة #${h.esc(sch.roomCode)}</button>`:"";
         evArea.innerHTML=`
           <div class="lail-event-strip">
-            <div style="display:flex; align-items:center; gap:12px;">
-              ${sch.poster_path?`<img src="https://image.tmdb.org/t/p/w200${sch.poster_path}" style="width:48px; height:70px; object-fit:cover; border-radius:8px;">`:""}
+            <div style="display:flex;align-items:center;gap:12px;">
+              ${sch.poster_path?`<img src="https://image.tmdb.org/t/p/w200${sch.poster_path}" style="width:48px;height:70px;object-fit:cover;border-radius:8px;">`:""}
               <div>
-                <div style="color:#D4AF37; font-size:.85rem; font-weight:bold;">👑 ${h.esc(sch.note||"سهرة سينما ليل")}</div>
-                <div style="font-size:1.15rem; font-weight:900; margin-top:2px;">${h.esc(sch.title)}</div>
+                <div style="color:#D4AF37;font-size:.85rem;font-weight:bold;">👑 ${h.esc(sch.note||"سهرة سينما ليل")}</div>
+                <div style="font-size:1.15rem;font-weight:900;margin-top:2px;">${h.esc(sch.title)}</div>
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <div id="lail-event-cd-val" class="lail-event-cd">...</div>
-              <button type="button" class="lail-play-btn" style="padding:8px 16px; font-size:.9rem;" onclick="window.lailCinema.openDetails(${sch.id},'${sch.media_type}')">التفاصيل</button>
+              ${joinBtn}
+              <button type="button" class="lail-play-btn" style="padding:8px 16px;font-size:.9rem;" onclick="window.lailCinema.openDetails(${sch.id},'${sch.media_type}')">التفاصيل</button>
             </div>
           </div>`;
         let tick=()=>{
@@ -1498,14 +1640,14 @@ copyDnsHost:function(val){
         let allVotes=Object.values(p.votes||{}),tot=allVotes.length;
         pArea.innerHTML=`
           <div class="lail-poll-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-              <div style="font-weight:800; color:#D4AF37; font-size:1rem;">${h.esc(p.question||"🗳️ صوّت لفيلم السهرة")}</div>
-              <span style="font-size:.82rem; color:#94a3b8;">${tot} صوت</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <div style="font-weight:800;color:#D4AF37;font-size:1rem;">${h.esc(p.question||"🗳️ صوّت لفيلم السهرة")}</div>
+              <span style="font-size:.82rem;color:#94a3b8;">${tot} صوت</span>
             </div>
             <div class="lail-poll-grid">
               ${p.options.map((o,idx)=>{
                 let cnt=allVotes.filter(v=>Number(v)===idx).length,pct=tot?Math.round(cnt/tot*100):0;
-                return`<button type="button" class="lail-poll-opt ${myVote===idx?"voted":""}" data-pidx="${idx}">${o.poster_path?`<img src="https://image.tmdb.org/t/p/w200${o.poster_path}">`:""}<div style="flex:1; min-width:0;"><div style="font-weight:bold; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${h.esc(o.title)}</div><div style="font-size:.78rem; color:#D4AF37; margin-top:4px;">${cnt} صوت (${pct}%) ${myVote===idx?"✓":""}</div></div></button>`
+                return`<button type="button" class="lail-poll-opt ${myVote===idx?"voted":""}" data-pidx="${idx}">${o.poster_path?`<img src="https://image.tmdb.org/t/p/w200${o.poster_path}">`:""}<div style="flex:1;min-width:0;"><div style="font-weight:bold;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.esc(o.title)}</div><div style="font-size:.78rem;color:#D4AF37;margin-top:4px;">${cnt} صوت (${pct}%) ${myVote===idx?"✓":""}</div></div></button>`
               }).join("")}
             </div>
           </div>`;
@@ -1517,24 +1659,37 @@ copyDnsHost:function(val){
       }else pArea.innerHTML=""
     }
   },
+  quickJoinCode:function(code){
+    this.openPartyJoin();
+    let inp=document.getElementById("party-code-input");
+    if(inp){inp.value=code;this.joinParty()}
+  },
   applyAdminSettings:function(){
-    let s=st.settings,adm=h.isAdmin();
+    let s=st.settings,adm=h.isAdmin(),vip=h.isVip();
     let app=document.getElementById("lail-cinema-app");
-    if(!1===s.enabled&&!adm&&app&&"flex"===app.style.display){
+    if(!1===s.enabled&&!adm&&!vip&&app&&"flex"===app.style.display){
       this.closePlayer();this.close();alert(s.disabledMsg||DEFAULT_SETTINGS.disabledMsg)
     }
     let offB=document.getElementById("cinema-admin-off-banner");
-    offB&&(offB.style.display=!1===s.enabled&&adm?"block":"none");
+    offB&&(offB.style.display=!1===s.enabled&&(adm||vip)?"block":"none");
     let annB=document.getElementById("cinema-announcement-banner"),annT=document.getElementById("cinema-announcement-text");
-    annB&&annT&&(s.bannerText?(annT.textContent=s.bannerText,annB.style.display="flex"):annB.style.display="none");
+    if(annB&&annT){
+      annB.className="lail-cinema-banner"+(s.bannerTheme&&"gold"!==s.bannerTheme?` th-${s.bannerTheme}`:"");
+      s.bannerText?(annT.textContent=s.bannerText,annB.style.display="flex"):annB.style.display="none"
+    }
     let navP=document.getElementById("cinema-nav-party-btn"),detP=document.getElementById("details-party-btn");
     navP&&(navP.style.display=!1===s.allowParties&&!adm?"none":"flex");
-    detP&&(detP.style.display=!1===s.allowParties&&!adm?"none":"flex");
+    detP&&(detP.style.display=(!1===s.allowParties||(s.partiesVipOnly&&!vip))&&!adm?"none":"flex");
     let pipB=document.getElementById("lail-pip-btn");
     pipB&&(pipB.style.display=!1===s.allowMiniPlayer?"none":"flex");
+    let setVis=(sel,flag)=>{let el=document.querySelector(sel);el&&(el.style.display=!1===flag?"none":"")};
+    setVis("#tab-movie",s.showMovieTab);
+    setVis("#tab-tv",s.showTvTab);
+    setVis("#tab-fav",s.showFavTab);
+    setVis(".lail-adguide-btn",s.showAdGuideBtn);
     let srvSel=document.getElementById("lail-player-server-sel");
     if(srvSel){
-      let srvs=h.getServers();
+      let srvs=h.getActiveServers();
       if((!1!==s.allowUserServerSwitch||adm)&&srvs.length>1){
         srvSel.innerHTML=srvs.map(x=>`<option value="${h.esc(x.id)}">${h.esc(x.name)}</option>`).join("");
         srvSel.value=this.activeServerId||s.defaultServerId||srvs[0].id;
@@ -1553,8 +1708,25 @@ copyDnsHost:function(val){
       st.myBan=snap.val()||null;
       let b=h.getActiveBan();
       if(b&&"full"===b.scope&&!h.isAdmin()){
-        let app=document.getElementById("lail-cinema-app");
-        if(app&&"flex"===app.style.display){this.closePlayer();this.close();alert(h.banMsg(b))}
+        let app=document.getElementById("lail-cinema-app"),pl=document.getElementById("cinema-player");
+        if((app&&"flex"===app.style.display)||(pl&&"flex"===pl.style.display)){this.closePlayer();this.close();alert(h.banMsg(b))}
+      }
+    })
+  },
+  bindUserCmdListener:function(){
+    if(!this.db)return;
+    let san=h.san(this.myUsername);if(!san||st.listenedCmdUser===san)return;
+    st.listenedCmdUser&&this.db.ref(`${ADMIN_PATH}/cmds/${st.listenedCmdUser}`).off();
+    st.listenedCmdUser=san;
+    this.db.ref(`${ADMIN_PATH}/cmds/${san}`).on("value",snap=>{
+      let v=snap.val();if(!v||!v.cmd)return;
+      snap.ref.remove().catch(()=>{});
+      if(v.ts&&Date.now()-v.ts>6e4)return;
+      if("kick"===v.cmd&&!h.isAdmin()){
+        let app=document.getElementById("lail-cinema-app"),pl=document.getElementById("cinema-player");
+        if((app&&"flex"===app.style.display)||(pl&&"flex"===pl.style.display)){this.closePlayer();this.close();alert(v.text||"تم إخراجك من السينما من قبل الإدارة.")}
+      }else if("alert"===v.cmd&&v.text){
+        this.showToast(`📩 تنبيه من الإدارة: ${h.esc(v.text)}`,8e3,"gold")
       }
     })
   },
@@ -1586,16 +1758,17 @@ copyDnsHost:function(val){
       let v=snap.val();
       if(v&&v.text&&v.ts>st.bootTs&&Date.now()-v.ts<2e4){
         let app=document.getElementById("lail-cinema-app"),pl=document.getElementById("cinema-player");
-        if((app&&"flex"===app.style.display)||(pl&&"flex"===pl.style.display))this.showToast(`📢 ${h.esc(v.text)}`,7e3)
+        if((app&&"flex"===app.style.display)||(pl&&"flex"===pl.style.display))this.showToast(`📢 ${h.esc(v.text)}`,7e3,v.theme||"blue")
       }
     });
-    this.bindMyBanListener()
+    this.bindMyBanListener();
+    this.bindUserCmdListener()
   },
   init:async function(){
     this.initFirebase();
-    let s=st.settings,adm=h.isAdmin();
-    if(!adm&&!1===s.enabled)return alert(s.disabledMsg||DEFAULT_SETTINGS.disabledMsg);
-    if(!adm&&!1===s.allowGuests&&h.isGuest())return alert("سينما ليل متاحة للأعضاء المسجلين فقط 🎬");
+    let s=st.settings,adm=h.isAdmin(),vip=h.isVip();
+    if(!adm&&!vip&&!1===s.enabled)return alert(s.disabledMsg||DEFAULT_SETTINGS.disabledMsg);
+    if(!adm&&!vip&&!1===s.allowGuests&&h.isGuest())return alert("سينما ليل متاحة للأعضاء المسجلين فقط 🎬");
     let ban=h.getActiveBan();
     if(!adm&&ban&&"full"===ban.scope)return alert(h.banMsg(ban));
 
@@ -1605,12 +1778,19 @@ copyDnsHost:function(val){
     if(!this._uiBound){this._uiBound=!0;this.setupScrollListener();this.setupDraggableMiniPlayer()}
     this.setPresence("يتصفح السينما");
     this.applyAdminSettings();
+    this.maybeShowWelcome();
     0===this.genres.movie.length&&await this.fetchGenres();
     let nv=document.getElementById("cinema-netflix-view");
-    nv&&""===nv.innerHTML.trim()&&this.switchMainTab(this.currentType)
+    if(nv&&""===nv.innerHTML.trim()){
+      let startTab=s.defaultTab||"movie";
+      if("movie"===startTab&&!1===s.showMovieTab&&!1!==s.showTvTab)startTab="tv";
+      else if("tv"===startTab&&!1===s.showTvTab&&!1!==s.showMovieTab)startTab="movie";
+      this.switchMainTab(startTab)
+    }
   },
   close:function(){
     this.closeAdGuide();
+    let welc=document.getElementById("lail-cin-welc");welc&&welc.remove();
     let ifr=document.getElementById("cinema-iframe"),pl=document.getElementById("cinema-player"),ico=document.querySelector("#lail-pip-btn i"),app=document.getElementById("lail-cinema-app");
     if(st.countdownTimer){clearInterval(st.countdownTimer);st.countdownTimer=null}
     if(pl&&"flex"===pl.style.display&&ifr&&ifr.src&&""!==ifr.src&&"about:blank"!==ifr.src&&!1!==st.settings.allowMiniPlayer){
@@ -1621,12 +1801,12 @@ copyDnsHost:function(val){
       this.setPresence(null);
       let nv=document.getElementById("cinema-netflix-view"),gr=document.getElementById("cinema-grid"),si=document.getElementById("cinema-search-input");
       nv&&(nv.innerHTML="");gr&&(gr.innerHTML="");si&&(si.value="");
-      this.currentQuery=null;this.currentGenre=null;this.currentPage=1;this.hasMore=!0
+      this.currentQuery=null;this.currentGenre=null;this.currentCustomApi=null;this.currentCustomKey=null;this.currentPage=1;this.hasMore=!0
     }
     let rb=document.getElementById("party-restore-btn");rb&&(rb.style.display="none")
   },
   switchMainTab:function(tp){
-    this.currentType=tp;this.currentGenre=null;this.currentQuery=null;
+    this.currentType=tp;this.currentGenre=null;this.currentQuery=null;this.currentCustomApi=null;this.currentCustomKey=null;
     document.querySelectorAll(".lail-c-tab").forEach(x=>x.classList.remove("active"));
     let tab=document.getElementById(`tab-${tp}`);tab&&tab.classList.add("active");
     let si=document.getElementById("cinema-search-input");si&&(si.value="");
@@ -1641,7 +1821,8 @@ copyDnsHost:function(val){
   appendFeaturedRow:function(c,tp){
     let items=Object.values(st.featured||{}).filter(x=>x&&x.id&&x.media_type===tp&&!h.isBlacklisted(x.id,x.media_type)).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
     if(!items.length)return;
-    let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#D4AF37; border-right-color:#D4AF37;">👑 اختيارات إدارة ليل</div><div class="lail-row-scroller">`;
+    let fTitle=h.esc(st.settings.featuredTitle||DEFAULT_SETTINGS.featuredTitle);
+    let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#D4AF37;border-right-color:#D4AF37;">${fTitle}</div><div class="lail-row-scroller">`;
     items.forEach(it=>{
       let p=it.poster_path?`https://image.tmdb.org/t/p/w500${it.poster_path}`:"https://via.placeholder.com/500x750/1a1a1f/fff?text=Lail+Cinema";
       html+=`<div class="lail-movie-card" style="border:1px solid rgba(212,175,55,0.45);" onclick="window.lailCinema.openDetails(${it.id}, '${it.media_type}')"><div class="lail-featured-badge">${h.esc(it.badge||"اختيار الإدارة ⭐")}</div><div class="lail-movie-rate"><i class="fas fa-star"></i> ${it.vote_average?Number(it.vote_average).toFixed(1):"N/A"}</div><img class="lail-movie-poster" src="${p}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(it.title)}</div></div>`
@@ -1653,30 +1834,54 @@ copyDnsHost:function(val){
     nv.innerHTML='<div class="lail-loader" style="margin-top:100px;"><div class="lail-spinner"></div></div>';
     try{
       let hist=[];
-      if(this.db){
+      if(this.db&&!1!==st.settings.showHistoryRow){
         let snap=(await this.db.ref(`lail_cinema/history/${h.san(this.myUsername)}`).once("value")).val();
         snap&&(hist=Object.values(snap).filter(x=>x&&x.type===tp&&!h.isBlacklisted(x.id,x.type)).sort((a,b)=>b.timestamp-a.timestamp).slice(0,15))
       }
-      let rows="movie"===tp
-        ?[{title:"🔥 توب 10 (اليوم)",url:"trending/movie/day"},{title:"📈 الأكثر شعبية",url:"movie/popular"},{title:"⭐ الأعلى تقييماً",url:"movie/top_rated"},{title:"🆕 أفلام جديدة",url:"movie/now_playing"}]
-        :[{title:"🔥 توب 10 (اليوم)",url:"trending/tv/day"},{title:"📈 الأكثر شعبية",url:"tv/popular"},{title:"⭐ الأعلى تقييماً",url:"tv/top_rated"},{title:"📺 يعرض حالياً",url:"tv/on_the_air"}];
-      let res=await Promise.all(rows.map(r=>fetch(`https://api.themoviedb.org/3/${r.url}?api_key=${TMDB_KEY}&language=ar`).then(x=>x.json())));
+      let showAr=!1!==st.settings.showArabicRows,sec=this.arabicSections(),rows=[];
+      if("movie"===tp){
+        rows.push({title:"🔥 توب 10 (اليوم)",url:"trending/movie/day"});
+        if(showAr){
+          rows.push({title:"🌙 أفلام خليجية وسعودية",url:`${sec.gulf_movie.path}?${sec.gulf_movie.params}`,secKey:"gulf_movie"});
+          rows.push({title:"🌙 أفلام مصرية وعربية",url:`${sec.ar_movie_all.path}?${sec.ar_movie_all.params}`,secKey:"ar_movie_all"})
+        }
+        rows.push(
+          {title:"📈 الأكثر شعبية",url:"movie/popular"},
+          {title:"⭐ الأعلى تقييماً",url:"movie/top_rated"},
+          {title:"🆕 أفلام جديدة",url:"movie/now_playing"}
+        )
+      }else{
+        rows.push({title:"🔥 توب 10 (اليوم)",url:"trending/tv/day"});
+        if(showAr){
+          rows.push({title:"🌙 مسلسلات خليجية",url:`${sec.gulf_tv.path}?${sec.gulf_tv.params}`,secKey:"gulf_tv"});
+          rows.push({title:"🌙 مسلسلات مصرية",url:`${sec.egy_tv.path}?${sec.egy_tv.params}`,secKey:"egy_tv"});
+          rows.push({title:"🌙 مسلسلات شامية وسورية",url:`${sec.levant_tv.path}?${sec.levant_tv.params}`,secKey:"levant_tv"});
+          rows.push({title:"🆕 أحدث المسلسلات العربية والخليجية",url:`${sec.ar_tv_new.path}?${sec.ar_tv_new.params}`,secKey:"ar_tv_new"})
+        }
+        rows.push(
+          {title:"📈 الأكثر شعبية",url:"tv/popular"},
+          {title:"⭐ الأعلى تقييماً",url:"tv/top_rated"},
+          {title:"📺 يعرض حالياً",url:"tv/on_the_air"}
+        )
+      }
+      let res=await Promise.all(rows.map(r=>fetch(`https://api.themoviedb.org/3/${r.url}${r.url.includes("?")?"&":"?"}api_key=${TMDB_KEY}&language=ar`).then(x=>x.json())));
       nv.innerHTML="";
       this.appendFeaturedRow(nv,tp);
       hist.length>0&&this.appendHistoryRow(nv,"▶️ استمر في المشاهدة",hist);
-      res.forEach((d,idx)=>{this.appendNetflixRow(nv,rows[idx].title,d.results,tp)})
-    }catch{nv.innerHTML='<div style="text-align:center; padding:50px;">حدث خطأ في التحميل.</div>'}
+      res.forEach((d,idx)=>{this.appendNetflixRow(nv,rows[idx].title,d.results,tp,rows[idx].secKey||null)})
+    }catch{nv.innerHTML='<div style="text-align:center;padding:50px;">حدث خطأ في التحميل.</div>'}
   },
   appendHistoryRow:function(c,title,items){
     let html=`<div class="lail-row-container"><div class="lail-row-title" style="color:#e50914;">${title}</div><div class="lail-row-scroller">`;
     items.forEach(x=>{html+=`<div class="lail-movie-card lail-continue-card" onclick="window.lailCinema.openDetails(${x.id}, '${x.type}')">${x.season?`<div class="lail-ep-badge">S${x.season} E${x.episode}</div>`:""}<img class="lail-movie-poster" src="${x.poster?`https://image.tmdb.org/t/p/w500${x.poster}`:"https://via.placeholder.com/500x750/1a1a1f/fff?text=Lail+Cinema"}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title)}</div></div>`});
     html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
   },
-  appendNetflixRow:function(c,title,items,tp){
+  appendNetflixRow:function(c,title,items,tp,secKey=null){
     let minR=Number(st.settings.minRating)||0;
-    let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||tp)&&!h.isGenreBlocked(x.genre_ids)&&((x.vote_average||0)>=minR||minR===0));
+    let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||tp)&&!h.isGenreBlocked(x.genre_ids)&&((x.vote_average||0)>=minR||0===minR));
     if(!clean.length)return;
-    let html=`<div class="lail-row-container"><div class="lail-row-title">${title}</div><div class="lail-row-scroller">`;
+    let moreBtn=secKey?`<span onclick="window.lailCinema.selectCustomSection('${secKey}')" style="margin-right:auto;font-size:.84rem;color:#D4AF37;cursor:pointer;font-weight:bold;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">عرض الكل <i class="fas fa-chevron-left"></i></span>`:"";
+    let html=`<div class="lail-row-container"><div class="lail-row-title">${title}${moreBtn}</div><div class="lail-row-scroller">`;
     clean.forEach(x=>{html+=`<div class="lail-movie-card" onclick="window.lailCinema.openDetails(${x.id}, '${x.media_type||tp}')"><div class="lail-movie-rate"><i class="fas fa-star"></i> ${x.vote_average?x.vote_average.toFixed(1):"N/A"}</div><img class="lail-movie-poster" src="https://image.tmdb.org/t/p/w500${x.poster_path}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title||x.name)}</div></div>`});
     html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
   },
@@ -1693,24 +1898,51 @@ copyDnsHost:function(val){
   },
   renderSidebar:function(){
     let el=document.getElementById("sidebar-genres");if(!el)return;
-    el.innerHTML=`<div class="lail-genre-item ${this.currentGenre?"":"active"}" onclick="window.lailCinema.switchMainTab('${this.currentType}')"><i class="fas fa-home"></i> الرئيسية</div>`;
+    let isHome=!this.currentGenre&&!this.currentCustomKey;
+    el.innerHTML=`<div class="lail-genre-item ${isHome?"active":""}" onclick="window.lailCinema.switchMainTab('${this.currentType}')"><i class="fas fa-home"></i> الرئيسية</div>`;
     if("fav"===this.currentType)return;
+    let sec=this.arabicSections(),showAr=!1!==st.settings.showArabicRows;
+    if(showAr){
+      let keys="movie"===this.currentType?["gulf_movie","egy_movie","ar_movie_all","ar_movie_comedy","ar_movie_action","ar_movie_new"]:["gulf_tv","egy_tv","levant_tv","ar_tv_all","ar_tv_comedy","ar_tv_drama","ar_tv_new"];
+      let lbl="movie"===this.currentType?"🌙 أفلام خليجية وعربية":"🌙 مسلسلات خليجية وعربية";
+      el.innerHTML+=`<div style="padding:10px 26px 4px;font-size:.78rem;color:#D4AF37;font-weight:bold;">${lbl}</div>`;
+      keys.forEach(k=>{let s=sec[k];s&&(el.innerHTML+=`<div class="lail-genre-item ${this.currentCustomKey===k?"active":""}" onclick="window.lailCinema.selectCustomSection('${k}')"><i class="fas ${s.icon}"></i> ${s.title}</div>`)});
+      el.innerHTML+=`<div style="padding:12px 26px 4px;font-size:.78rem;color:#64748b;font-weight:bold;border-top:1px solid rgba(255,255,255,0.06);margin-top:6px;">التصنيفات العالمية</div>`
+    }
     let blocked=st.settings.blockedGenres||[],list=("movie"===this.currentType?this.genres.movie:this.genres.tv).filter(g=>!blocked.includes(g.id));
     let icons={28:"fa-fist-raised",12:"fa-compass",16:"fa-child",35:"fa-laugh-squint",80:"fa-user-secret",99:"fa-video",18:"fa-theater-masks",10751:"fa-users",14:"fa-dragon",36:"fa-monument",27:"fa-ghost",10402:"fa-music",9648:"fa-search",10749:"fa-heart",878:"fa-rocket",10770:"fa-tv",53:"fa-running",10752:"fa-fighter-jet",37:"fa-hat-cowboy",10759:"fa-bomb",10765:"fa-meteor"};
-    list.forEach(g=>{el.innerHTML+=`<div class="lail-genre-item ${this.currentGenre===g.id?"active":""}" onclick="window.lailCinema.selectGenre(${g.id}, '${g.name}')"><i class="fas ${icons[g.id]||"fa-film"}"></i> ${g.name}</div>`})
+    list.forEach(g=>{el.innerHTML+=`<div class="lail-genre-item ${this.currentGenre===g.id?"active":""}" onclick="window.lailCinema.selectGenre(${g.id}, '${g.name.replace(/'/g,"\\'")}')"><i class="fas ${icons[g.id]||"fa-film"}"></i> ${g.name}</div>`})
+  },
+  selectCustomSection:function(key){
+    let s=this.arabicSections()[key];if(!s)return;
+    this.currentCustomApi=s;this.currentCustomKey=key;this.currentGenre=null;this.currentQuery=null;
+    let si=document.getElementById("cinema-search-input"),gh=document.getElementById("grid-header");
+    si&&(si.value="");gh&&(gh.innerHTML=`<i class="fas ${s.icon}" style="color:#D4AF37;"></i> ${h.esc(s.title)}`);
+    let sb=document.getElementById("cinema-sidebar");sb&&"0px"===sb.style.right&&this.toggleSidebar();
+    this.renderSidebar();
+    let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
+    nv&&(nv.style.display="none");gv&&(gv.style.display="block");
+    let mb=document.getElementById("cinema-main-body");mb&&(mb.scrollTop=0);
+    this.loadGridContent(!0)
   },
   selectGenre:function(id,name){
-    this.currentGenre=id;this.currentQuery=null;
+    this.currentGenre=id;this.currentQuery=null;this.currentCustomApi=null;this.currentCustomKey=null;
     let si=document.getElementById("cinema-search-input"),gh=document.getElementById("grid-header");
     si&&(si.value="");gh&&(gh.innerHTML=`<i class="fas fa-list"></i> تصنيف: ${h.esc(name)}`);
-    this.toggleSidebar();this.renderSidebar();
+    let sb=document.getElementById("cinema-sidebar");sb&&"0px"===sb.style.right&&this.toggleSidebar();
+    this.renderSidebar();
     let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
     nv&&(nv.style.display="none");gv&&(gv.style.display="block");this.loadGridContent(!0)
   },
   executeSearch:function(){
     let si=document.getElementById("cinema-search-input");if(!si)return;
     let q=si.value.trim();if(!q)return;
-    this.currentQuery=q;this.currentGenre=null;
+    if(!h.isAdmin()){
+      let b=h.getActiveBan();
+      if(b&&("search_only"===b.scope||"full"===b.scope))return alert(h.banMsg(b));
+      if(h.isWordBlocked(q))return this.showToast("🚫 عبارة البحث غير مسموحة من قبل الإدارة.",4e3,"red")
+    }
+    this.currentQuery=q;this.currentGenre=null;this.currentCustomApi=null;this.currentCustomKey=null;
     let gh=document.getElementById("grid-header"),nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
     gh&&(gh.innerHTML=`<i class="fas fa-search"></i> نتائج: ${h.esc(q)}`);
     nv&&(nv.style.display="none");gv&&(gv.style.display="block");this.loadGridContent(!0)
@@ -1723,7 +1955,9 @@ copyDnsHost:function(val){
       reset&&(this.currentPage=1,this.hasMore=!0,gr.innerHTML="");ld.style.display="flex";
       try{
         let adult=st.settings.safeMode?"&include_adult=false":"",url="";
-        this.currentQuery?url=`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar${adult}&query=${encodeURIComponent(this.currentQuery)}&page=${this.currentPage}`:this.currentGenre&&(url=`https://api.themoviedb.org/3/discover/${this.currentType}?api_key=${TMDB_KEY}&language=ar${adult}&with_genres=${this.currentGenre}&page=${this.currentPage}&sort_by=popularity.desc`);
+        if(this.currentCustomApi)url=`https://api.themoviedb.org/3/${this.currentCustomApi.path}?api_key=${TMDB_KEY}&language=ar${adult}&${this.currentCustomApi.params}&page=${this.currentPage}`;
+        else if(this.currentQuery)url=`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar${adult}&query=${encodeURIComponent(this.currentQuery)}&page=${this.currentPage}`;
+        else if(this.currentGenre)url=`https://api.themoviedb.org/3/discover/${this.currentType}?api_key=${TMDB_KEY}&language=ar${adult}&with_genres=${this.currentGenre}&page=${this.currentPage}&sort_by=popularity.desc`;
         let data=await (await fetch(url)).json(),items=data.results||[];
         this.currentQuery&&(items=items.filter(x=>"movie"===x.media_type||"tv"===x.media_type));
         this.appendGridItems(items);
@@ -1734,11 +1968,12 @@ copyDnsHost:function(val){
   },
   appendGridItems:function(items){
     let gr=document.getElementById("cinema-grid");if(!gr)return;
-    let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||this.currentType)&&!h.isGenreBlocked(x.genre_ids));
-    if(0===clean.length&&1===this.currentPage){gr.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">لا توجد نتائج.</div>';return}
+    let fb=this.currentCustomApi?this.currentCustomApi.mediaType:this.currentType;
+    let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||fb)&&!h.isGenreBlocked(x.genre_ids));
+    if(0===clean.length&&1===this.currentPage){gr.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:#aaa;">لا توجد نتائج.</div>';return}
     let frag=document.createDocumentFragment();
     clean.forEach(x=>{
-      let mt=x.media_type||this.currentType,img=x.poster_path.startsWith("http")?x.poster_path:`https://image.tmdb.org/t/p/w500${x.poster_path}`,rt=x.vote_average?x.vote_average.toFixed(1):"N/A";
+      let mt=x.media_type||fb,img=x.poster_path.startsWith("http")?x.poster_path:`https://image.tmdb.org/t/p/w500${x.poster_path}`,rt=x.vote_average?x.vote_average.toFixed(1):"N/A";
       let card=document.createElement("div");card.className="lail-movie-card";card.onclick=()=>this.openDetails(x.id,mt);
       card.innerHTML=`<div class="lail-movie-rate"><i class="fas fa-star"></i> ${rt}</div><img class="lail-movie-poster" src="${img}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title||x.name)}</div>`;
       frag.appendChild(card)
@@ -1753,12 +1988,12 @@ copyDnsHost:function(val){
     let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view"),gh=document.getElementById("grid-header"),gr=document.getElementById("cinema-grid");
     nv&&(nv.style.display="none");gv&&(gv.style.display="block");gh&&(gh.innerHTML='<i class="fas fa-heart" style="color:#ef4444;"></i> قائمة مفضلاتي');
     if(!gr)return;
-    if(gr.innerHTML='<div class="lail-loader" style="margin-top:50px;"><div class="lail-spinner"></div></div>',!this.db){gr.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:50px; color:#ef4444;">جاري الاتصال بالقاعدة...</div>';return}
+    if(gr.innerHTML='<div class="lail-loader" style="margin-top:50px;"><div class="lail-spinner"></div></div>',!this.db){gr.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:#ef4444;">جاري الاتصال بالقاعدة...</div>';return}
     this.db.ref(`lail_cinema/favorites/${h.san(this.myUsername)}`).once("value").then(snap=>{
       gr.innerHTML="";let list=Object.values(snap.val()||{}).sort((a,b)=>b.timestamp-a.timestamp);
-      if(!list.length){gr.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;"><i class="far fa-folder-open fa-3x" style="margin-bottom:15px; opacity:0.5;"></i><br>قائمة مفضلاتك فارغة حالياً.</div>';return}
+      if(!list.length){gr.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:#aaa;"><i class="far fa-folder-open fa-3x" style="margin-bottom:15px;opacity:0.5;"></i><br>قائمة مفضلاتك فارغة حالياً.</div>';return}
       this.appendGridItems(list)
-    }).catch(()=>{gr.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:50px; color:#ef4444;">حدث خطأ.</div>'})
+    }).catch(()=>{gr.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:#ef4444;">حدث خطأ.</div>'})
   },
   checkIfFavorite:function(id){
     let btn=document.getElementById("details-fav-btn");if(!btn)return;
@@ -1782,9 +2017,7 @@ copyDnsHost:function(val){
     det.style.display="flex";det.scrollTop=0;
     let tvB=document.getElementById("tv-episodes-container"),rcB=document.getElementById("recs-container"),dt=document.getElementById("details-title"),bd=document.getElementById("details-backdrop"),ps=document.getElementById("details-poster"),pw=document.getElementById("details-poster-wrap");
     tvB&&(tvB.style.display="none");rcB&&(rcB.style.display="none");dt&&(dt.innerText="جاري التحميل...");
-    bd&&(bd.removeAttribute("src"),bd.style.opacity="0");
-    ps&&ps.removeAttribute("src");
-    pw&&(pw.style.display="none");
+    bd&&(bd.removeAttribute("src"),bd.style.opacity="0");ps&&ps.removeAttribute("src");pw&&(pw.style.display="none");
     document.getElementById("details-genres")&&(document.getElementById("details-genres").innerHTML="");
     document.getElementById("details-cast")&&(document.getElementById("details-cast").innerHTML="");
     this.applyAdminSettings();
@@ -1810,7 +2043,7 @@ copyDnsHost:function(val){
       o.credits?.cast&&document.getElementById("details-cast")&&(document.getElementById("details-cast").innerHTML=`تمثيل: <span>${h.esc(o.credits.cast.slice(0,4).map(x=>x.name).join("، "))}</span>`);
       let pBtn=document.getElementById("details-play-btn");
       pBtn&&("movie"===tp?(pBtn.innerHTML='<i class="fas fa-play"></i> تشغيل الفيلم',pBtn.onclick=()=>this.playVideo(id,"movie",title)):(pBtn.innerHTML='<i class="fas fa-list"></i> اختر حلقة',pBtn.onclick=()=>{tvB&&tvB.scrollIntoView({behavior:"smooth"})},this.renderTvSeasons(o)));
-      o.recommendations?.results?.length>0&&this.renderRecommendations(o.recommendations.results,tp)
+      !1!==st.settings.showRecs&&o.recommendations?.results?.length>0&&this.renderRecommendations(o.recommendations.results,tp)
     }catch{}
   },
   renderRecommendations:function(items,tp){
@@ -1830,15 +2063,15 @@ copyDnsHost:function(val){
   },
   loadSeason:async function(seasonNum){
     let el=document.getElementById("episodes-list");if(!el)return;
-    el.innerHTML='<div style="text-align:center; padding:20px;"><div class="lail-spinner"></div></div>';
+    el.innerHTML='<div style="text-align:center;padding:20px;"><div class="lail-spinner"></div></div>';
     try{
       let data=await (await fetch(`https://api.themoviedb.org/3/tv/${this.currentDetailsId}/season/${seasonNum}?api_key=${TMDB_KEY}&language=ar`)).json();
       el.innerHTML="";let frag=document.createDocumentFragment(),sName=this.currentDetailsItem?this.currentDetailsItem.name||this.currentDetailsItem.title:"";
-      let showP=!1!==st.settings.allowParties||h.isAdmin();
+      let showP=(!1!==st.settings.allowParties&&(!st.settings.partiesVipOnly||h.isVip()))||h.isAdmin();
       (data.episodes||[]).forEach(ep=>{
         let img=ep.still_path?`https://image.tmdb.org/t/p/w300${ep.still_path}`:"https://via.placeholder.com/300x170/1a1a1f/555?text=Lail+Cinema";
         let row=document.createElement("div");row.className="lail-episode-item";
-        row.innerHTML=`<div class="lail-ep-img-wrapper"><img class="lail-ep-img" src="${img}" loading="lazy"><i class="fas fa-play-circle lail-ep-play-icon"></i></div><div class="lail-ep-info"><h4 class="lail-ep-title"><span>${ep.episode_number}. ${h.esc(ep.name)}</span>${showP?'<button class="lail-party-btn lail-ep-pbtn" style="padding:4px 8px; font-size:0.8rem;" title="غرفة جماعية"><i class="fas fa-users"></i></button>':""}</h4><p class="lail-ep-desc">${h.esc(ep.overview||"تفاصيل الحلقة غير متوفرة.")}</p></div>`;
+        row.innerHTML=`<div class="lail-ep-img-wrapper"><img class="lail-ep-img" src="${img}" loading="lazy"><i class="fas fa-play-circle lail-ep-play-icon"></i></div><div class="lail-ep-info"><h4 class="lail-ep-title"><span>${ep.episode_number}. ${h.esc(ep.name)}</span>${showP?'<button class="lail-party-btn lail-ep-pbtn" style="padding:4px 8px;font-size:0.8rem;" title="غرفة جماعية"><i class="fas fa-users"></i></button>':""}</h4><p class="lail-ep-desc">${h.esc(ep.overview||"تفاصيل الحلقة غير متوفرة.")}</p></div>`;
         row.querySelector(".lail-ep-img-wrapper").onclick=()=>this.playVideo(this.currentDetailsId,"tv",sName,seasonNum,ep.episode_number);
         let pb=row.querySelector(".lail-ep-pbtn");pb&&(pb.onclick=()=>this.createParty(this.currentDetailsId,"tv",sName,seasonNum,ep.episode_number));
         frag.appendChild(row)
@@ -1880,6 +2113,7 @@ copyDnsHost:function(val){
   closePlayer:function(){
     let pl=document.getElementById("cinema-player");pl&&(pl.style.display="none",pl.classList.remove("mini-mode"));
     this.setIframeUrl("");
+    this._loadedRoomMediaKey=null;
     this.leaveParty();
     let app=document.getElementById("lail-cinema-app");
     app&&"flex"===app.style.display?this.setPresence("يتصفح السينما"):this.setPresence(null)
@@ -1898,12 +2132,13 @@ copyDnsHost:function(val){
   },
   createParty:function(id=null,tp=null,title=null,s=null,ep=null){
     if(!this.checkPartyPermission())return;
+    if(!h.isAdmin()&&!h.isVip()&&st.settings.partiesVipOnly)return this.showToast("👑 إنشاء غرف المشاهدة متاح للإدارة والـ VIP فقط حالياً.",4e3,"gold");
     if(!this.db)return this.showToast("خطأ في الاتصال بالقاعدة.");
     if(!id&&this.currentDetailsItem&&(id=this.currentDetailsItem.id,tp=this.currentDetailsItem.title?"movie":"tv",title=this.currentDetailsItem.title||this.currentDetailsItem.name),!id)return;
     if(h.isBlacklisted(id,tp)&&!h.isAdmin())return this.showToast("🚫 هذا العمل محجوب.");
     let go=()=>{
       let code=Math.floor(1e3+9e3*Math.random()).toString(),me=h.san(this.myUsername);
-      this.partyCode=code;this.isHost=!0;this.currentVideoData={id,type:tp,title,s,e:ep};
+      this.partyCode=code;this.isHost=!0;this._loadedRoomMediaKey=null;this.currentVideoData={id,type:tp,title,s,e:ep};
       this.db.ref(`lail_cinema/rooms/${code}`).set({host:me,movieId:id,type:tp,title,season:s||0,episode:ep||0,status:"waiting",startTime:0,pauseElapsed:0,createdAt:Date.now(),players:{[me]:!0}}).then(()=>{
         let m=document.getElementById("cinema-party-modal"),mt=document.getElementById("party-modal-title"),ju=document.getElementById("party-join-ui"),wu=document.getElementById("party-wait-ui");
         m&&(m.style.display="flex");mt&&(mt.innerHTML='<i class="fas fa-crown" style="color:#fbbf24;"></i> غرفتك جاهزة');ju&&(ju.style.display="none");wu&&(wu.style.display="block");
@@ -1914,19 +2149,20 @@ copyDnsHost:function(val){
       })
     };
     let maxR=Number(st.settings.maxRooms)||0;
-    if(maxR>0&&!h.isAdmin())this.db.ref("lail_cinema/rooms").once("value").then(sn=>Object.keys(sn.val()||{}).length>=maxR?this.showToast(`⚠️ الحد الأقصى للغرف (${maxR}) ممتلئ حالياً.`):go());
+    if(maxR>0&&!h.isAdmin()&&!h.isVip())this.db.ref("lail_cinema/rooms").once("value").then(sn=>Object.keys(sn.val()||{}).length>=maxR?this.showToast(`⚠️ الحد الأقصى للغرف (${maxR}) ممتلئ حالياً.`):go());
     else go()
   },
   joinParty:function(){
     if(!this.checkPartyPermission()||!this.db)return;
     let inp=document.getElementById("party-code-input");if(!inp)return;
-    let code=inp.value.trim();if(!code||code.length<4)return this.showToast("يرجى إدخال كود الغرفة الصحيح.");
+    let code=inp.value.trim();if(!code||code.length<3)return this.showToast("يرجى إدخال كود الغرفة الصحيح.");
     let me=h.san(this.myUsername);
     this.db.ref(`lail_cinema/rooms/${code}`).once("value").then(snap=>{
       if(!snap.exists())return this.showToast("الغرفة غير موجودة أو انتهت ❌");
       let rm=snap.val(),maxP=Number(st.settings.maxPlayersPerRoom)||0;
-      if(maxP>0&&!h.isAdmin()&&Object.keys(rm.players||{}).length>=maxP&&!rm.players?.[me])return this.showToast(`⚠️ الغرفة ممتلئة (الحد ${maxP} عضو).`);
-      this.partyCode=code;this.isHost=rm.host===me;this.currentVideoData={id:rm.movieId,type:rm.type,title:rm.title,s:rm.season,e:rm.episode};
+      if(maxP>0&&!h.isAdmin()&&!h.isVip()&&Object.keys(rm.players||{}).length>=maxP&&!rm.players?.[me])return this.showToast(`⚠️ الغرفة ممتلئة (الحد ${maxP} عضو).`);
+      this.partyCode=code;this.isHost=rm.host===me;this._loadedRoomMediaKey=null;
+      this.currentVideoData={id:rm.movieId,type:rm.type,title:rm.title,s:rm.season,e:rm.episode};
       this.db.ref(`lail_cinema/rooms/${code}/players/${me}`).set(!0).then(()=>{
         let mt=document.getElementById("party-modal-title"),ju=document.getElementById("party-join-ui"),wu=document.getElementById("party-wait-ui");
         mt&&(mt.innerHTML='<i class="fas fa-video"></i> قاعة الانتظار');ju&&(ju.style.display="none");wu&&(wu.style.display="block");
@@ -1938,7 +2174,7 @@ copyDnsHost:function(val){
     })
   },
   copyPartyCode:function(){
-    navigator.clipboard.writeText(`🍿 انضم لي في سينما ليل لمشاهدة جماعية لـ (${this.currentVideoData.title||"فيلم"})!\nكود الغرفة: ${this.partyCode}`).then(()=>this.showToast("تم نسخ رسالة الدعوة والكود بنجاح 📋"))
+    this.copyDnsHost(`🍿 انضم لي في سينما ليل لمشاهدة جماعية لـ (${this.currentVideoData.title||"فيلم"})!\nكود الغرفة: ${this.partyCode}`,"تم نسخ رسالة الدعوة والكود بنجاح 📋")
   },
   minimizeParty:function(){
     let m=document.getElementById("cinema-party-modal"),app=document.getElementById("lail-cinema-app"),rb=document.getElementById("party-restore-btn");
@@ -1977,9 +2213,13 @@ copyDnsHost:function(val){
     sb&&(sb.style.display="flex");rb&&(rb.style.display=!1===st.settings.allowReactions?"none":"flex");
     pb&&(this.isHost?(pb.style.display="flex",pb.innerHTML='<i class="fas fa-pause"></i> إيقاف للكل'):pb.style.display="none");
     this.applyAdminSettings();
-    this.setIframeUrl(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
-    let pl=document.getElementById("cinema-player");pl&&(pl.classList.remove("mini-mode"),pl.style.display="flex");
-    this.setPresence(`غرفة #${this.partyCode}: ${rm.title}`);
+    let mediaKey=`${rm.type}_${rm.movieId}_${rm.season||0}_${rm.episode||0}`,pl=document.getElementById("cinema-player");
+    if(this._loadedRoomMediaKey!==mediaKey||!pl||"flex"!==pl.style.display){
+      this._loadedRoomMediaKey=mediaKey;
+      this.setIframeUrl(h.buildEmbedUrl(rm.type,rm.movieId,rm.season,rm.episode,this.activeServerId));
+      pl&&(pl.classList.remove("mini-mode"),pl.style.display="flex");
+      this.setPresence(`غرفة #${this.partyCode}: ${rm.title}`)
+    }
     if(!this.reactionListenerSetup&&!1!==st.settings.allowReactions){
       this.reactionRef=this.db.ref(`lail_cinema/rooms/${this.partyCode}/reactions`);
       this.reactionRef.on("child_added",sn=>{let v=sn.val();v&&Date.now()-v.timestamp<1e4&&this.spawnReaction(v.emoji)});
@@ -1994,6 +2234,7 @@ copyDnsHost:function(val){
     })
   },
   handlePartyPause:function(){
+    this._loadedRoomMediaKey=null;
     this.setIframeUrl("");
     if(this.isHost){let pb=document.getElementById("party-pause-btn");pb&&(pb.innerHTML='<i class="fas fa-play"></i> استئناف')}
     this.showToast("⏸️ تم إيقاف الفيلم مؤقتاً من قبل المضيف...",5e3)
@@ -2014,7 +2255,7 @@ copyDnsHost:function(val){
       this.partyListener&&this.db.ref(`lail_cinema/rooms/${this.partyCode}`).off("value",this.partyListener);
       this.reactionListenerSetup&&this.reactionRef&&(this.reactionRef.off("child_added"),this.reactionListenerSetup=!1)
     }
-    this.partyCode=null;this.isHost=!1;
+    this.partyCode=null;this.isHost=!1;this._loadedRoomMediaKey=null;
     ["cinema-party-modal","party-restore-btn","party-sync-btn","party-pause-btn","party-reactions"].forEach(k=>{let el=document.getElementById(k);el&&(el.style.display="none")});
     let pl=document.getElementById("cinema-player");
     if(closedByHost&&pl&&"flex"===pl.style.display){
@@ -2074,426 +2315,4 @@ let timer,obs=new MutationObserver(()=>{
 document.body&&obs.observe(document.body,{childList:!0,subtree:!0});
 injectCinemaBtn();
 window.lailCinema.initFirebase();
-
-/* === ملحق الأقسام العربية والخليجية + إصلاح بحث الجوال + الصلاحيات الإدارية المتقدمة === */
-(function(){
-  Object.assign(DEFAULT_SETTINGS,{
-    vipUsers:[],
-    showMovieTab:!0,
-    showTvTab:!0,
-    showArabicTab:!0,
-    showFavTab:!0,
-    showAdGuideBtn:!0,
-    welcomePopupText:"",
-    welcomePopupVersion:0
-  });
-  st.settings=Object.assign({},DEFAULT_SETTINGS,st.settings);
-
-  if(!document.getElementById("lail-cinema-pro-style")){
-    let ps=document.createElement("style");
-    ps.id="lail-cinema-pro-style";
-    ps.textContent=`
-      @media (max-width:768px){
-        .lail-c-actions{flex-direction:row!important;flex-wrap:wrap!important;width:100%!important;gap:8px!important}
-        .lail-btn-sidebar,.lail-btn-party{flex:1!important;justify-content:center!important;padding:9px 10px!important;font-size:.88rem!important}
-        .lail-c-search-area{flex:1 0 100%!important;width:100%!important;min-width:0!important}
-        .lail-c-search-area input,.lail-c-search-area input:focus{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
-      }
-      .lail-welc-ov{position:fixed;inset:0;background:rgba(8,10,18,0.88);z-index:2147483643;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);direction:rtl;font-family:'Segoe UI',tahoma,sans-serif}
-      .lail-welc-box{background:linear-gradient(180deg,#1c1f38,#101222);border:1px solid rgba(212,175,55,0.45);border-radius:18px;width:90%;max-width:400px;padding:22px 20px;text-align:center;color:#f8fafc;box-shadow:0 20px 50px rgba(0,0,0,0.85)}
-    `;
-    (document.head||document.documentElement).appendChild(ps)
-  }
-
-  APP_HTML=APP_HTML.replace(
-    '<div id="tab-fav"',
-    '<div id="tab-arabic" class="lail-c-tab" style="color:#D4AF37;" onclick="window.lailCinema.switchMainTab(\'arabic\')"><i class="fas fa-moon"></i> عربي وخليجي</div><div id="tab-fav"'
-  );
-
-  const isVip=()=>{
-    let list=st.settings.vipUsers;
-    if(!Array.isArray(list)||!list.length)return!1;
-    let u=window.lailCinema.myUsername||"",s=h.san(u);
-    return list.some(x=>x===u||h.san(x)===s)
-  };
-
-  Object.assign(window.lailCinema,{
-    currentCustomApi:null,
-    currentCustomKey:null,
-    arabicSections:function(){
-      let today=new Date().toISOString().split("T")[0];
-      return{
-        gulf_tv:{key:"gulf_tv",title:"مسلسلات خليجية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=KW|SA|AE|QA|BH|OM&sort_by=popularity.desc"},
-        gulf_movie:{key:"gulf_movie",title:"أفلام خليجية وسعودية",icon:"fa-film",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_origin_country=SA|KW|AE|QA|BH|OM&sort_by=popularity.desc"},
-        egy_tv:{key:"egy_tv",title:"مسلسلات مصرية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=EG&sort_by=popularity.desc"},
-        egy_movie:{key:"egy_movie",title:"أفلام مصرية",icon:"fa-film",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_origin_country=EG&sort_by=popularity.desc"},
-        levant_tv:{key:"levant_tv",title:"مسلسلات شامية وسورية",icon:"fa-tv",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_origin_country=SY|LB|JO&sort_by=popularity.desc"},
-        ar_tv_all:{key:"ar_tv_all",title:"كل المسلسلات العربية",icon:"fa-moon",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&sort_by=popularity.desc"},
-        ar_movie_all:{key:"ar_movie_all",title:"كل الأفلام العربية",icon:"fa-moon",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&sort_by=popularity.desc"},
-        ar_tv_comedy:{key:"ar_tv_comedy",title:"كوميديا خليجية وعربية",icon:"fa-laugh-squint",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_genres=35&sort_by=popularity.desc"},
-        ar_tv_drama:{key:"ar_tv_drama",title:"دراما خليجية وعربية",icon:"fa-theater-masks",path:"discover/tv",mediaType:"tv",params:"with_original_language=ar&with_genres=18&sort_by=popularity.desc"},
-        ar_movie_comedy:{key:"ar_movie_comedy",title:"أفلام كوميديا عربية",icon:"fa-laugh-squint",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_genres=35&sort_by=popularity.desc"},
-        ar_movie_action:{key:"ar_movie_action",title:"أفلام أكشن وإثارة عربية",icon:"fa-fist-raised",path:"discover/movie",mediaType:"movie",params:"with_original_language=ar&with_genres=28|53&sort_by=popularity.desc"},
-        ar_tv_new:{key:"ar_tv_new",title:"أحدث المسلسلات العربية والخليجية",icon:"fa-clock",path:"discover/tv",mediaType:"tv",params:`with_original_language=ar&sort_by=first_air_date.desc&first_air_date.lte=${today}`},
-        ar_movie_new:{key:"ar_movie_new",title:"أحدث الأفلام العربية والخليجية",icon:"fa-clock",path:"discover/movie",mediaType:"movie",params:`with_original_language=ar&sort_by=primary_release_date.desc&primary_release_date.lte=${today}`}
-      }
-    },
-    maybeShowWelcome:function(){
-      let txt=(st.settings.welcomePopupText||"").trim(),ver=String(st.settings.welcomePopupVersion||1);
-      if(!txt||localStorage.getItem("lail_cin_welc_v")===ver)return;
-      let old=document.getElementById("lail-cin-welc");old&&old.remove();
-      let ov=document.createElement("div");ov.id="lail-cin-welc";ov.className="lail-welc-ov";
-      ov.innerHTML=`<div class="lail-welc-box"><div style="font-size:28px;margin-bottom:8px;">🎬</div><h3 style="margin:0 0 10px;color:#D4AF37;font-size:17px;">رسالة من إدارة سينما ليل</h3><p style="margin:0 0 18px;font-size:13.5px;line-height:1.7;color:#e2e8f0;white-space:pre-line;">${h.esc(txt)}</p><button type="button" id="lail-welc-ok" style="background:linear-gradient(135deg,#D4AF37,#b59226);color:#161824;border:none;border-radius:10px;padding:10px 26px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">حسناً، فهمت</button></div>`;
-      document.body.appendChild(ov);
-      let dismiss=()=>{localStorage.setItem("lail_cin_welc_v",ver);ov.remove()};
-      ov.onclick=ev=>{ev.target===ov&&dismiss()};
-      document.getElementById("lail-welc-ok").onclick=dismiss
-    },
-    applyAdminSettings:function(){
-      let s=st.settings,adm=h.isAdmin(),vip=isVip();
-      let app=document.getElementById("lail-cinema-app");
-      if(!1===s.enabled&&!adm&&!vip&&app&&"flex"===app.style.display){
-        this.closePlayer();this.close();alert(s.disabledMsg||DEFAULT_SETTINGS.disabledMsg)
-      }
-      let offB=document.getElementById("cinema-admin-off-banner");
-      offB&&(offB.style.display=!1===s.enabled&&(adm||vip)?"block":"none");
-      let annB=document.getElementById("cinema-announcement-banner"),annT=document.getElementById("cinema-announcement-text");
-      annB&&annT&&(s.bannerText?(annT.textContent=s.bannerText,annB.style.display="flex"):annB.style.display="none");
-      let navP=document.getElementById("cinema-nav-party-btn"),detP=document.getElementById("details-party-btn");
-      navP&&(navP.style.display=!1===s.allowParties&&!adm?"none":"flex");
-      detP&&(detP.style.display=!1===s.allowParties&&!adm?"none":"flex");
-      let pipB=document.getElementById("lail-pip-btn");
-      pipB&&(pipB.style.display=!1===s.allowMiniPlayer?"none":"flex");
-      let setVis=(sel,flag)=>{let el=document.querySelector(sel);el&&(el.style.display=!1===flag?"none":"")};
-      setVis("#tab-movie",s.showMovieTab);
-      setVis("#tab-tv",s.showTvTab);
-      setVis("#tab-arabic",s.showArabicTab);
-      setVis("#tab-fav",s.showFavTab);
-      setVis(".lail-adguide-btn",s.showAdGuideBtn);
-      let srvSel=document.getElementById("lail-player-server-sel");
-      if(srvSel){
-        let srvs=h.getServers();
-        if((!1!==s.allowUserServerSwitch||adm)&&srvs.length>1){
-          srvSel.innerHTML=srvs.map(x=>`<option value="${h.esc(x.id)}">${h.esc(x.name)}</option>`).join("");
-          srvSel.value=this.activeServerId||s.defaultServerId||srvs[0].id;
-          srvSel.style.display="inline-block"
-        }else srvSel.style.display="none"
-      }
-      this.renderReactionButtons();
-      app&&"flex"===app.style.display&&this.renderEventAndPoll()
-    },
-    init:async function(){
-      this.initFirebase();
-      let s=st.settings,adm=h.isAdmin(),vip=isVip();
-      if(!adm&&!vip&&!1===s.enabled)return alert(s.disabledMsg||DEFAULT_SETTINGS.disabledMsg);
-      if(!adm&&!vip&&!1===s.allowGuests&&h.isGuest())return alert("سينما ليل متاحة للأعضاء المسجلين فقط 🎬");
-      let ban=h.getActiveBan();
-      if(!adm&&ban&&"full"===ban.scope)return alert(h.banMsg(ban));
-      let app=document.getElementById("lail-cinema-app");
-      app||(document.body.insertAdjacentHTML("beforeend",APP_HTML),app=document.getElementById("lail-cinema-app"));
-      app&&(app.style.display="flex");
-      if(!this._uiBound){this._uiBound=!0;this.setupScrollListener();this.setupDraggableMiniPlayer()}
-      this.setPresence("يتصفح السينما");
-      this.applyAdminSettings();
-      this.maybeShowWelcome();
-      0===this.genres.movie.length&&await this.fetchGenres();
-      let nv=document.getElementById("cinema-netflix-view");
-      nv&&""===nv.innerHTML.trim()&&this.switchMainTab(this.currentType)
-    },
-    switchMainTab:function(tp){
-      this.currentType=tp;this.currentGenre=null;this.currentQuery=null;this.currentCustomApi=null;this.currentCustomKey=null;
-      document.querySelectorAll(".lail-c-tab").forEach(x=>x.classList.remove("active"));
-      let tab=document.getElementById(`tab-${tp}`);tab&&tab.classList.add("active");
-      let si=document.getElementById("cinema-search-input");si&&(si.value="");
-      this.renderSidebar();
-      if("fav"===tp)this.loadFavorites();
-      else{
-        let gv=document.getElementById("cinema-grid-view"),nv=document.getElementById("cinema-netflix-view");
-        gv&&(gv.style.display="none");nv&&(nv.style.display="block");
-        this.buildNetflixLayout(tp)
-      }
-    },
-    buildNetflixLayout:async function(tp){
-      let nv=document.getElementById("cinema-netflix-view");if(!nv)return;
-      nv.innerHTML='<div class="lail-loader" style="margin-top:100px;"><div class="lail-spinner"></div></div>';
-      try{
-        if("arabic"===tp){
-          let sec=this.arabicSections();
-          let rows=["gulf_tv","gulf_movie","egy_tv","egy_movie","levant_tv","ar_tv_comedy","ar_tv_drama","ar_tv_new"].map(k=>sec[k]);
-          let res=await Promise.all(rows.map(r=>fetch(`https://api.themoviedb.org/3/${r.path}?api_key=${TMDB_KEY}&language=ar&${r.params}`).then(x=>x.json())));
-          nv.innerHTML="";
-          rows.forEach((r,idx)=>{this.appendNetflixRow(nv,`🌙 ${r.title}`,res[idx].results,r.mediaType,r.key)});
-          return
-        }
-        let hist=[];
-        if(this.db){
-          let snap=(await this.db.ref(`lail_cinema/history/${h.san(this.myUsername)}`).once("value")).val();
-          snap&&(hist=Object.values(snap).filter(x=>x&&x.type===tp&&!h.isBlacklisted(x.id,x.type)).sort((a,b)=>b.timestamp-a.timestamp).slice(0,15))
-        }
-        let rows="movie"===tp
-          ?[{title:"🔥 توب 10 (اليوم)",url:"trending/movie/day"},{title:"🌙 أفلام خليجية وعربية",url:"discover/movie?with_original_language=ar&sort_by=popularity.desc",secKey:"ar_movie_all"},{title:"📈 الأكثر شعبية",url:"movie/popular"},{title:"⭐ الأعلى تقييماً",url:"movie/top_rated"},{title:"🆕 أفلام جديدة",url:"movie/now_playing"}]
-          :[{title:"🔥 توب 10 (اليوم)",url:"trending/tv/day"},{title:"🌙 مسلسلات خليجية",url:"discover/tv?with_original_language=ar&with_origin_country=KW|SA|AE|QA|BH|OM&sort_by=popularity.desc",secKey:"gulf_tv"},{title:"📈 الأكثر شعبية",url:"tv/popular"},{title:"⭐ الأعلى تقييماً",url:"tv/top_rated"},{title:"📺 يعرض حالياً",url:"tv/on_the_air"}];
-        let res=await Promise.all(rows.map(r=>fetch(`https://api.themoviedb.org/3/${r.url}${r.url.includes("?")?"&":"?"}api_key=${TMDB_KEY}&language=ar`).then(x=>x.json())));
-        nv.innerHTML="";
-        this.appendFeaturedRow(nv,tp);
-        hist.length>0&&this.appendHistoryRow(nv,"▶️ استمر في المشاهدة",hist);
-        res.forEach((d,idx)=>{this.appendNetflixRow(nv,rows[idx].title,d.results,tp,rows[idx].secKey||null)})
-      }catch{nv.innerHTML='<div style="text-align:center; padding:50px;">حدث خطأ في التحميل.</div>'}
-    },
-    appendNetflixRow:function(c,title,items,tp,secKey=null){
-      let minR=Number(st.settings.minRating)||0;
-      let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||tp)&&!h.isGenreBlocked(x.genre_ids)&&((x.vote_average||0)>=minR||0===minR));
-      if(!clean.length)return;
-      let moreBtn=secKey?`<span onclick="window.lailCinema.selectCustomSection('${secKey}')" style="margin-right:auto; font-size:.86rem; color:#D4AF37; cursor:pointer; font-weight:bold; display:inline-flex; align-items:center; gap:5px;">عرض الكل <i class="fas fa-chevron-left"></i></span>`:"";
-      let html=`<div class="lail-row-container"><div class="lail-row-title">${title}${moreBtn}</div><div class="lail-row-scroller">`;
-      clean.forEach(x=>{html+=`<div class="lail-movie-card" onclick="window.lailCinema.openDetails(${x.id}, '${x.media_type||tp}')"><div class="lail-movie-rate"><i class="fas fa-star"></i> ${x.vote_average?x.vote_average.toFixed(1):"N/A"}</div><img class="lail-movie-poster" src="https://image.tmdb.org/t/p/w500${x.poster_path}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title||x.name)}</div></div>`});
-      html+="</div></div>";c.insertAdjacentHTML("beforeend",html)
-    },
-    renderSidebar:function(){
-      let el=document.getElementById("sidebar-genres");if(!el)return;
-      let isHome=!this.currentGenre&&!this.currentCustomKey;
-      el.innerHTML=`<div class="lail-genre-item ${isHome?"active":""}" onclick="window.lailCinema.switchMainTab('${this.currentType}')"><i class="fas fa-home"></i> الرئيسية</div>`;
-      if("fav"===this.currentType)return;
-      let sec=this.arabicSections();
-      let addGroup=(lbl,keys)=>{
-        el.innerHTML+=`<div style="padding:10px 26px 4px; font-size:.78rem; color:#D4AF37; font-weight:bold; opacity:.9;">${lbl}</div>`;
-        keys.forEach(k=>{let s=sec[k];s&&(el.innerHTML+=`<div class="lail-genre-item ${this.currentCustomKey===k?"active":""}" onclick="window.lailCinema.selectCustomSection('${k}')"><i class="fas ${s.icon}"></i> ${s.title}</div>`)})
-      };
-      if("arabic"===this.currentType){addGroup("أقسام خليجية وعربية",Object.keys(sec));return}
-      if("movie"===this.currentType)addGroup("أفلام عربية وخليجية",["gulf_movie","egy_movie","ar_movie_all","ar_movie_comedy","ar_movie_action","ar_movie_new"]);
-      else if("tv"===this.currentType)addGroup("مسلسلات خليجية وعربية",["gulf_tv","egy_tv","levant_tv","ar_tv_all","ar_tv_comedy","ar_tv_drama","ar_tv_new"]);
-      el.innerHTML+=`<div style="padding:12px 26px 4px; font-size:.78rem; color:#64748b; font-weight:bold; border-top:1px solid rgba(255,255,255,0.06); margin-top:6px;">التصنيفات العالمية</div>`;
-      let blocked=st.settings.blockedGenres||[],list=("movie"===this.currentType?this.genres.movie:this.genres.tv).filter(g=>!blocked.includes(g.id));
-      let icons={28:"fa-fist-raised",12:"fa-compass",16:"fa-child",35:"fa-laugh-squint",80:"fa-user-secret",99:"fa-video",18:"fa-theater-masks",10751:"fa-users",14:"fa-dragon",36:"fa-monument",27:"fa-ghost",10402:"fa-music",9648:"fa-search",10749:"fa-heart",878:"fa-rocket",10770:"fa-tv",53:"fa-running",10752:"fa-fighter-jet",37:"fa-hat-cowboy",10759:"fa-bomb",10765:"fa-meteor"};
-      list.forEach(g=>{el.innerHTML+=`<div class="lail-genre-item ${this.currentGenre===g.id?"active":""}" onclick="window.lailCinema.selectGenre(${g.id}, '${g.name.replace(/'/g,"\\'")}')"><i class="fas ${icons[g.id]||"fa-film"}"></i> ${g.name}</div>`})
-    },
-    selectCustomSection:function(key){
-      let s=this.arabicSections()[key];if(!s)return;
-      this.currentCustomApi=s;this.currentCustomKey=key;this.currentGenre=null;this.currentQuery=null;
-      let si=document.getElementById("cinema-search-input"),gh=document.getElementById("grid-header");
-      si&&(si.value="");gh&&(gh.innerHTML=`<i class="fas ${s.icon}" style="color:#D4AF37;"></i> ${h.esc(s.title)}`);
-      let sb=document.getElementById("cinema-sidebar");sb&&"0px"===sb.style.right&&this.toggleSidebar();
-      this.renderSidebar();
-      let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
-      nv&&(nv.style.display="none");gv&&(gv.style.display="block");
-      let mb=document.getElementById("cinema-main-body");mb&&(mb.scrollTop=0);
-      this.loadGridContent(!0)
-    },
-    selectGenre:function(id,name){
-      this.currentGenre=id;this.currentQuery=null;this.currentCustomApi=null;this.currentCustomKey=null;
-      let si=document.getElementById("cinema-search-input"),gh=document.getElementById("grid-header");
-      si&&(si.value="");gh&&(gh.innerHTML=`<i class="fas fa-list"></i> تصنيف: ${h.esc(name)}`);
-      let sb=document.getElementById("cinema-sidebar");sb&&"0px"===sb.style.right&&this.toggleSidebar();
-      this.renderSidebar();
-      let nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
-      nv&&(nv.style.display="none");gv&&(gv.style.display="block");this.loadGridContent(!0)
-    },
-    executeSearch:function(){
-      let si=document.getElementById("cinema-search-input");if(!si)return;
-      let q=si.value.trim();if(!q)return;
-      this.currentQuery=q;this.currentGenre=null;this.currentCustomApi=null;this.currentCustomKey=null;
-      let gh=document.getElementById("grid-header"),nv=document.getElementById("cinema-netflix-view"),gv=document.getElementById("cinema-grid-view");
-      gh&&(gh.innerHTML=`<i class="fas fa-search"></i> نتائج: ${h.esc(q)}`);
-      nv&&(nv.style.display="none");gv&&(gv.style.display="block");this.loadGridContent(!0)
-    },
-    loadGridContent:async function(reset=!1){
-      if(this.isLoading||(!this.hasMore&&!reset))return;
-      this.isLoading=!0;
-      let gr=document.getElementById("cinema-grid"),ld=document.getElementById("cinema-loader");
-      if(gr&&ld){
-        reset&&(this.currentPage=1,this.hasMore=!0,gr.innerHTML="");ld.style.display="flex";
-        try{
-          let adult=st.settings.safeMode?"&include_adult=false":"",url="";
-          if(this.currentCustomApi)url=`https://api.themoviedb.org/3/${this.currentCustomApi.path}?api_key=${TMDB_KEY}&language=ar${adult}&${this.currentCustomApi.params}&page=${this.currentPage}`;
-          else if(this.currentQuery)url=`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar${adult}&query=${encodeURIComponent(this.currentQuery)}&page=${this.currentPage}`;
-          else if(this.currentGenre)url=`https://api.themoviedb.org/3/discover/${this.currentType}?api_key=${TMDB_KEY}&language=ar${adult}&with_genres=${this.currentGenre}&page=${this.currentPage}&sort_by=popularity.desc`;
-          let data=await (await fetch(url)).json(),items=data.results||[];
-          this.currentQuery&&(items=items.filter(x=>"movie"===x.media_type||"tv"===x.media_type));
-          this.appendGridItems(items);
-          data.page>=data.total_pages||data.page>=50?this.hasMore=!1:this.currentPage++
-        }catch{}
-        ld.style.display="none";this.isLoading=!1
-      }
-    },
-    appendGridItems:function(items){
-      let gr=document.getElementById("cinema-grid");if(!gr)return;
-      let fb=this.currentCustomApi?this.currentCustomApi.mediaType:("arabic"===this.currentType?"tv":this.currentType);
-      let clean=(items||[]).filter(x=>x&&x.poster_path&&!h.isBlacklisted(x.id,x.media_type||fb)&&!h.isGenreBlocked(x.genre_ids));
-      if(0===clean.length&&1===this.currentPage){gr.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa;">لا توجد نتائج.</div>';return}
-      let frag=document.createDocumentFragment();
-      clean.forEach(x=>{
-        let mt=x.media_type||fb,img=x.poster_path.startsWith("http")?x.poster_path:`https://image.tmdb.org/t/p/w500${x.poster_path}`,rt=x.vote_average?x.vote_average.toFixed(1):"N/A";
-        let card=document.createElement("div");card.className="lail-movie-card";card.onclick=()=>this.openDetails(x.id,mt);
-        card.innerHTML=`<div class="lail-movie-rate"><i class="fas fa-star"></i> ${rt}</div><img class="lail-movie-poster" src="${img}" loading="lazy"><div class="lail-movie-title-overlay">${h.esc(x.title||x.name)}</div>`;
-        frag.appendChild(card)
-      });
-      gr.appendChild(frag)
-    }
-  });
-
-  // توسيع لوحة التحكم الإدارية بتبويب «⚡ صلاحيات إضافية»
-  const origAdminOpen=cinemaAdmin.open;
-  const origAdminSwitch=cinemaAdmin.switchTab;
-
-  function renderProTab(){
-    let s=st.settings;
-    let sc=(id,v)=>{let el=document.getElementById(id);el&&(el.checked=!1!==v)};
-    sc("lcma-p-tmov",s.showMovieTab);
-    sc("lcma-p-ttv",s.showTvTab);
-    sc("lcma-p-tar",s.showArabicTab);
-    sc("lcma-p-tfav",s.showFavTab);
-    sc("lcma-p-tadg",s.showAdGuideBtn);
-    let wi=document.getElementById("lcma-p-welc");wi&&(wi.value=s.welcomePopupText||"");
-    let vBox=document.getElementById("lcma-p-viplist");
-    if(vBox){
-      let list=Array.isArray(s.vipUsers)?s.vipUsers:[];
-      vBox.innerHTML=list.length?list.map((u,i)=>`<span class="lcma-tag lcma-t-gold" style="margin:2px;">👑 ${h.esc(u)} <i class="fas fa-times lcma-vip-rm" data-i="${i}" style="cursor:pointer;color:#f87171;"></i></span>`).join(""):'<span style="font-size:11px;color:#64748b;">لا يوجد أعضاء VIP مضافون.</span>';
-      vBox.querySelectorAll(".lcma-vip-rm").forEach(el=>el.onclick=()=>{
-        let next=(st.settings.vipUsers||[]).slice();next.splice(Number(el.dataset.i),1);
-        cinemaAdmin.patchSettings({vipUsers:next},"تمت الإزالة من قائمة VIP")
-      })
-    }
-    let rSel=document.getElementById("lcma-p-rmsel");
-    if(rSel){
-      let rms=Object.entries(st.roomsCache||{});
-      rSel.innerHTML=rms.length?rms.map(([code,rm])=>`<option value="${h.esc(code)}">#${h.esc(code)} — ${h.esc(rm.title||"غرفة")}</option>`).join(""):'<option value="">لا توجد غرف نشطة حالياً</option>'
-    }
-  }
-
-  cinemaAdmin.switchTab=function(tab){
-    origAdminSwitch(tab);
-    if("pro"===tab)renderProTab()
-  };
-
-  cinemaAdmin.open=function(){
-    origAdminOpen();
-    let ov=document.getElementById("lail-cinema-admin-modal");if(!ov)return;
-    let tabs=ov.querySelector(".lcma-tabs"),body=ov.querySelector(".lcma-body");
-    if(!tabs||!body||document.getElementById("lcma-v-pro"))return;
-    let btn=document.createElement("button");
-    btn.type="button";btn.className="lcma-tab";btn.dataset.mtab="pro";
-    btn.innerHTML='<i class="fas fa-bolt"></i> صلاحيات إضافية';
-    btn.onclick=()=>cinemaAdmin.switchTab("pro");
-    tabs.appendChild(btn);
-
-    let view=document.createElement("div");
-    view.id="lcma-v-pro";view.className="lcma-view";
-    view.innerHTML=`
-      <div class="lcma-card" style="border-color:rgba(212,175,55,0.35);">
-        <div class="lcma-card-t"><span><i class="fas fa-crown"></i> قائمة VIP (تجاوز الصيانة والضيوف)</span></div>
-        <div class="lcma-row" style="margin-bottom:7px;">
-          <input type="text" id="lcma-p-vipinp" class="lcma-inp" style="flex:1;" placeholder="اسم المستخدم (Username)...">
-          <button type="button" id="lcma-p-vipadd" class="lcma-btn lcma-btn-gold lcma-mini" style="padding:8px 13px;">إضافة</button>
-        </div>
-        <div id="lcma-p-viplist"></div>
-      </div>
-
-      <div class="lcma-card">
-        <div class="lcma-card-t"><span><i class="fas fa-eye"></i> إظهار وإخفاء التبويبات والأزرار</span></div>
-        <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">تبويب الأفلام</div><label class="lcma-sw"><input type="checkbox" id="lcma-p-tmov"><span class="lcma-sl"></span></label></div>
-        <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">تبويب المسلسلات</div><label class="lcma-sw"><input type="checkbox" id="lcma-p-ttv"><span class="lcma-sl"></span></label></div>
-        <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">تبويب «🌙 عربي وخليجي»</div><label class="lcma-sw"><input type="checkbox" id="lcma-p-tar"><span class="lcma-sl"></span></label></div>
-        <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">تبويب مفضلاتي</div><label class="lcma-sw"><input type="checkbox" id="lcma-p-tfav"><span class="lcma-sl"></span></label></div>
-        <div class="lcma-srow"><div style="font-size:12px;font-weight:bold;">زر «إيقاف الإعلانات» العلوي</div><label class="lcma-sw"><input type="checkbox" id="lcma-p-tadg"><span class="lcma-sl"></span></label></div>
-        <button type="button" id="lcma-p-vis-save" class="lcma-btn lcma-btn-gold"><i class="fas fa-save"></i> حفظ إعدادات الظهور</button>
-      </div>
-
-      <div class="lcma-card">
-        <div class="lcma-card-t"><span><i class="fas fa-comment-alt"></i> رسالة ترحيب منبثقة عند دخول السينما</span></div>
-        <textarea id="lcma-p-welc" class="lcma-inp" rows="2" style="resize:vertical;margin-bottom:7px;" placeholder="اتركه فارغاً لتعطيل الرسالة..."></textarea>
-        <div class="lcma-row" style="gap:6px;">
-          <button type="button" id="lcma-p-welc-save" class="lcma-btn lcma-btn-ok" style="flex:1;"><i class="fas fa-paper-plane"></i> حفظ وإظهار للجميع</button>
-          <button type="button" id="lcma-p-welc-off" class="lcma-btn lcma-btn-danger lcma-mini">تعطيل</button>
-        </div>
-      </div>
-
-      <div class="lcma-card" style="border-color:rgba(56,189,248,0.3);">
-        <div class="lcma-card-t" style="color:#7dd3fc;"><span><i class="fas fa-exchange-alt"></i> تغيير العمل داخل غرفة نشطة (بدون إغلاقها)</span></div>
-        <select id="lcma-p-rmsel" class="lcma-inp" style="margin-bottom:6px;"></select>
-        <div class="lcma-row" style="margin-bottom:6px;">
-          <input type="text" id="lcma-p-rmq" class="lcma-inp" style="flex:1;" placeholder="ابحث عن الفيلم/المسلسل البديل...">
-          <button type="button" id="lcma-p-rmsbtn" class="lcma-btn lcma-btn-info lcma-mini" style="padding:8px 12px;"><i class="fas fa-search"></i></button>
-        </div>
-        <div id="lcma-p-rmres" style="max-height:150px;overflow-y:auto;"></div>
-      </div>
-
-      <div class="lcma-card">
-        <div class="lcma-card-t"><span><i class="fas fa-tools"></i> أدوات النشر والتنظيف العميق</span></div>
-        <div class="lcma-g2">
-          <button type="button" id="lcma-p-copylead" class="lcma-btn lcma-btn-info"><i class="fas fa-trophy"></i> نسخ تقرير «نجوم السينما»</button>
-          <button type="button" id="lcma-p-cleanbans" class="lcma-btn lcma-btn-ok"><i class="fas fa-user-check"></i> تنظيف الحظر المنتهي</button>
-          <button type="button" id="lcma-p-wipehist" class="lcma-btn lcma-btn-danger"><i class="fas fa-trash"></i> تصفير كل سجل المشاهدة</button>
-          <button type="button" id="lcma-p-wipefavs" class="lcma-btn lcma-btn-danger"><i class="fas fa-heart-broken"></i> تصفير كل المفضلات</button>
-        </div>
-      </div>`;
-    body.appendChild(view);
-
-    document.getElementById("lcma-p-vipadd").onclick=()=>{
-      let u=(document.getElementById("lcma-p-vipinp").value||"").trim();if(!u)return;
-      let next=Array.from(new Set([...(st.settings.vipUsers||[]),u]));
-      document.getElementById("lcma-p-vipinp").value="";
-      cinemaAdmin.patchSettings({vipUsers:next},`👑 تمت إضافة (${u}) لقائمة VIP`);
-      renderProTab()
-    };
-    document.getElementById("lcma-p-vis-save").onclick=()=>{
-      cinemaAdmin.patchSettings({
-        showMovieTab:document.getElementById("lcma-p-tmov").checked,
-        showTvTab:document.getElementById("lcma-p-ttv").checked,
-        showArabicTab:document.getElementById("lcma-p-tar").checked,
-        showFavTab:document.getElementById("lcma-p-tfav").checked,
-        showAdGuideBtn:document.getElementById("lcma-p-tadg").checked
-      },"✅ تم تحديث ظهور التبويبات")
-    };
-    document.getElementById("lcma-p-welc-save").onclick=()=>{
-      let txt=(document.getElementById("lcma-p-welc").value||"").trim();
-      cinemaAdmin.patchSettings({welcomePopupText:txt,welcomePopupVersion:Date.now()},txt?"✅ تم تفعيل رسالة الترحيب للجميع":"تم تعطيل الرسالة")
-    };
-    document.getElementById("lcma-p-welc-off").onclick=()=>{
-      document.getElementById("lcma-p-welc").value="";
-      cinemaAdmin.patchSettings({welcomePopupText:""},"تم تعطيل رسالة الترحيب")
-    };
-    document.getElementById("lcma-p-rmsbtn").onclick=async()=>{
-      let code=document.getElementById("lcma-p-rmsel").value,q=(document.getElementById("lcma-p-rmq").value||"").trim(),box=document.getElementById("lcma-p-rmres");
-      if(!code)return alert("لا توجد غرفة مختارة.");if(!q)return;
-      box.innerHTML='<div style="text-align:center;color:#D4AF37;padding:8px;"><i class="fas fa-spinner fa-spin"></i></div>';
-      try{
-        let d=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&language=ar&query=${encodeURIComponent(q)}`).then(x=>x.json());
-        let list=(d.results||[]).filter(x=>"movie"===x.media_type||"tv"===x.media_type).slice(0,5);
-        box.innerHTML=list.length?list.map((it,idx)=>`<div class="lcma-mrow"><div style="flex:1;font-size:12px;"><b>${h.esc(it.title||it.name)}</b> <span style="color:#94a3b8;">(${"movie"===it.media_type?"فيلم":"مسلسل"})</span></div><button type="button" class="lcma-btn lcma-btn-gold lcma-mini lcma-rmsw" data-i="${idx}">تبديل الآن</button></div>`).join(""):'<div style="text-align:center;color:#94a3b8;font-size:11.5px;">لا نتائج.</div>';
-        box.querySelectorAll(".lcma-rmsw").forEach(b=>b.onclick=()=>{
-          let it=list[Number(b.dataset.i)],sN=0,eN=0;
-          if("tv"===it.media_type){sN=parseInt(prompt("رقم الموسم:","1"))||1;eN=parseInt(prompt("رقم الحلقة:","1"))||1}
-          window.lailCinema.db.ref(`lail_cinema/rooms/${code}`).update({movieId:it.id,type:it.media_type,title:it.title||it.name,season:sN,episode:eN,startTime:Date.now(),pauseElapsed:0}).then(()=>{
-            cinemaAdmin.log("تبديل فيلم غرفة",`#${code}`,it.title||it.name);
-            box.innerHTML="";window.lailCinema.showToast(`✅ تم تبديل العرض في الغرفة #${code}`)
-          })
-        })
-      }catch{box.innerHTML='<div style="color:#ef4444;text-align:center;">خطأ اتصال.</div>'}
-    };
-    document.getElementById("lcma-p-copylead").onclick=async()=>{
-      if(!window.lailCinema.db)return;
-      let snap=await window.lailCinema.db.ref("lail_cinema/history").once("value");
-      let hist=snap.val()||{},uC={},mC={};
-      Object.entries(hist).forEach(([u,m])=>{if(!m||"object"!=typeof m)return;let arr=Object.values(m);uC[u]=arr.length;arr.forEach(it=>{if(!it?.title)return;mC[it.title]=(mC[it.title]||0)+1})});
-      let topU=Object.entries(uC).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      let topM=Object.entries(mC).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      let txt="🎬✨ نجوم سينما ليل ✨🎬\n\n🍿 أكثر الأعضاء مشاهدة:\n"+(topU.map(([u,c],i)=>`${i+1}. ${u} (${c} عمل)`).join("\n")||"-")+"\n\n🔥 أكثر الأعمال مشاهدة:\n"+(topM.map(([t,c],i)=>`${i+1}. ${t} (${c})`).join("\n")||"-");
-      window.lailCinema.copyDnsHost(txt);
-      window.lailCinema.showToast("📋 تم نسخ تقرير نجوم السينما — جاهز للصق في الشات!")
-    };
-    document.getElementById("lcma-p-cleanbans").onclick=()=>{
-      let up={},cnt=0;
-      Object.entries(st.bannedCache||{}).forEach(([k,d])=>{if(d&&d.expiresAt&&Date.now()>=d.expiresAt){up[k]=null;cnt++}});
-      if(!cnt)return window.lailCinema.showToast("لا يوجد حظر منتهي");
-      window.lailCinema.db.ref(`${ADMIN_PATH}/banned`).update(up).then(()=>{cinemaAdmin.log("تنظيف الحظر المنتهي",`${cnt} عضو`,"");cinemaAdmin.loadBanned();window.lailCinema.showToast(`🧹 تم تنظيف ${cnt} حظر منتهي`)})
-    };
-    document.getElementById("lcma-p-wipehist").onclick=()=>{
-      if(confirm("⚠️ تحذير: حذف كامل سجل المشاهدة لجميع الأعضاء؟")&&confirm("تأكيد نهائي؟ لا يمكن التراجع!"))window.lailCinema.db.ref("lail_cinema/history").remove().then(()=>{cinemaAdmin.log("تصفير سجل المشاهدة","الجميع","");window.lailCinema.showToast("🗑️ تم تصفير السجل")})
-    };
-    document.getElementById("lcma-p-wipefavs").onclick=()=>{
-      if(confirm("⚠️ تحذير: حذف مفضلات جميع الأعضاء؟")&&confirm("تأكيد نهائي؟ لا يمكن التراجع!"))window.lailCinema.db.ref("lail_cinema/favorites").remove().then(()=>{cinemaAdmin.log("تصفير المفضلات","الجميع","");window.lailCinema.showToast("🗑️ تم تصفير المفضلات")})
-    }
-  };
-  window.lailCinema.openAdmin=cinemaAdmin.open;
-})();
 }();
