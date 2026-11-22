@@ -102,7 +102,43 @@ const t={
 const a={
   sanitizeName:x=>x?x.replace(/[.#$\[\]\/]/g,"_").trim():null,
   escapeHTML:x=>x?String(x).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]||c):"",
-  isSafeUrl:u=>Boolean(u&&/^https?:\/\/[^\s"'<>]+$/i.test(u.trim())),
+  isSafeUrl:u=>Boolean(u&&(/^https?:\/\/[^\s"'<>]+$/i.test(u.trim())||/^data:image\/(jpeg|jpg|png|webp|gif);base64,[a-zA-Z0-9+/=]+$/.test(u.trim()))),
+  compressImage(file){
+    return new Promise((res,rej)=>{
+      if(!file||!file.type||!file.type.startsWith("image/"))return rej("الملف المختار ليس صورة صالحة");
+      if(file.size>12*1024*1024)return rej("حجم الصورة كبير جداً (الحد الأقصى 12 ميجا)");
+      let rdr=new FileReader;
+      rdr.onerror=()=>rej("تعذر قراءة الصورة");
+      rdr.onload=()=>{
+        let img=new Image;
+        img.onerror=()=>rej("تعذر معالجة الصورة");
+        img.onload=()=>{
+          let maxDim=1080,w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+          if(w>maxDim||h>maxDim){
+            if(w>=h){h=Math.round(h*(maxDim/w));w=maxDim}
+            else{w=Math.round(w*(maxDim/h));h=maxDim}
+          }
+          let cv=document.createElement("canvas");
+          cv.width=w;cv.height=h;
+          let ctx=cv.getContext("2d");
+          ctx.fillStyle="#0f172a";
+          ctx.fillRect(0,0,w,h);
+          ctx.drawImage(img,0,0,w,h);
+          let data=cv.toDataURL("image/jpeg",.72);
+          if(data.length>240000)data=cv.toDataURL("image/jpeg",.52);
+          if(data.length>320000){
+            let sc=.7;cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);
+            ctx.fillRect(0,0,cv.width,cv.height);
+            ctx.drawImage(img,0,0,cv.width,cv.height);
+            data=cv.toDataURL("image/jpeg",.5)
+          }
+          res({dataUrl:data,sizeKB:Math.round((data.length*.75)/1024)})
+        };
+        img.src=rdr.result
+      };
+      rdr.readAsDataURL(file)
+    })
+  },
   getCleanText(el){
     if(!el)return"";
     if(!el.firstElementChild||!el.querySelector("img,i,svg,.user-identity-badge-icon,.user-identity-super"))return el.textContent.trim();
@@ -391,6 +427,21 @@ const ui={
     d.innerHTML=t.toastQueue.shift();
     document.body.appendChild(d);
     setTimeout(()=>{d.remove();t.isToasting=!1;ui.processToast()},2900)
+  },
+  openImagePreview(src){
+    if(!a.isSafeUrl(src))return;
+    let old=document.getElementById("lfb-img-viewer");old&&old.remove();
+    let v=document.createElement("div");
+    v.id="lfb-img-viewer";
+    v.className="lfb-overlay lfb-sub-overlay active";
+    v.style.zIndex="2147483647";
+    v.innerHTML=`
+      <div style="position:relative; max-width:94vw; max-height:90vh; display:flex; flex-direction:column; align-items:center;">
+        <button type="button" id="lfb-iv-close" class="lfb-ctrl-btn lfb-ctrl-close" style="position:absolute; top:-14px; left:-10px; z-index:2; background:rgba(239,68,68,.92);"><i class="fas fa-times"></i></button>
+        <img src="${a.escapeHTML(src)}" style="max-width:92vw; max-height:84vh; border-radius:14px; border:1px solid rgba(212,175,55,.4); box-shadow:0 20px 60px rgba(0,0,0,.9); object-fit:contain; background:#090b14;">
+      </div>`;
+    document.body.appendChild(v);
+    v.addEventListener("click",ev=>{if(ev.target===v||ev.target.closest("#lfb-iv-close"))v.remove()})
   }
 };
 
@@ -482,6 +533,8 @@ const memberUI={
   activeTab:"send",
   selectedType:"suggestion",
   openTicketId:null,
+  pendingAttachment:null,
+  isUploadingImg:!1,
   open(){
     a.detectIdentity();
     if(t.myKey&&t.boundUserKey!==t.myKey&&typeof sync!=="undefined")sync.bindUserListeners();
@@ -638,8 +691,13 @@ const memberUI={
         <textarea id="lfb-f-msg" class="lfb-input" rows="4" maxlength="${maxL}" style="resize:vertical; line-height:1.6;" placeholder="اكتب اقتراحك أو شكواك بكل وضوح..."></textarea>
       </div>
       <div style="margin-bottom:10px;">
-        <label class="lfb-label"><i class="fas fa-image"></i> رابط صورة / دليل (اختياري — رابط مباشر https)</label>
-        <input type="url" id="lfb-f-attach" class="lfb-input" maxlength="350" placeholder="https://...">
+        <label class="lfb-label"><i class="fas fa-image"></i> إرفاق صورة / دليل من الأستوديو (اختياري)</label>
+        <input type="file" id="lfb-f-file" accept="image/*" style="display:none;">
+        <div class="lfb-row" style="gap:6px;">
+          <button type="button" id="lfb-f-pick" class="lfb-btn lfb-btn-dark" style="flex:1; padding:8px 10px;"><i class="fas fa-images" style="color:#38bdf8;"></i> اختيار صورة من الأستوديو</button>
+          <button type="button" id="lfb-f-clear-img" class="lfb-btn lfb-btn-danger lfb-mini" style="display:none; padding:8px 10px;"><i class="fas fa-trash"></i> إزالة</button>
+        </div>
+        <div id="lfb-f-preview" style="display:none; margin-top:7px;"></div>
       </div>
       ${lim>0&&!a.isBypassed()?`<div style="font-size:10.5px; color:#94a3b8; margin-bottom:7px; text-align:center;">المتبقي من حدّك اليومي: <b style="color:#D4AF37;">${Math.max(0,lim-used)} / ${lim}</b></div>`:""}
       <button type="button" id="lfb-f-submit" class="lfb-btn lfb-btn-gold"><i class="fas fa-paper-plane"></i> إرسال للإدارة</button>
@@ -655,6 +713,41 @@ const memberUI={
     let ta=document.getElementById("lfb-f-msg"),cnt=document.getElementById("lfb-char-cnt");
     ta.oninput=()=>{cnt.textContent=`${ta.value.length} / ${maxL}`};
     document.getElementById("lfb-f-submit").onclick=()=>memberUI.submitTicket();
+    memberUI.pendingAttachment=null;
+    memberUI.isUploadingImg=!1;
+    let fInp=document.getElementById("lfb-f-file"),fPick=document.getElementById("lfb-f-pick"),fClr=document.getElementById("lfb-f-clear-img"),fPrev=document.getElementById("lfb-f-preview");
+    fPick.onclick=()=>fInp.click();
+    fClr.onclick=()=>{
+      memberUI.pendingAttachment=null;
+      fInp.value="";
+      fPrev.style.display="none";
+      fPrev.innerHTML="";
+      fClr.style.display="none";
+      fPick.innerHTML='<i class="fas fa-images" style="color:#38bdf8;"></i> اختيار صورة من الأستوديو'
+    };
+    fInp.onchange=()=>{
+      let file=fInp.files&&fInp.files[0];
+      if(!file)return;
+      memberUI.isUploadingImg=!0;
+      fPick.disabled=!0;
+      fPick.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري تجهيز الصورة...';
+      a.compressImage(file).then(res=>{
+        memberUI.pendingAttachment=res.dataUrl;
+        fPrev.style.display="block";
+        fPrev.innerHTML=`<div style="font-size:10.5px; color:#34d399; margin-bottom:4px;"><i class="fas fa-check-circle"></i> تم تجهيز الصورة (${res.sizeKB} KB) — اضغط عليها للمعاينة</div><img src="${res.dataUrl}" class="lfb-attach-img" style="cursor:pointer; max-height:130px;">`;
+        fPrev.querySelector("img").onclick=()=>ui.openImagePreview(res.dataUrl);
+        fClr.style.display="inline-flex";
+        fPick.innerHTML='<i class="fas fa-sync-alt" style="color:#38bdf8;"></i> تغيير الصورة'
+      }).catch(err=>{
+        memberUI.pendingAttachment=null;
+        fInp.value="";
+        ui.showToast("⚠️ "+(err||"تعذر رفع الصورة"));
+        fPick.innerHTML='<i class="fas fa-images" style="color:#38bdf8;"></i> اختيار صورة من الأستوديو'
+      }).finally(()=>{
+        memberUI.isUploadingImg=!1;
+        fPick.disabled=!1
+      })
+    };
     memberUI.startCooldownTicker()
   },
   startCooldownTicker(){
@@ -697,10 +790,11 @@ const memberUI={
     let cat=document.getElementById("lfb-f-cat")?.value||"أخرى";
     let prio=document.getElementById("lfb-f-prio")?.value||"normal";
     let targetUser="complaint"===memberUI.selectedType?(document.getElementById("lfb-f-target")?.value||"").trim():"";
-    let attach=(document.getElementById("lfb-f-attach")?.value||"").trim();
+    if(memberUI.isUploadingImg)return ui.showToast("⏳ انتظر اكتمال تجهيز الصورة...");
+    let attach=memberUI.pendingAttachment||"";
     if(msg.length<minL)return ui.showToast(`⚠️ يرجى كتابة تفاصيل أكثر (${minL} أحرف على الأقل)`);
     if(msg.length>maxL)return ui.showToast(`⚠️ الحد الأقصى هو ${maxL} حرف`);
-    if(attach&&!a.isSafeUrl(attach))return ui.showToast("⚠️ رابط الدليل يجب أن يبدأ بـ https://");
+    if(attach&&!a.isSafeUrl(attach))return ui.showToast("⚠️ الصورة المرفقة غير صالحة");
     let bad=a.findBlockedWord(subj+" "+msg);
     if(bad)return ui.showToast("🚫 تحتوي رسالتك على ألفاظ غير مسموح بها");
     let btn=document.getElementById("lfb-f-submit");
@@ -760,6 +854,7 @@ const memberUI={
     updates[`${e.rootPath}/user_tickets/${t.myKey}/${id}`]=userMirror;
     updates[`${e.rootPath}/codes/${code}`]=codeMirror;
     t.db.ref().update(updates).then(()=>{
+      memberUI.pendingAttachment=null;
       try{localStorage.setItem(e.lastSentPrefix+t.myKey,String(now))}catch{}
       let c=document.getElementById("lfb-uview-send");
       if(c){
@@ -858,7 +953,7 @@ const memberUI={
     let msgs=a.getMessagesArray(x);
     let canReply=!1!==t.settings.allowFollowUp&&!x.locked&&"closed"!==x.status&&"rejected"!==x.status&&!a.isActiveBan(t.myBan);
     let canRate=!1!==t.settings.allowRating&&(x.adminReply||"replied"===x.status||"closed"===x.status||"implemented"===x.status);
-    let attachHtml=x.attachmentUrl&&a.isSafeUrl(x.attachmentUrl)?`<a href="${a.escapeHTML(x.attachmentUrl)}" target="_blank" rel="noopener"><img src="${a.escapeHTML(x.attachmentUrl)}" class="lfb-attach-img" alt="مرفق"></a>`:"";
+    let attachHtml=x.attachmentUrl&&a.isSafeUrl(x.attachmentUrl)?`<img src="${a.escapeHTML(x.attachmentUrl)}" class="lfb-attach-img lfb-zoom-img" style="cursor:pointer;" alt="مرفق" title="اضغط للتكبير">`:"";
     let threadHtml=msgs.length?msgs.map(m=>{
       let cls="admin"===m.senderRole?"lfb-msg-admin":"system"===m.senderRole?"lfb-msg-sys":"lfb-msg-user";
       let who="admin"===m.senderRole?"الإدارة":"system"===m.senderRole?"النظام":"أنت";
@@ -898,7 +993,8 @@ const memberUI={
       sendBtn.onclick=go;
       inp.addEventListener("keydown",ev=>{"Enter"===ev.key&&go()})
     }
-    b.querySelectorAll(".lfb-star-btn").forEach(st=>st.onclick=()=>memberUI.rateTicket(id,Number(st.dataset.star)))
+    b.querySelectorAll(".lfb-star-btn").forEach(st=>st.onclick=()=>memberUI.rateTicket(id,Number(st.dataset.star)));
+    b.querySelectorAll(".lfb-zoom-img").forEach(im=>im.onclick=()=>ui.openImagePreview(im.getAttribute("src")));
   },
   sendFollowUp(id,raw){
     if(!t.db||!t.myKey)return;
@@ -1534,7 +1630,7 @@ const adminUI={
     let tpls=Object.entries(t.templates||{}).filter(([,v])=>v&&v.text);
     let tplPills=tpls.map(([k,v])=>`<button type="button" class="lfb-pill lfb-use-tpl" data-k="${a.escapeHTML(k)}">${a.escapeHTML(v.title)}</button>`).join("");
     let adminOpts=`<option value="">— غير مستلمة —</option>`+t.adminUsers.map(ad=>`<option value="${a.escapeHTML(ad)}" ${x.claimedBy===ad?"selected":""}>${a.escapeHTML(ad)}</option>`).join("");
-    let attachHtml=x.attachmentUrl&&a.isSafeUrl(x.attachmentUrl)?`<div style="margin-top:6px;"><a href="${a.escapeHTML(x.attachmentUrl)}" target="_blank" rel="noopener" style="font-size:11px; color:#38bdf8;"><i class="fas fa-external-link-alt"></i> فتح المرفق في نافذة جديدة</a><img src="${a.escapeHTML(x.attachmentUrl)}" class="lfb-attach-img" alt="مرفق"></div>`:"";
+    let attachHtml=x.attachmentUrl&&a.isSafeUrl(x.attachmentUrl)?`<div style="margin-top:6px;"><div style="font-size:10.5px; color:#38bdf8; margin-bottom:3px;"><i class="fas fa-search-plus"></i> اضغط على الصورة للتكبير</div><img src="${a.escapeHTML(x.attachmentUrl)}" class="lfb-attach-img lfb-zoom-img" style="cursor:pointer;" alt="مرفق"></div>`:"";
     sub.innerHTML=`
       <div class="lfb-box lfb-sub-box">
         <div class="lfb-header">
@@ -1654,6 +1750,7 @@ const adminUI={
     document.getElementById("lfb-ed-send-close").onclick=()=>adminUI.sendAdminReply(id,!0);
     document.getElementById("lfb-ed-save-meta").onclick=()=>adminUI.saveTicketMeta(id);
     adminUI.renderAdminThreadOnly(id);
+    sub.querySelectorAll(".lfb-zoom-img").forEach(im=>im.onclick=()=>ui.openImagePreview(im.getAttribute("src")));
     requestAnimationFrame(()=>sub.classList.add("active"))
   },
   renderAdminThreadOnly(id){
