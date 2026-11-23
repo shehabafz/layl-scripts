@@ -60,6 +60,57 @@ const PANELS = [
   }
 ];
 
+const watchedBadges = new WeakSet();
+const badgeObserver = new MutationObserver(() => updateHubBadges());
+
+function readPanelBadge(p) {
+  if (!p.badgeId) return 0;
+  const el = document.getElementById(p.badgeId);
+  if (!el || el.style.display === "none") return 0;
+  const txt = el.textContent.trim();
+  if (!txt || txt === "0") return 0;
+  const num = parseInt(txt, 10);
+  return isNaN(num) ? 0 : num;
+}
+
+function watchBadges() {
+  for (let i = 0; i < PANELS.length; i++) {
+    const bid = PANELS[i].badgeId;
+    if (!bid) continue;
+    const el = document.getElementById(bid);
+    if (el && !watchedBadges.has(el)) {
+      watchedBadges.add(el);
+      badgeObserver.observe(el, {
+        attributes: true,
+        attributeFilter: ["style"],
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+    }
+  }
+}
+
+function updateHubBadges() {
+  let total = 0;
+  for (let i = 0; i < PANELS.length; i++) {
+    const p = PANELS[i];
+    const cnt = readPanelBadge(p);
+    total += cnt;
+    const cardBadge = document.querySelector(`#${MODAL_ID} .lah-card[data-target="${p.id}"] .lah-badge`);
+    if (cardBadge) {
+      cardBadge.textContent = cnt > 99 ? "99+" : String(cnt);
+      cardBadge.style.display = cnt > 0 ? "inline-block" : "none";
+    }
+  }
+  const label = total > 99 ? "99+" : String(total);
+  const hubBadges = document.querySelectorAll(".lah-hub-badge");
+  for (let i = 0; i < hubBadges.length; i++) {
+    hubBadges[i].textContent = label;
+    hubBadges[i].style.display = total > 0 ? "inline-block" : "none";
+  }
+}
+
 function injectStyles() {
   if (document.getElementById("layl-admin-hub-styles")) return;
   const hideSelectors = PANELS.map(p => `#${p.id}#${p.id}#${p.id}`).join(",\n");
@@ -76,6 +127,34 @@ function injectStyles() {
       position: absolute !important;
       visibility: hidden !important;
       pointer-events: none !important;
+    }
+    #${HUB_ID} .modern-classic-icon-wrapper {
+      position: relative !important;
+      overflow: visible !important;
+    }
+    .lah-hub-badge {
+      display: none;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      left: auto;
+      bottom: auto;
+      margin: 0;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 50px;
+      font-size: 10px;
+      height: 18px;
+      line-height: 18px;
+      min-width: 18px;
+      width: max-content;
+      padding: 0 4px;
+      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 2px 5px rgba(239, 68, 68, 0.55);
+      z-index: 10;
+      box-sizing: border-box;
     }
     #${MODAL_ID} {
       position: fixed; inset: 0; background: rgba(8, 10, 18, 0.88);
@@ -135,6 +214,11 @@ function injectStyles() {
     .lah-info { flex: 1; min-width: 0; }
     .lah-name { font-size: 13.5px; font-weight: 800; color: #f8fafc; margin-bottom: 2px; }
     .lah-desc { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lah-badge {
+      background: #ef4444; color: #fff; border-radius: 50px;
+      font-size: 10.5px; font-weight: 800; padding: 2px 7px; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
+    }
     .lah-arrow { color: #64748b; font-size: 12px; flex-shrink: 0; transition: color 0.2s; }
     .lah-card:hover .lah-arrow { color: #D4AF37; }
   `;
@@ -164,7 +248,12 @@ function openHub() {
         <button type="button" class="lah-close" id="lah-btn-close" title="إغلاق"><i class="fas fa-times"></i></button>
       </div>
       <div class="lah-grid">
-        ${available.map(p => `
+        ${available.map(p => {
+          const cnt = readPanelBadge(p);
+          const badgeHtml = p.badgeId
+            ? `<span class="lah-badge" style="display:${cnt > 0 ? "inline-block" : "none"};">${cnt > 99 ? "99+" : cnt}</span>`
+            : "";
+          return `
           <button type="button" class="lah-card" data-target="${p.id}">
             <div class="lah-ico" style="background:${p.bg}; color:${p.color};">
               <i class="${p.icon}"></i>
@@ -173,9 +262,10 @@ function openHub() {
               <div class="lah-name">${p.title}</div>
               <div class="lah-desc">${p.desc}</div>
             </div>
+            ${badgeHtml}
             <i class="fas fa-chevron-left lah-arrow"></i>
-          </button>
-        `).join("")}
+          </button>`;
+        }).join("")}
       </div>
     </div>`;
 
@@ -213,27 +303,31 @@ function syncHub(list) {
     if (existing) existing.remove();
     return;
   }
-  if (existing) return;
 
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "modern-classic-item";
-  btn.id = HUB_ID;
-  btn.innerHTML = `
-    <div class="modern-classic-item-content">
-      <div class="modern-classic-icon-wrapper" style="background: linear-gradient(135deg, #4a091a, #8b1836); color: #D4AF37;">
-        <i class="fas fa-shield-alt"></i>
+  if (!existing) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "modern-classic-item";
+    btn.id = HUB_ID;
+    btn.innerHTML = `
+      <div class="modern-classic-item-content">
+        <div class="modern-classic-icon-wrapper" style="position:relative; overflow:visible; background: linear-gradient(135deg, #4a091a, #8b1836); color: #D4AF37;">
+          <i class="fas fa-shield-alt"></i>
+          <b class="lah-hub-badge">0</b>
+        </div>
+        <span class="modern-classic-text">لوحات التحكم الإدارية</span>
       </div>
-      <span class="modern-classic-text">لوحات التحكم الإدارية</span>
-    </div>
-    <i class="fas fa-chevron-left modern-classic-chevron"></i>`;
-  btn.addEventListener("click", ev => {
-    ev.preventDefault();
-    ev.stopPropagation();
-    openHub();
-  });
+      <i class="fas fa-chevron-left modern-classic-chevron"></i>`;
+    btn.addEventListener("click", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      openHub();
+    });
+    firstOrig.insertAdjacentElement("beforebegin", btn);
+  }
 
-  firstOrig.insertAdjacentElement("beforebegin", btn);
+  watchBadges();
+  updateHubBadges();
 }
 
 function syncAll() {
@@ -281,5 +375,6 @@ document.addEventListener("keydown", ev => {
 });
 
 setTimeout(syncAll, 800);
-window.LaylAdminHub = { open: openHub, close: closeHub };
+setTimeout(() => { watchBadges(); updateHubBadges(); }, 2000);
+window.LaylAdminHub = { open: openHub, close: closeHub, refreshBadges: updateHubBadges };
 }();
