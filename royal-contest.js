@@ -91,32 +91,28 @@
         ms.id = "lrc-menu-btn-style";
         ms.textContent = `
         #btn-layl-royal-contest{
-            order:-9999!important;
-            position:relative!important;
-            border:1px solid rgba(212,175,55,.78)!important;
-            background:linear-gradient(135deg,#261d0a 0%,#14111d 100%)!important;
-            box-shadow:0 0 14px rgba(212,175,55,.38),inset 0 0 10px rgba(212,175,55,.15)!important;
-            overflow:visible!important;
+            grid-row:1!important;
+            grid-column:-2 / -1!important;
         }
-        #btn-layl-royal-contest::before{
+        #btn-layl-royal-contest .modern-classic-icon-wrapper{
+            position:relative!important;
+            overflow:visible!important;
+            border:1.5px solid rgba(212,175,55,.85)!important;
+            box-shadow:0 0 14px rgba(212,175,55,.55),0 0 24px rgba(251,191,36,.28)!important;
+        }
+        #btn-layl-royal-contest .modern-classic-icon-wrapper::before{
             content:"";
             position:absolute;
-            inset:-2px;
+            inset:-3px;
             border-radius:inherit;
-            border:1.5px solid rgba(251,191,36,.85);
-            box-shadow:0 0 18px rgba(212,175,55,.6);
-            opacity:.35;
+            border:2px solid rgba(251,191,36,.92);
+            box-shadow:0 0 16px rgba(212,175,55,.75),inset 0 0 8px rgba(251,191,36,.3);
+            opacity:.3;
             pointer-events:none;
             animation:lrcGoldPulse 2.4s ease-in-out infinite;
             will-change:opacity;
         }
-        #btn-layl-royal-contest .modern-classic-text{
-            color:#fde68a!important;
-            font-weight:800!important;
-            text-shadow:0 0 8px rgba(212,175,55,.45);
-        }
-        #btn-layl-royal-contest .modern-classic-chevron{color:#D4AF37!important}
-        @keyframes lrcGoldPulse{0%,100%{opacity:.3}50%{opacity:.95}}
+        @keyframes lrcGoldPulse{0%,100%{opacity:.25}50%{opacity:1}}
         `;
         (document.head || document.documentElement).appendChild(ms);
     }
@@ -242,9 +238,24 @@
     function pinContestBtnIfBlock() {
         const btn = document.getElementById("btn-layl-royal-contest");
         if (!btn || !btn.parentElement) return;
-        const disp = window.getComputedStyle(btn.parentElement).display;
-        if (disp !== "flex" && disp !== "grid" && btn.parentElement.firstElementChild !== btn) {
-            btn.parentElement.insertBefore(btn, btn.parentElement.firstElementChild);
+        const list = btn.parentElement;
+        const disp = window.getComputedStyle(list).display || "";
+        if (disp.includes("grid")) return;
+        const visible = Array.from(list.children).filter(el =>
+            el.tagName === "BUTTON" && el !== btn && window.getComputedStyle(el).display !== "none"
+        );
+        if (!visible.length) return;
+        const firstTop = visible[0].offsetTop;
+        let firstRowCount = 0;
+        for (let i = 0; i < visible.length; i++) {
+            if (Math.abs(visible[i].offsetTop - firstTop) < 12) firstRowCount++;
+            else break;
+        }
+        if (visible.length > firstRowCount) {
+            const refNode = visible[Math.max(0, firstRowCount - 1)];
+            if (refNode && btn.nextElementSibling !== refNode) list.insertBefore(btn, refNode);
+        } else if (list.lastElementChild !== btn) {
+            list.appendChild(btn);
         }
     }
 
