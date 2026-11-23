@@ -335,7 +335,7 @@
         st.toastTimer = setTimeout(() => el.classList.remove("show"), ms);
     }
 
-    function showBannerToastAd(msg, theme = "gold") {
+function showBannerToastAd(msg, theme = "gold") {
         if (!1 === st.settings.showToastAd) return;
         ensureBaseStyles();
         let ad = document.getElementById("lrc-live-ad");
@@ -352,6 +352,53 @@
         clearTimeout(st.adTimer);
         requestAnimationFrame(() => ad.classList.add("show"));
         st.adTimer = setTimeout(() => ad.classList.remove("show"), 12000);
+    }
+
+    let phaseWaitId = null;
+    function announcePhase(ph) {
+        if (!ph || "idle" === ph) {
+            st.lastPhaseAnnounced = null;
+            clearInterval(phaseWaitId);
+            phaseWaitId = null;
+            return;
+        }
+        if (st.lastPhaseAnnounced === ph) return;
+        st.lastPhaseAnnounced = ph;
+        clearInterval(phaseWaitId);
+
+        const fire = () => {
+            if (!1 === st.settings.showToastAd) return;
+            if (!h.isAdmin() && !h.isVip() && !1 === st.settings.enabled) return;
+            if (document.getElementById("lrc-modal")?.classList.contains("open")) return;
+            const cur = getPhaseInfo().phase;
+            if ("nomination" === cur) showBannerToastAd("👑 بدأ الترشيح لملك وملكة الشات! رشّح نفسك الآن.", "gold");
+            else if ("voting" === cur) showBannerToastAd("🗳️ بدأ التصويت لملك وملكة الشات! ادخل وصوّت للأفضل.", "gold");
+            else if ("tiebreaker" === cur) showBannerToastAd("⚖️ تعادل بالصدارة! بانتظار قرار الإدارة الحاسم.", "red");
+            else if ("results" === cur) showBannerToastAd("🏆 ظهرت نتائج ملك/ملكة الشات! ادخل للتهنئة.", "gold");
+        };
+
+        const isChatReady = () => {
+            const mc = document.getElementById("messages-container");
+            const lo = document.getElementById("login-overlay");
+            return Boolean(mc && null !== mc.offsetParent && (!lo || lo.classList.contains("d-none") || "none" === window.getComputedStyle(lo).display));
+        };
+
+        if (isChatReady()) {
+            setTimeout(fire, 1500);
+            return;
+        }
+
+        let tries = 0;
+        phaseWaitId = setInterval(() => {
+            if (isChatReady()) {
+                clearInterval(phaseWaitId);
+                phaseWaitId = null;
+                setTimeout(fire, 1500);
+            } else if (++tries >= 180) {
+                clearInterval(phaseWaitId);
+                phaseWaitId = null;
+            }
+        }, 800);
     }
 
     function ensureBaseStyles() {
@@ -1885,16 +1932,9 @@
                 st.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice();
                 royalAdmin.refresh();
             });
-            st.db.ref(`${ROOT}/state`).on("value", sn => {
+           st.db.ref(`${ROOT}/state`).on("value", sn => {
                 st.state = sn.val() || null;
-                const ph = getPhaseInfo().phase;
-                if (st.lastPhaseAnnounced && st.lastPhaseAnnounced !== ph) {
-                    if ("nomination" === ph) showBannerToastAd("👑 بدأ الترشيح لملك وملكة الشات!", "gold");
-                    else if ("voting" === ph) showBannerToastAd("🗳️ بدأ التصويت لملك وملكة الشات!", "gold");
-                    else if ("tiebreaker" === ph) showBannerToastAd("⚖️ تعادل بالصدارة! جاري حسم اللقب.", "red");
-                    else if ("results" === ph) showBannerToastAd("🏆 تم تتويج ملك/ملكة الشات! ادخل للتهنئة.", "gold");
-                }
-                st.lastPhaseAnnounced = ph;
+                announcePhase(getPhaseInfo().phase);
                 renderMainBody();
                 royalAdmin.refresh();
             });
