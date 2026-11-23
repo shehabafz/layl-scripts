@@ -371,6 +371,7 @@ function showBannerToastAd(msg, theme = "gold") {
             if (!h.isAdmin() && !h.isVip() && !1 === st.settings.enabled) return;
             if (document.getElementById("lrc-modal")?.classList.contains("open")) return;
             const cur = getPhaseInfo().phase;
+            st.lastPhaseAnnounced = cur;
             if ("nomination" === cur) showBannerToastAd("👑 بدأ الترشيح لملك وملكة الشات! رشّح نفسك الآن.", "gold");
             else if ("voting" === cur) showBannerToastAd("🗳️ بدأ التصويت لملك وملكة الشات! ادخل وصوّت للأفضل.", "gold");
             else if ("tiebreaker" === cur) showBannerToastAd("⚖️ تعادل بالصدارة! بانتظار قرار الإدارة الحاسم.", "red");
@@ -637,283 +638,7 @@ function showBannerToastAd(msg, theme = "gold") {
         if (av && /^https?:\/\//i.test(av)) return `<img class="lrc-av" src="${h.esc(av)}" alt="">`;
         return `<div class="lrc-av"><i class="fas ${"queen" === role ? "fa-chess-queen" : "fa-crown"}"></i></div>`;
     }
-
-    function renderMainBody() {
-        const modal = document.getElementById("lrc-modal");
-        if (!modal || !modal.classList.contains("open")) return;
-        const body = document.getElementById("lrc-body");
-        const hdrTitle = document.getElementById("lrc-hdr-title");
-        const banner = document.getElementById("lrc-banner"), bTxt = document.getElementById("lrc-banner-txt");
-        const multBar = document.getElementById("lrc-mult-bar");
-        if (!body) return;
-
-        if (hdrTitle) hdrTitle.textContent = (st.state && st.state.title) || "مسابقة ملك وملكة الشات";
-        if (banner && bTxt) {
-            banner.className = "lrc-banner" + (st.settings.bannerTheme && "gold" !== st.settings.bannerTheme ? ` th-${st.settings.bannerTheme}` : "");
-            if (st.settings.bannerText) { bTxt.textContent = st.settings.bannerText; banner.style.display = "flex"; }
-            else banner.style.display = "none";
-        }
-
-        const info = getPhaseInfo();
-        const mult = Math.max(1, Number(st.state?.voteMultiplier) || 1);
-        if (multBar) {
-            if ("voting" === info.phase && mult > 1) {
-                multBar.textContent = `⚡ ساعة التاج الذهبية نشطة الآن! كل صوت يُحسب ×${mult} أصوات 🔥`;
-                multBar.style.display = "block";
-            } else multBar.style.display = "none";
-        }
-
-        const myKey = h.myKey(), isAdm = h.isAdmin();
-
-        if ("idle" === info.phase) {
-            body.innerHTML = `
-                <div class="lrc-hero">
-                    <div style="font-size:48px;color:#D4AF37;">👑</div>
-                    <h2>مسابقة ملك وملكة شات ليل</h2>
-                    <p>لا توجد جولة نشطة حالياً. عند إطلاق الموسم تبدأ مرحلة <b>الترشيح لمدة يومين</b> تليها مرحلة <b>جمع الأصوات لمدة 3 أيام</b> للتتويج باللقب والجوائز الملكية.</p>
-                    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-                        <button type="button" class="lrc-btn" id="lrc-idle-pz"><i class="fas fa-gift"></i> الجوائز والقوانين</button>
-                        <button type="button" class="lrc-btn lrc-btn-out" id="lrc-idle-hf"><i class="fas fa-trophy"></i> قاعة الشرف</button>
-                        ${isAdm ? `<button type="button" class="lrc-btn" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;" id="lrc-idle-adm"><i class="fas fa-sliders-h"></i> لوحة التحكم</button>` : ""}
-                    </div>
-                </div>`;
-            document.getElementById("lrc-idle-pz").onclick = openPrizesModal;
-            document.getElementById("lrc-idle-hf").onclick = openHofModal;
-            document.getElementById("lrc-idle-adm")?.addEventListener("click", () => { window.LaylRoyalContest.close(); royalAdmin.open(); });
-            return;
-        }
-
-        if ("nomination" === info.phase) {
-            const mine = myKey ? st.candidates[myKey] : null;
-            const approved = getApprovedCandidates();
-            const pausedTag = info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ المسابقة متوقفة مؤقتاً</div>' : "";
-            let myCardHtml = "";
-            if (mine) {
-                const isPend = "pending" === mine.status;
-                const roleLabel = "queen" === mine.role ? "ملكة الشات 👸" : "ملك الشات 👑";
-                myCardHtml = `
-                    <div class="lrc-form" style="border-color:${isPend ? "#f59e0b" : "#10b981"};text-align:center;">
-                        <div style="font-size:26px;margin-bottom:5px;">${isPend ? "⏳" : "✅"}</div>
-                        <div style="font-weight:900;font-size:1.02rem;color:${isPend ? "#fcd34d" : "#6ee7b7"};">${isPend ? "تم استلام ترشيحك — بانتظار اعتماد الإدارة" : `أنت مرشح رسمي على لقب ${roleLabel}!`}</div>
-                        ${mine.slogan ? `<div style="color:#cbd5e1;font-size:.85rem;margin:5px 0 10px;">«${h.esc(mine.slogan)}»</div>` : ""}
-                        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
-                            <button type="button" class="lrc-btn" id="lrc-copy-camp"><i class="fas fa-bullhorn"></i> نسخ رسالة حملتي</button>
-                            <button type="button" class="lrc-btn lrc-btn-red" id="lrc-withdraw" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-sign-out-alt"></i> انسحاب</button>
-                        </div>
-                    </div>`;
-            } else {
-                const maxC = Number(st.settings.maxCandidates) || 0;
-                const isFull = maxC > 0 && Object.keys(st.candidates || {}).length >= maxC && !isAdm;
-                myCardHtml = `
-                    <div class="lrc-form">
-                        <div style="font-weight:800;color:#D4AF37;margin-bottom:10px;font-size:.96rem;"><i class="fas fa-feather-alt"></i> رشّح نفسك الآن للمنافسة على التاج ${maxC ? `<span style="font-size:.78rem;color:#94a3b8;">(${Object.keys(st.candidates || {}).length}/${maxC})</span>` : ""}</div>
-                        <div class="lrc-roles">
-                            <div class="lrc-role-opt sel-king" id="lrc-pick-king"><div style="font-size:22px;">👑</div>ملك الشات</div>
-                            <div class="lrc-role-opt" id="lrc-pick-queen"><div style="font-size:22px;">👸</div>ملكة الشات</div>
-                        </div>
-                        <input type="text" id="lrc-slogan-inp" class="lrc-inp" maxlength="90" placeholder="شعارك الدعائي القصير (اختياري)..." style="margin-bottom:10px;">
-                        <button type="button" id="lrc-submit-nom" class="lrc-btn" style="width:100%;" ${info.paused || isFull ? "disabled" : ""}><i class="fas fa-crown"></i> ${isFull ? "اكتمل العدد المسموح للمرشحين" : "تأكيد ترشيح نفسي"}</button>
-                    </div>`;
-            }
-
-            body.innerHTML = `
-                <div class="lrc-hero">
-                    <div style="color:#D4AF37;font-size:.84rem;font-weight:800;">الموسم #${h.esc(st.state.season || 1)} • مرحلة الترشيح</div>
-                    <h2>👑 باب الترشيح مفتوح الآن!</h2>
-                    <p>رشّح نفسك قبل انتهاء العدّاد لتدخل سباق الأصوات وتنافس على التاج والجوائز الملكية.</p>
-                    <div class="lrc-timer"><i class="fas fa-clock"></i> <span id="lrc-cd-txt">${h.fmtTime(info.remaining)}</span></div>
-                    ${pausedTag}
-                </div>
-                ${myCardHtml}
-                <div style="margin-bottom:10px;"><b style="color:#fde68a;font-size:.96rem;">📜 المرشحون حتى الآن (${approved.length})</b></div>
-                <div class="lrc-grid">
-                    ${approved.length ? approved.map(c => `
-                        <div class="lrc-card ${c.role}-card">
-                            <span class="lrc-role-tag ${c.role}">${"queen" === c.role ? "👸 ملكة" : "👑 ملك"}</span>
-                            ${renderAvatar(c.avatar, c.role)}
-                            ${c.badge ? `<span class="lrc-spot-bdg">${h.esc(c.badge)}</span>` : ""}
-                            <div class="lrc-cname">${c.html ? h.sanHtml(c.html) : h.esc(c.displayName || c.username)}</div>
-                            <div class="lrc-slogan">${c.slogan ? `«${h.esc(c.slogan)}»` : "مرشح رسمي للتاج 👑"}</div>
-                        </div>`).join("") : '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:22px;">كن أول من يرشّح نفسه هذا الموسم!</div>'}
-                </div>`;
-
-            if (mine) {
-                document.getElementById("lrc-copy-camp").onclick = () => {
-                    const roleTxt = "queen" === mine.role ? "ملكة الشات 👸" : "ملك الشات 👑";
-                    h.copy(`✨ رشّحت نفسي على لقب ${roleTxt} في شات ليل!\n👤 ${mine.displayName || mine.username}${mine.slogan ? `\n💬 «${mine.slogan}»` : ""}\n🔥 ادعموني بأصواتكم عند بدء التصويت!`, "📋 تم نسخ رسالة حملتك!");
-                };
-                document.getElementById("lrc-withdraw").onclick = () => {
-                    if (confirm("سحب ترشيحك من المسابقة؟")) st.db?.ref(`${ROOT}/candidates/${myKey}`).remove().then(() => showToast("تم سحب ترشيحك."));
-                };
-            } else {
-                let pickedRole = "king";
-                const kBtn = document.getElementById("lrc-pick-king"), qBtn = document.getElementById("lrc-pick-queen");
-                kBtn.onclick = () => { pickedRole = "king"; kBtn.className = "lrc-role-opt sel-king"; qBtn.className = "lrc-role-opt"; };
-                qBtn.onclick = () => { pickedRole = "queen"; qBtn.className = "lrc-role-opt sel-queen"; kBtn.className = "lrc-role-opt"; };
-                document.getElementById("lrc-submit-nom").onclick = () => submitNomination(pickedRole);
-            }
-            return;
-        }
-
-        if ("voting" === info.phase) {
-            const counts = computeVoteCounts();
-            const isDual = "dual" === st.state.mode;
-            const hideVotes = Boolean(st.settings.hideLiveVotes) && !isAdm;
-            let list = getApprovedCandidates("all" === st.voteFilter ? null : st.voteFilter);
-            if (st.voteSearch) {
-                const q = st.voteSearch.toLowerCase();
-                list = list.filter(c => `${c.displayName || ""} ${c.username || ""} ${c.slogan || ""}`.toLowerCase().includes(q));
-            }
-            if (!hideVotes) list.sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
-            const totalVotes = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-
-            const myVoteSingle = myKey && st.votes[myKey] ? st.votes[myKey].target : null;
-            const myVoteKing = myKey && st.votes[`${myKey}_king`] ? st.votes[`${myKey}_king`].target : null;
-            const myVoteQueen = myKey && st.votes[`${myKey}_queen`] ? st.votes[`${myKey}_queen`].target : null;
-
-            body.innerHTML = `
-                <div class="lrc-hero">
-                    <div style="color:#D4AF37;font-size:.84rem;font-weight:800;">الموسم #${h.esc(st.state.season || 1)} • مرحلة التصويت</div>
-                    <h2>🗳️ صوّت لمن يستحق التاج!</h2>
-                    <p>${isDual ? "لك صوت لـ <b>ملك الشات 👑</b> وصوت لـ <b>ملكة الشات 👸</b>." : "لك صوت واحد فقط لاختيار <b>ملك أو ملكة الشات</b>."} ${h.isVip() ? `<br><span style="color:#fde68a;">⭐ أنت عضو VIP — صوتك يُحسب ×${Number(st.settings.vipVoteWeight) || 2}!</span>` : ""} ${hideVotes ? "<br><span style='color:#fcd34d;'>🔒 التصويت سري حتى انتهاء الوقت.</span>" : ""}</p>
-                    <div class="lrc-timer"><i class="fas fa-hourglass-half"></i> <span id="lrc-cd-txt">${h.fmtTime(info.remaining)}</span></div>
-                    ${info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ التصويت متوقف مؤقتاً</div>' : ""}
-                </div>
-                <div class="lrc-filters">
-                    <button type="button" class="lrc-fbtn ${"all" === st.voteFilter ? "active" : ""}" data-vf="all">الكل</button>
-                    <button type="button" class="lrc-fbtn ${"king" === st.voteFilter ? "active" : ""}" data-vf="king">👑 الملوك</button>
-                    <button type="button" class="lrc-fbtn ${"queen" === st.voteFilter ? "active" : ""}" data-vf="queen">👸 الملكات</button>
-                    <input type="text" id="lrc-vsearch" class="lrc-inp" style="flex:1;min-width:150px;padding:7px 12px;font-size:.84rem;" placeholder="🔍 ابحث عن مرشح..." value="${h.esc(st.voteSearch)}">
-                </div>
-                <div class="lrc-grid">
-                    ${list.length ? list.map((c, idx) => {
-                        const vCnt = counts[c.key] || 0;
-                        const pct = Math.min(100, Math.round((vCnt / totalVotes) * 100));
-                        const votedForThis = isDual ? (("king" === c.role ? myVoteKing : myVoteQueen) === c.key) : (myVoteSingle === c.key);
-                        const hasVotedSlot = isDual ? Boolean("king" === c.role ? myVoteKing : myVoteQueen) : Boolean(myVoteSingle);
-                        const isFrozen = Boolean(c.frozen);
-                        const canVoteBtn = !info.paused && !isFrozen && (!hasVotedSlot || st.settings.allowVoteChange) && !votedForThis;
-                        return `
-                        <div class="lrc-card ${c.role}-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
-                            <span class="lrc-role-tag ${c.role}">${"queen" === c.role ? "👸 ملكة" : "👑 ملك"}</span>
-                            ${!hideVotes ? `<span class="lrc-rank-num">#${idx + 1}</span>` : ""}
-                            ${renderAvatar(c.avatar, c.role)}
-                            ${c.badge ? `<span class="lrc-spot-bdg">${h.esc(c.badge)}</span>` : ""}
-                            <div class="lrc-cname">${c.html ? h.sanHtml(c.html) : h.esc(c.displayName || c.username)}</div>
-                            <div class="lrc-slogan">${c.slogan ? `«${h.esc(c.slogan)}»` : "ينافس على اللقب الملكي"}</div>
-                            ${!hideVotes ? `<div class="lrc-bar-wrap"><div class="lrc-bar-fill" style="width:${pct}%;"></div></div><div class="lrc-vstat">🔥 ${vCnt} صوت (${pct}%)</div>` : '<div class="lrc-vstat" style="color:#94a3b8;">🔒 الأصوات سرية</div>'}
-                            <div class="lrc-cacts">
-                                ${isFrozen
-                                    ? `<button type="button" class="lrc-btn" style="flex:1;padding:8px;font-size:.82rem;background:#334155;color:#cbd5e1;" disabled>❄️ مجمد مؤقتاً</button>`
-                                    : votedForThis
-                                    ? `<button type="button" class="lrc-btn" style="flex:1;padding:8px;font-size:.82rem;background:#10b981;color:#fff;" disabled>✓ تم تصويتك</button>`
-                                    : `<button type="button" class="lrc-btn lrc-vote-go" data-k="${h.esc(c.key)}" data-role="${c.role}" style="flex:1;padding:8px;font-size:.82rem;" ${canVoteBtn ? "" : "disabled"}>${hasVotedSlot && st.settings.allowVoteChange ? "تغيير صوتي" : "صوّت 🗳️"}</button>`}
-                                <button type="button" class="lrc-ibtn sq lrc-share-cand" data-name="${h.esc(c.displayName || c.username)}" data-role="${c.role}" title="دعم ومشاركة"><i class="fas fa-share-alt"></i></button>
-                            </div>
-                        </div>`;
-                    }).join("") : '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:24px;">لا يوجد مرشحون مطابقون.</div>'}
-                </div>`;
-
-            body.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => { st.voteFilter = b.dataset.vf; renderMainBody(); });
-            const vs = document.getElementById("lrc-vsearch");
-            if (vs) vs.oninput = () => { st.voteSearch = vs.value; renderMainBody(); };
-            body.querySelectorAll(".lrc-vote-go").forEach(b => b.onclick = () => castVote(b.dataset.k, b.dataset.role));
-            body.querySelectorAll(".lrc-share-cand").forEach(b => b.onclick = () => {
-                const rTxt = "queen" === b.dataset.role ? "ملكة الشات 👸" : "ملك الشات 👑";
-                h.copy(`🗳️ صوّت الآن لـ (${b.dataset.name}) في مسابقة ${rTxt} داخل شات ليل! 👑🔥`, "📋 تم نسخ رسالة الدعم!");
-            });
-            return;
-        }
-
-        if ("tiebreaker" === info.phase) {
-            const counts = computeVoteCounts();
-            const isDual = "dual" === st.state.mode;
-            const renderTieGroup = (arr, label, slot) => !arr || !arr.length ? "" : `
-                <h3 style="color:#fca5a5;margin:14px 0 10px;text-align:center;">⚖️ تعادل على لقب ${label}</h3>
-                <div class="lrc-grid">
-                    ${arr.map(c => `
-                        <div class="lrc-card ${c.role}-card" style="border-color:#ef4444;">
-                            ${renderAvatar(c.avatar, c.role)}
-                            <div class="lrc-cname">${c.html ? h.sanHtml(c.html) : h.esc(c.displayName || c.username)}</div>
-                            <div class="lrc-vstat">متعادل بـ ${counts[c.key] || 0} صوت</div>
-                            ${isAdm ? `<button type="button" class="lrc-btn lrc-btn-red lrc-tb-pick" data-k="${h.esc(c.key)}" data-slot="${slot}" style="width:100%;">منح اللقب الحاسم 🏆</button>` : '<span style="font-size:.82rem;color:#fcd34d;">بانتظار حسم الإدارة...</span>'}
-                        </div>`).join("")}
-                </div>`;
-
-            body.innerHTML = `
-                <div class="lrc-hero" style="border-color:rgba(239,68,68,.4);">
-                    <div style="font-size:40px;">⚖️</div>
-                    <h2>تعادل في المركز الأول!</h2>
-                    <p>${isAdm ? "بصفتك من الإدارة، اختر المتوّج بالصوت الحاسم الآن." : "بانتظار الصوت الملكي الحاسم من الإدارة لإعلان النتيجة النهائية."}</p>
-                </div>
-                ${isDual ? (renderTieGroup(info.kTies, "ملك الشات 👑", "tieBreakerKing") + renderTieGroup(info.qTies, "ملكة الشات 👸", "tieBreakerQueen")) : renderTieGroup(info.ties, "ملك / ملكة الشات 👑", "tieBreaker")}`;
-
-            body.querySelectorAll(".lrc-tb-pick").forEach(b => b.onclick = () => {
-                if (!confirm("تأكيد منح الصوت الحاسم وتتويج هذا المرشح؟")) return;
-                st.db?.ref(`${ROOT}/state/${b.dataset.slot}`).set(b.dataset.k).then(() => {
-                    royalAdmin.log("حسم تعادل", b.dataset.k, b.dataset.slot);
-                    showToast("🏆 تم حسم التعادل وإعلان التتويج!", 4000, "gold");
-                });
-            });
-            return;
-        }
-
-        // RESULTS
-        const counts = computeVoteCounts(), s = st.state, isDual = "dual" === s.mode;
-        if (s.tieBreaker && void 0 !== counts[s.tieBreaker]) counts[s.tieBreaker]++;
-        if (s.tieBreakerKing && void 0 !== counts[s.tieBreakerKing]) counts[s.tieBreakerKing]++;
-        if (s.tieBreakerQueen && void 0 !== counts[s.tieBreakerQueen]) counts[s.tieBreakerQueen]++;
-
-        const allSorted = getApprovedCandidates().sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
-        const winners = [];
-        if (isDual) {
-            const topK = allSorted.find(c => "king" === c.role), topQ = allSorted.find(c => "queen" === c.role);
-            if (topK) winners.push(topK);
-            if (topQ) winners.push(topQ);
-        } else if (allSorted[0]) winners.push(allSorted[0]);
-
-        const cKey = `s_${s.season}_${winners.map(w => w.key).join("_")}`;
-        if (winners.length && st.confettiFiredKey !== cKey) { st.confettiFiredKey = cKey; h.fireConfetti(); }
-
-        body.innerHTML = `
-            <div style="text-align:center;margin-bottom:14px;">
-                <h2 style="margin:0;color:#D4AF37;font-size:1.45rem;font-weight:900;">🏆 التتويج الرسمي — الموسم #${h.esc(s.season || 1)} 🏆</h2>
-            </div>
-            ${winners.length ? `<div style="display:grid;grid-template-columns:${winners.length > 1 ? "repeat(auto-fit,minmax(260px,1fr))" : "1fr"};gap:14px;">
-                ${winners.map(w => `
-                    <div class="lrc-podium">
-                        <div style="font-size:38px;margin-bottom:4px;">${"queen" === w.role ? "👸" : "👑"}</div>
-                        <div style="color:#fde68a;font-size:.92rem;font-weight:800;">${"queen" === w.role ? "ملكة شات ليل" : "ملك شات ليل"}</div>
-                        ${renderAvatar(w.avatar, w.role)}
-                        <div class="lrc-cname" style="font-size:1.25rem;">${w.html ? h.sanHtml(w.html) : h.esc(w.displayName || w.username)}</div>
-                        ${w.slogan ? `<div style="color:#cbd5e1;font-size:.85rem;margin:4px 0 10px;">«${h.esc(w.slogan)}»</div>` : ""}
-                        <div style="display:inline-block;background:#D4AF37;color:#111;padding:5px 18px;border-radius:20px;font-weight:900;font-size:.9rem;">🔥 ${counts[w.key] || 0} صوت</div>
-                    </div>`).join("")}
-            </div>` : '<div class="lrc-hero"><p>لم تسجل أي مشاركات في هذا الموسم.</p></div>'}
-            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;">
-                <button type="button" class="lrc-btn" id="lrc-res-copy"><i class="fas fa-copy"></i> نسخ تهنئة التتويج للشات</button>
-                <button type="button" class="lrc-btn lrc-btn-out" id="lrc-res-pz"><i class="fas fa-gift"></i> الجوائز المستحقة</button>
-            </div>
-            ${allSorted.length > winners.length ? `
-                <div style="font-weight:800;color:#94a3b8;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:6px;">باقي المراكز:</div>
-                ${allSorted.map((c, i) => `
-                    <div class="lrc-prize-item" style="margin-bottom:7px;padding:8px 12px;">
-                        <b style="color:#D4AF37;width:28px;text-align:center;">#${i + 1}</b>
-                        ${c.avatar ? `<img src="${h.esc(c.avatar)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #D4AF37;">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
-                        <div style="flex:1;min-width:0;">
-                            <div class="lrc-cname" style="font-size:.9rem;margin:0;text-align:right;">${c.html ? h.sanHtml(c.html) : h.esc(c.displayName || c.username)}</div>
-                            <div style="font-size:.74rem;color:#94a3b8;">${"queen" === c.role ? "👸 ملكة" : "👑 ملك"}</div>
-                        </div>
-                        <span style="background:rgba(212,175,55,.15);color:#fde68a;padding:4px 10px;border-radius:12px;font-size:.8rem;font-weight:800;">${counts[c.key] || 0} صوت</span>
-                    </div>`).join("")}` : ""}`;
-
-        document.getElementById("lrc-res-pz").onclick = openPrizesModal;
-        document.getElementById("lrc-res-copy").onclick = () => {
-            if (!winners.length) return;
-            const lines = winners.map(w => `${"queen" === w.role ? "👸 ملكة الشات" : "👑 ملك الشات"}: ${w.displayName || w.username} (${counts[w.key] || 0} صوت)`).join("\n");
-            h.copy(`👑✨ ألف مبروك التتويج في شات ليل ✨👑\n\n${lines}\n\n🎁 الجوائز الملكية جاهزة للتفعيل! 🎉`, "📋 تم نسخ إعلان التتويج!");
-        };
-    }
+function renderMainBody() {
 
     function submitNomination(role) {
         if (!st.db) return showToast("تعذر الاتصال بالقاعدة", 3000, "red");
@@ -1870,6 +1595,7 @@ function showBannerToastAd(msg, theme = "gold") {
             const ban = h.getMyBan();
             if (!h.isAdmin() && ban && "all" === ban.scope) return alert(`تم منعك من المسابقة 🚫${ban.reason ? "\nالسبب: " + ban.reason : ""}`);
             ensureUserModal();
+            document.getElementById("lrc-live-ad")?.classList.remove("show");
             document.getElementById("lrc-mini-fab").style.display = "none";
             document.getElementById("lrc-modal").classList.add("open");
             setPresence("يتصفح المسابقة");
@@ -1932,12 +1658,12 @@ function showBannerToastAd(msg, theme = "gold") {
                 st.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice();
                 royalAdmin.refresh();
             });
-           st.db.ref(`${ROOT}/state`).on("value", sn => {
-                st.state = sn.val() || null;
-                announcePhase(getPhaseInfo().phase);
-                renderMainBody();
-                royalAdmin.refresh();
-            });
+st.db.ref(`${ROOT}/state`).on("value", sn => {
+    st.state = sn.val() || null;
+    announcePhase(getPhaseInfo().phase);
+    renderMainBody();
+    royalAdmin.refresh();
+});
             st.db.ref(`${ROOT}/candidates`).on("value", sn => { st.candidates = sn.val() || {}; renderMainBody(); royalAdmin.refresh(); });
             st.db.ref(`${ROOT}/votes`).on("value", sn => { st.votes = sn.val() || {}; renderMainBody(); royalAdmin.refresh(); });
             st.db.ref(`${ROOT}/banned`).on("value", sn => { st.banned = sn.val() || {}; royalAdmin.refresh(); });
@@ -1965,6 +1691,11 @@ function showBannerToastAd(msg, theme = "gold") {
         if (e.target.closest("#member-login-btn")) syncLogin("member-username");
         if (e.target.closest("#register-btn")) syncLogin("register-username");
         if (e.target.closest('button[onclick*="renderAddons"]')) setTimeout(pinContestBtnIfBlock, 120);
+    });
+
+    document.addEventListener("submit", e => {
+        if ("member-login-form" === e.target?.id) syncLogin("member-username");
+        if ("register-form" === e.target?.id) syncLogin("register-username");
     });
 
     const menuItems = [
