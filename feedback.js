@@ -292,7 +292,7 @@ const a={
   getUnreadAdminCount(){
     let c=0;
     Object.values(t.allTickets||{}).forEach(x=>{
-      if(x&&!x.archived&&("new"===x.status||!0===x.adminReadFollowup))c++
+      if(x&&!x.archived&&!["closed","implemented","rejected"].includes(x.status))c++
     });
     return c
   },
@@ -305,6 +305,7 @@ const a={
     t.prevUnreadUser=uc;
     let ab=document.getElementById("lfb-admin-badge"),ac=a.getUnreadAdminCount();
     if(ab){ab.textContent=ac>99?"99+":String(ac);ab.style.display=ac>0?"inline-block":"none"}
+    window.LaylAdminHub&&window.LaylAdminHub.refreshBadges&&window.LaylAdminHub.refreshBadges()
   }
 };
 a.detectIdentity();
