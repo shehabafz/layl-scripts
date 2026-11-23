@@ -49,6 +49,16 @@ const PANELS = [
     fallback: () => window.lailCinema?.openAdmin?.()
   },
   {
+    id: "btn-lail-library-admin",
+    title: "لوحة تحكم المكتبة",
+    desc: "الرادار، الأرفف والكتب الخاصة، البلاغات والحظر",
+    icon: "fas fa-book-reader",
+    bg: "linear-gradient(135deg, #2e1065, #6d28d9)",
+    color: "#fbbf24",
+    badgeId: "llba-rep-tbdg",
+    fallback: () => window.lailApp?.openAdmin?.()
+  },
+  {
     id: "btn-lail-feedback-admin",
     title: "لوحة الاقتراحات والشكاوي",
     desc: "التذاكر، ساحة التصويت، الرادار، الحظر والإعدادات",
@@ -236,7 +246,7 @@ function openHub() {
   let old = document.getElementById(MODAL_ID);
   if (old) old.remove();
 
-  const available = PANELS.filter(p => document.getElementById(p.id));
+  const available = PANELS.filter(p => document.getElementById(p.id) || typeof p.fallback === "function");
   if (!available.length) return;
 
   const ov = document.createElement("div");
