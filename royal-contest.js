@@ -120,6 +120,39 @@
     const h = {
         san: x => x ? String(x).replace(/[.#$\[\]\/]/g, "_").trim() : "",
         esc: x => String(x || "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])),
+        isValidImg: av => Boolean(av && /^(https?:\/\/|data:image\/(jpeg|jpg|png|webp|gif);base64,)/i.test(String(av))),
+        compressImg(file) {
+            return new Promise((resolve, reject) => {
+                if (!file || (file.type && !file.type.startsWith("image/"))) return reject("الرجاء اختيار ملف صورة صالح");
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const MAX = 220;
+                        const side = Math.min(img.width, img.height);
+                        const sx = (img.width - side) / 2;
+                        const sy = (img.height - side) / 2;
+                        const cv = document.createElement("canvas");
+                        cv.width = MAX;
+                        cv.height = MAX;
+                        const ctx = cv.getContext("2d");
+                        ctx.drawImage(img, sx, sy, side, side, 0, 0, MAX, MAX);
+                        let data = cv.toDataURL("image/jpeg", 0.78);
+                        if (data.length > 65000) data = cv.toDataURL("image/jpeg", 0.6);
+                        URL.revokeObjectURL(url);
+                        resolve(data);
+                    } catch (err) {
+                        URL.revokeObjectURL(url);
+                        reject("تعذر معالجة الصورة");
+                    }
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject("تعذر قراءة الصورة");
+                };
+                img.src = url;
+            });
+        },
         sanHtml(html) {
             const t = document.createElement("template");
             t.innerHTML = String(html || "");
@@ -198,7 +231,7 @@
                         const uid = row.getAttribute("data-user-id") || el.getAttribute("data-user-id") || st.myUid || "";
                         const idEl = row.querySelector(".user-identity") || row.querySelector(".user-identity-name");
                         const imgEl = row.querySelector("img.message-avatar, img.user-avatar, img");
-                        const avatar = imgEl && imgEl.src && /^https?:\/\//i.test(imgEl.src) ? imgEl.src : "";
+                        const avatar = imgEl && imgEl.src && h.isValidImg(imgEl.src) ? imgEl.src : "";
                         let cleanName = username.trim();
                         if (idEl) {
                             const cl = idEl.cloneNode(!0);
@@ -335,7 +368,7 @@
         st.toastTimer = setTimeout(() => el.classList.remove("show"), ms);
     }
 
-function showBannerToastAd(msg, theme = "gold") {
+    function showBannerToastAd(msg, theme = "gold") {
         if (!1 === st.settings.showToastAd) return;
         ensureBaseStyles();
         let ad = document.getElementById("lrc-live-ad");
@@ -441,6 +474,9 @@ function showBannerToastAd(msg, theme = "gold") {
         .lrc-role-opt.sel-queen{border-color:#ec4899;background:rgba(236,72,153,.14);color:#f9a8d4;box-shadow:0 0 18px rgba(236,72,153,.2)}
         .lrc-inp{width:100%;box-sizing:border-box;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.14);color:#fff;padding:10px 14px;border-radius:12px;font-family:inherit;font-size:.9rem;outline:none}
         .lrc-inp:focus{border-color:#D4AF37}
+        .lrc-pick-row{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.32);border:1px dashed rgba(212,175,55,.38);border-radius:12px;padding:8px 12px;margin-bottom:10px}
+        .lrc-pick-thumb{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#D4AF37;font-size:18px;flex-shrink:0;overflow:hidden}
+        .lrc-pick-thumb img{width:100%;height:100%;object-fit:cover;display:block}
         .lrc-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
         .lrc-fbtn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#cbd5e1;padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
         .lrc-fbtn.active{background:#D4AF37;color:#111;border-color:#D4AF37}
@@ -468,7 +504,7 @@ function showBannerToastAd(msg, theme = "gold") {
         .lrc-prize-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-top:10px}
         .lrc-prize-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.25);border-radius:14px;padding:10px 13px;text-align:right}
         .lrc-prize-ico{width:36px;height:36px;border-radius:10px;background:rgba(212,175,55,.16);color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-        .lrc-subov{position:fixed;inset:0;background:rgba(4,6,12,.92);z-index:2147483645;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);direction:rtl;padding:14px}
+        .lrc-subov{position:fixed;inset:0;background:rgba(4,6,12,.92);z-index:2147483646;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);direction:rtl;padding:14px}
         .lrc-subbox{background:linear-gradient(180deg,#1a1d32,#0e101d);border:1px solid rgba(212,175,55,.45);border-radius:20px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:18px;color:#fff;box-shadow:0 25px 60px rgba(0,0,0,.9)}
         .lrc-mini-fab{position:fixed;bottom:95px;right:20px;background:linear-gradient(135deg,#D4AF37,#b59226);color:#111;padding:10px 16px;border-radius:30px;font-weight:900;font-size:.86rem;box-shadow:0 10px 25px rgba(0,0,0,.6);display:none;align-items:center;gap:8px;z-index:2147483643;cursor:pointer;direction:rtl;border:2px solid rgba(255,255,255,.3)}
         .lrc-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#121424;border:1px solid #D4AF37;color:#fff;padding:10px 20px;border-radius:30px;font-size:.86rem;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.75);z-index:2147483647;opacity:0;pointer-events:none;transition:all .35s ease;direction:rtl;max-width:90vw;text-align:center}
@@ -602,7 +638,7 @@ function showBannerToastAd(msg, theme = "gold") {
                 </div>
                 ${list.length ? list.map(w => `
                     <div class="lrc-prize-item" style="margin-bottom:8px;">
-                        ${w.avatar ? `<img src="${h.esc(w.avatar)}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;">` : `<div class="lrc-prize-ico"><i class="fas fa-crown"></i></div>`}
+                        ${h.isValidImg(w.avatar) ? `<img src="${h.esc(w.avatar)}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;">` : `<div class="lrc-prize-ico"><i class="fas fa-crown"></i></div>`}
                         <div style="flex:1;min-width:0;">
                             <div style="font-weight:900;color:#fff;font-size:.94rem;">${"queen" === w.role ? "👸 ملكة الشات:" : "👑 ملك الشات:"} ${h.esc(w.name)}</div>
                             <div style="font-size:.76rem;color:#D4AF37;margin-top:2px;">الموسم #${h.esc(w.season || 1)} • ${w.votes || 0} صوت • ${h.fmtDate(w.date)}</div>
@@ -635,10 +671,11 @@ function showBannerToastAd(msg, theme = "gold") {
     }
 
     function renderAvatar(av, role) {
-        if (av && /^https?:\/\//i.test(av)) return `<img class="lrc-av" src="${h.esc(av)}" alt="">`;
+        if (h.isValidImg(av)) return `<img class="lrc-av" src="${h.esc(av)}" alt="">`;
         return `<div class="lrc-av"><i class="fas ${"queen" === role ? "fa-chess-queen" : "fa-crown"}"></i></div>`;
     }
-function renderMainBody() {
+
+    function renderMainBody() {
         const modal = document.getElementById("lrc-modal");
         if (!modal || !modal.classList.contains("open")) return;
         const body = document.getElementById("lrc-body");
@@ -731,7 +768,17 @@ function renderMainBody() {
                             <div class="lrc-role-opt sel-king" id="lrc-pick-king"><div style="font-size:22px;">👑</div>ملك الشات</div>
                             <div class="lrc-role-opt" id="lrc-pick-queen"><div style="font-size:22px;">👸</div>ملكة الشات</div>
                         </div>
-                        <input type="text" id="lrc-slogan-inp" class="lrc-inp" maxlength="90" placeholder="شعارك الدعائي القصير (اختياري)..." style="margin-bottom:10px;">
+                        <div class="lrc-pick-row">
+                            <div class="lrc-pick-thumb" id="lrc-nom-av-prev"><i class="fas fa-camera"></i></div>
+                            <div style="flex:1;min-width:0;text-align:right;">
+                                <div style="font-size:.83rem;font-weight:800;color:#e2e8f0;">صورة المرشح (اختياري)</div>
+                                <div style="font-size:.73rem;color:#94a3b8;" id="lrc-nom-av-lbl">تُستخدم صورة عضويتك تلقائياً أو اختر من الأستوديو</div>
+                            </div>
+                            <input type="file" id="lrc-nom-av-file" accept="image/*" style="display:none;">
+                            <button type="button" class="lrc-btn lrc-btn-out" id="lrc-nom-av-btn" style="padding:7px 12px;font-size:.8rem;"><i class="fas fa-images"></i> الأستوديو</button>
+                            <button type="button" class="lrc-ibtn sq x" id="lrc-nom-av-clr" style="display:none;" title="إزالة"><i class="fas fa-times"></i></button>
+                        </div>
+                        <input type="text" id="lrc-slogan-inp" class="lrc-inp" maxlength="90" placeholder="رسالتك الانتخابية / شعارك (اختياري)..." style="margin-bottom:10px;">
                         <button type="button" id="lrc-submit-nom" class="lrc-btn" style="width:100%;" ${info.paused || isFull ? "disabled" : ""}><i class="fas fa-crown"></i> ${isFull ? "اكتمل العدد المسموح للمرشحين" : "تأكيد ترشيح نفسي"}</button>
                     </div>`;
             }
@@ -757,11 +804,33 @@ function renderMainBody() {
                     if (confirm("سحب ترشيحك من المسابقة؟")) st.db?.ref(`${ROOT}/candidates/${myKey}`).remove().then(() => showToast("تم سحب ترشيحك."));
                 };
             } else {
-                let pickedRole = "king";
+                let pickedRole = "king", pickedAv = "";
                 const kBtn = document.getElementById("lrc-pick-king"), qBtn = document.getElementById("lrc-pick-queen");
                 kBtn.onclick = () => { pickedRole = "king"; kBtn.className = "lrc-role-opt sel-king"; qBtn.className = "lrc-role-opt"; };
                 qBtn.onclick = () => { pickedRole = "queen"; qBtn.className = "lrc-role-opt sel-queen"; kBtn.className = "lrc-role-opt"; };
-                document.getElementById("lrc-submit-nom").onclick = () => submitNomination(pickedRole);
+                const fInp = document.getElementById("lrc-nom-av-file");
+                const fPrev = document.getElementById("lrc-nom-av-prev");
+                const fLbl = document.getElementById("lrc-nom-av-lbl");
+                const fClr = document.getElementById("lrc-nom-av-clr");
+                document.getElementById("lrc-nom-av-btn").onclick = () => fInp.click();
+                fInp.onchange = ev => {
+                    const file = ev.target.files?.[0];
+                    ev.target.value = "";
+                    if (!file) return;
+                    h.compressImg(file).then(data => {
+                        pickedAv = data;
+                        fPrev.innerHTML = `<img src="${data}" alt="">`;
+                        fLbl.textContent = "تم اختيار الصورة من الأستوديو ✓";
+                        fClr.style.display = "inline-flex";
+                    }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+                };
+                fClr.onclick = () => {
+                    pickedAv = "";
+                    fPrev.innerHTML = '<i class="fas fa-camera"></i>';
+                    fLbl.textContent = "تُستخدم صورة عضويتك تلقائياً أو اختر من الأستوديو";
+                    fClr.style.display = "none";
+                };
+                document.getElementById("lrc-submit-nom").onclick = () => submitNomination(pickedRole, pickedAv);
             }
             return;
         }
@@ -930,7 +999,7 @@ function renderMainBody() {
                 ${allSorted.map((c, i) => `
                     <div class="lrc-prize-item" style="margin-bottom:7px;padding:8px 12px;">
                         <b style="color:#D4AF37;width:28px;text-align:center;">#${i + 1}</b>
-                        ${c.avatar ? `<img src="${h.esc(c.avatar)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #D4AF37;">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
+                        ${h.isValidImg(c.avatar) ? `<img src="${h.esc(c.avatar)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #D4AF37;">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
                         <div style="flex:1;min-width:0;">
                             <div class="lrc-cname" style="font-size:.9rem;margin:0;text-align:right;">${c.html ? h.sanHtml(c.html) : h.esc(c.displayName || c.username)}</div>
                             <div style="font-size:.74rem;color:#94a3b8;">${"queen" === c.role ? "👸 ملكة" : "👑 ملك"}</div>
@@ -946,7 +1015,7 @@ function renderMainBody() {
         };
     }
 
-    function submitNomination(role) {
+    function submitNomination(role, customAvatar = "") {
         if (!st.db) return showToast("تعذر الاتصال بالقاعدة", 3000, "red");
         if (!ensureIdentity()) return;
         const ban = h.getMyBan();
@@ -967,7 +1036,7 @@ function renderMainBody() {
             username: st.myUser,
             displayName: det.displayName || st.myUser,
             html: det.html || st.myHtml || h.esc(st.myUser),
-            avatar: det.avatar || st.myAvatar || "",
+            avatar: customAvatar || det.avatar || st.myAvatar || "",
             role, slogan, badge: "", frozen: !1,
             status: needsApp ? "pending" : "approved",
             bonusVotes: 0,
@@ -1077,6 +1146,9 @@ function renderMainBody() {
             .lrca-sl:before{content:"";position:absolute;height:16px;width:16px;right:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
             .lrca-sw input:checked+.lrca-sl{background:#10b981}.lrca-sw input:checked+.lrca-sl:before{transform:translateX(-20px)}
             .lrca-bdg{background:#ef4444;color:#fff;font-size:9.5px;font-weight:900;padding:1px 6px;border-radius:12px;margin-right:3px;display:none}
+            .lrca-up-box{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px dashed rgba(212,175,55,.35);border-radius:10px;padding:6px 9px}
+            .lrca-up-prev{width:34px;height:34px;border-radius:50%;border:1.5px solid #D4AF37;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#D4AF37;font-size:14px;flex-shrink:0;overflow:hidden}
+            .lrca-up-prev img{width:100%;height:100%;object-fit:cover;display:block}
             `;
             document.head.appendChild(s);
         },
@@ -1106,6 +1178,113 @@ function renderMainBody() {
                 renderMainBody();
                 if (msg) showToast(msg, 3000, "gold");
             }).catch(() => alert("❌ فشل الحفظ."));
+        },
+
+        openEditCandidate(key) {
+            const it = st.candidates?.[key];
+            if (!it || !st.db) return;
+            document.getElementById("lrc-edit-cand-sub")?.remove();
+            let editAv = it.avatar || "";
+            const ov = document.createElement("div");
+            ov.id = "lrc-edit-cand-sub";
+            ov.className = "lrc-subov";
+            ov.innerHTML = `
+                <div class="lrc-subbox" style="max-width:440px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:14px;">
+                        <b style="color:#D4AF37;font-size:1.02rem;"><i class="fas fa-user-edit"></i> تعديل بيانات المرشح</b>
+                        <button type="button" class="lrc-ibtn sq x" id="lrc-ec-x"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px;">
+                        <div id="lrc-ec-prev" style="width:88px;height:88px;border-radius:50%;border:2px solid #D4AF37;background:#1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:32px;color:#D4AF37;">
+                            ${h.isValidImg(editAv) ? `<img src="${h.esc(editAv)}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="fas ${"queen" === it.role ? "fa-chess-queen" : "fa-crown"}"></i>`}
+                        </div>
+                        <input type="file" id="lrc-ec-file" accept="image/*" style="display:none;">
+                        <div style="display:flex;gap:7px;">
+                            <button type="button" id="lrc-ec-pick" class="lrca-btn lrca-b-info lrca-mini"><i class="fas fa-images"></i> تغيير من الأستوديو</button>
+                            <button type="button" id="lrc-ec-rmav" class="lrca-btn lrca-b-dng lrca-mini" style="${h.isValidImg(editAv) ? "" : "display:none;"}"><i class="fas fa-trash"></i> إزالة الصورة</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label class="lrca-lbl">الاسم الظاهر للمرشح</label>
+                        <input id="lrc-ec-name" class="lrca-inp" maxlength="45" value="${h.esc(it.displayName || it.username)}">
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label class="lrca-lbl">الرسالة الانتخابية / الشعار</label>
+                        <textarea id="lrc-ec-slogan" class="lrca-inp" rows="2" maxlength="90" placeholder="اكتب الرسالة الانتخابية...">${h.esc(it.slogan || "")}</textarea>
+                    </div>
+                    <div class="lrca-g2" style="margin-bottom:14px;">
+                        <div>
+                            <label class="lrca-lbl">اللقب</label>
+                            <select id="lrc-ec-role" class="lrca-inp">
+                                <option value="king" ${"queen" !== it.role ? "selected" : ""}>👑 ملك الشات</option>
+                                <option value="queen" ${"queen" === it.role ? "selected" : ""}>👸 ملكة الشات</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="lrca-lbl">شارة التمييز (اختياري)</label>
+                            <input id="lrc-ec-badge" class="lrca-inp" maxlength="25" value="${h.esc(it.badge || "")}" placeholder="مثلاً: مرشح مميز">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" id="lrc-ec-save" class="lrca-btn lrca-b-gold" style="flex:1;"><i class="fas fa-save"></i> حفظ التعديلات</button>
+                        <button type="button" id="lrc-ec-cancel" class="lrca-btn lrca-b-dark" style="padding:8px 14px;">إلغاء</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(ov);
+
+            const close = () => ov.remove();
+            ov.onclick = e => { if (e.target === ov) close(); };
+            document.getElementById("lrc-ec-x").onclick = close;
+            document.getElementById("lrc-ec-cancel").onclick = close;
+
+            const fInp = document.getElementById("lrc-ec-file");
+            const prev = document.getElementById("lrc-ec-prev");
+            const rmBtn = document.getElementById("lrc-ec-rmav");
+            const roleSel = document.getElementById("lrc-ec-role");
+
+            const syncPrev = () => {
+                if (h.isValidImg(editAv)) {
+                    prev.innerHTML = `<img src="${h.esc(editAv)}" style="width:100%;height:100%;object-fit:cover;">`;
+                    rmBtn.style.display = "inline-flex";
+                } else {
+                    prev.innerHTML = `<i class="fas ${"queen" === roleSel.value ? "fa-chess-queen" : "fa-crown"}"></i>`;
+                    rmBtn.style.display = "none";
+                }
+            };
+
+            document.getElementById("lrc-ec-pick").onclick = () => fInp.click();
+            fInp.onchange = ev => {
+                const file = ev.target.files?.[0];
+                ev.target.value = "";
+                if (!file) return;
+                h.compressImg(file).then(data => {
+                    editAv = data;
+                    syncPrev();
+                    showToast("📷 تم تجهيز الصورة الجديدة");
+                }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+            };
+            rmBtn.onclick = () => { editAv = ""; syncPrev(); };
+            roleSel.onchange = () => { if (!h.isValidImg(editAv)) syncPrev(); };
+
+            document.getElementById("lrc-ec-save").onclick = () => {
+                const newName = document.getElementById("lrc-ec-name").value.trim() || it.username;
+                const newSlogan = document.getElementById("lrc-ec-slogan").value.trim().slice(0, 90);
+                const newRole = "queen" === roleSel.value ? "queen" : "king";
+                const newBadge = document.getElementById("lrc-ec-badge").value.trim().slice(0, 25);
+                const up = {
+                    displayName: newName,
+                    slogan: newSlogan,
+                    role: newRole,
+                    badge: newBadge,
+                    avatar: editAv
+                };
+                if (newName !== (it.displayName || it.username)) up.html = h.esc(newName);
+                st.db.ref(`${ROOT}/candidates/${key}`).update(up).then(() => {
+                    this.log("تعديل مرشح", key, newName);
+                    close();
+                    showToast("✅ تم حفظ تعديلات المرشح", 3000, "gold");
+                }).catch(() => alert("❌ فشل حفظ التعديلات."));
+            };
         },
 
         open() {
@@ -1215,9 +1394,13 @@ function renderMainBody() {
                                 <input id="lrca-mc-u" class="lrca-inp" placeholder="اسم المستخدم *">
                                 <select id="lrca-mc-r" class="lrca-inp"><option value="king">👑 ملك</option><option value="queen">👸 ملكة</option></select>
                             </div>
-                            <div class="lrca-g2" style="margin-bottom:7px;">
-                                <input id="lrca-mc-s" class="lrca-inp" placeholder="الشعار (اختياري)">
-                                <input id="lrca-mc-av" class="lrca-inp" dir="ltr" placeholder="رابط صورة اختياري (https://...)">
+                            <input id="lrca-mc-s" class="lrca-inp" style="margin-bottom:7px;" maxlength="90" placeholder="الرسالة الانتخابية / الشعار (اختياري)">
+                            <div class="lrca-up-box" style="margin-bottom:8px;">
+                                <div class="lrca-up-prev" id="lrca-mc-prev"><i class="fas fa-camera"></i></div>
+                                <div style="flex:1;font-size:11px;color:#94a3b8;" id="lrca-mc-av-lbl">صورة المرشح من الأستوديو (اختياري)</div>
+                                <input type="file" id="lrca-mc-file" accept="image/*" style="display:none;">
+                                <button type="button" id="lrca-mc-pick" class="lrca-btn lrca-b-info lrca-mini"><i class="fas fa-images"></i> الأستوديو</button>
+                                <button type="button" id="lrca-mc-clr" class="lrca-btn lrca-b-dng lrca-mini" style="display:none;"><i class="fas fa-times"></i></button>
                             </div>
                             <button type="button" id="lrca-mc-add" class="lrca-btn lrca-b-ok" style="width:100%;">إضافة مرشح معتمد</button>
                         </div>
@@ -1362,6 +1545,13 @@ function renderMainBody() {
                                 <select id="lrca-hf-r" class="lrca-inp"><option value="king">👑 ملك</option><option value="queen">👸 ملكة</option></select>
                                 <input id="lrca-hf-v" type="number" class="lrca-inp" placeholder="الأصوات">
                             </div>
+                            <div class="lrca-up-box" style="margin-bottom:7px;">
+                                <div class="lrca-up-prev" id="lrca-hf-prev"><i class="fas fa-camera"></i></div>
+                                <div style="flex:1;font-size:11px;color:#94a3b8;" id="lrca-hf-av-lbl">صورة الفائز من الأستوديو (اختياري)</div>
+                                <input type="file" id="lrca-hf-file" accept="image/*" style="display:none;">
+                                <button type="button" id="lrca-hf-pick" class="lrca-btn lrca-b-info lrca-mini"><i class="fas fa-images"></i> الأستوديو</button>
+                                <button type="button" id="lrca-hf-clr" class="lrca-btn lrca-b-dng lrca-mini" style="display:none;"><i class="fas fa-times"></i></button>
+                            </div>
                             <button type="button" id="lrca-hf-add" class="lrca-btn lrca-b-ok" style="width:100%;margin-bottom:8px;">+ إضافة سجل لقاعة الشرف</button>
                             <div id="lrca-hof-list"></div>
                         </div>
@@ -1385,6 +1575,7 @@ function renderMainBody() {
             if (st.logsRef) { st.logsRef.off(); st.logsRef = null; }
             if (st.presenceRef) { st.presenceRef.off(); st.presenceRef = null; }
             if (st.bansRef) { st.bansRef.off(); st.bansRef = null; }
+            document.getElementById("lrc-edit-cand-sub")?.remove();
             document.getElementById("lrc-admin-modal")?.remove();
             syncHeavyStreams();
         },
@@ -1558,7 +1749,32 @@ function renderMainBody() {
                 this.patchSettings({ bannerText: txt, bannerTheme: th }, txt ? "📢 تم تحديث الشريط" : "تم إخفاء الشريط");
             };
 
-            // 2. المرشحون
+            // 2. المرشحون + رفع صورة من الأستوديو
+            let manualCandAv = "";
+            const mcFile = document.getElementById("lrca-mc-file");
+            const mcPrev = document.getElementById("lrca-mc-prev");
+            const mcLbl = document.getElementById("lrca-mc-av-lbl");
+            const mcClr = document.getElementById("lrca-mc-clr");
+            const resetMcAv = () => {
+                manualCandAv = "";
+                mcPrev.innerHTML = '<i class="fas fa-camera"></i>';
+                mcLbl.textContent = "صورة المرشح من الأستوديو (اختياري)";
+                mcClr.style.display = "none";
+            };
+            document.getElementById("lrca-mc-pick").onclick = () => mcFile.click();
+            mcClr.onclick = resetMcAv;
+            mcFile.onchange = ev => {
+                const file = ev.target.files?.[0];
+                ev.target.value = "";
+                if (!file) return;
+                h.compressImg(file).then(data => {
+                    manualCandAv = data;
+                    mcPrev.innerHTML = `<img src="${data}" alt="">`;
+                    mcLbl.textContent = "تم اختيار الصورة من الأستوديو ✓";
+                    mcClr.style.display = "inline-flex";
+                }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+            };
+
             document.getElementById("lrca-app-all").onclick = () => {
                 const up = {}; let cnt = 0;
                 Object.entries(st.candidates || {}).forEach(([k, c]) => { if (c && "pending" === c.status) { up[`${k}/status`] = "approved"; cnt++; } });
@@ -1569,14 +1785,16 @@ function renderMainBody() {
             document.getElementById("lrca-mc-add").onclick = () => {
                 const u = document.getElementById("lrca-mc-u").value.trim(), key = h.san(u);
                 if (!key || !st.db) return alert("أدخل اسم المستخدم.");
-                const role = document.getElementById("lrca-mc-r").value, slogan = document.getElementById("lrca-mc-s").value.trim(), av = document.getElementById("lrca-mc-av").value.trim();
+                const role = document.getElementById("lrca-mc-r").value, slogan = document.getElementById("lrca-mc-s").value.trim().slice(0, 90);
                 const det = h.detectFromDOM(u) || {};
                 st.db.ref(`${ROOT}/candidates/${key}`).set({
                     uid: det.uid || "", username: u, displayName: det.displayName || u, html: det.html || h.esc(u),
-                    avatar: av || det.avatar || "", role, slogan, badge: "", frozen: !1, status: "approved", bonusVotes: 0, joinedAt: Date.now()
+                    avatar: manualCandAv || det.avatar || "", role, slogan, badge: "", frozen: !1, status: "approved", bonusVotes: 0, joinedAt: Date.now()
                 }).then(() => {
                     this.log("إضافة مرشح", u, role);
-                    ["lrca-mc-u", "lrca-mc-s", "lrca-mc-av"].forEach(id => document.getElementById(id).value = "");
+                    document.getElementById("lrca-mc-u").value = "";
+                    document.getElementById("lrca-mc-s").value = "";
+                    resetMcAv();
                     showToast(`✅ تمت إضافة (${u})`);
                 });
             };
@@ -1697,6 +1915,31 @@ function renderMainBody() {
             };
 
             // 7. التحليلات وقاعة الشرف والسجل
+            let hofAv = "";
+            const hfFile = document.getElementById("lrca-hf-file");
+            const hfPrev = document.getElementById("lrca-hf-prev");
+            const hfLbl = document.getElementById("lrca-hf-av-lbl");
+            const hfClr = document.getElementById("lrca-hf-clr");
+            const resetHfAv = () => {
+                hofAv = "";
+                hfPrev.innerHTML = '<i class="fas fa-camera"></i>';
+                hfLbl.textContent = "صورة الفائز من الأستوديو (اختياري)";
+                hfClr.style.display = "none";
+            };
+            document.getElementById("lrca-hf-pick").onclick = () => hfFile.click();
+            hfClr.onclick = resetHfAv;
+            hfFile.onchange = ev => {
+                const file = ev.target.files?.[0];
+                ev.target.value = "";
+                if (!file) return;
+                h.compressImg(file).then(data => {
+                    hofAv = data;
+                    hfPrev.innerHTML = `<img src="${data}" alt="">`;
+                    hfLbl.textContent = "تم اختيار الصورة من الأستوديو ✓";
+                    hfClr.style.display = "inline-flex";
+                }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+            };
+
             document.getElementById("lrca-copy-top").onclick = () => {
                 const counts = computeVoteCounts();
                 const top = getApprovedCandidates().sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0)).slice(0, 5);
@@ -1712,8 +1955,9 @@ function renderMainBody() {
             document.getElementById("lrca-hf-add").onclick = () => {
                 const name = document.getElementById("lrca-hf-n").value.trim(), role = document.getElementById("lrca-hf-r").value, votes = parseInt(document.getElementById("lrca-hf-v").value, 10) || 0;
                 if (!name || !st.db) return alert("أدخل اسم الفائز.");
-                st.db.ref(`${ROOT}/hall_of_fame`).push({ season: st.state?.season || 1, name, role, avatar: "", votes, date: Date.now() }).then(() => {
+                st.db.ref(`${ROOT}/hall_of_fame`).push({ season: st.state?.season || 1, name, role, avatar: hofAv, votes, date: Date.now() }).then(() => {
                     document.getElementById("lrca-hf-n").value = ""; document.getElementById("lrca-hf-v").value = "";
+                    resetHfAv();
                     this.log("إضافة لقاعة الشرف", name); showToast("🏆 تمت الإضافة");
                 });
             };
@@ -1753,9 +1997,15 @@ function renderMainBody() {
             if (!list.length) { c.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا يوجد مرشحون حالياً.</div>'; return; }
             c.innerHTML = list.map(([k, it]) => {
                 const pend = "pending" === it.status, frz = Boolean(it.frozen);
+                const avThumb = h.isValidImg(it.avatar)
+                    ? `<img src="${h.esc(it.avatar)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #D4AF37;flex-shrink:0;">`
+                    : `<div style="width:34px;height:34px;border-radius:50%;background:#1e293b;border:1.5px solid #D4AF37;color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;"><i class="fas ${"queen" === it.role ? "fa-chess-queen" : "fa-crown"}"></i></div>`;
                 return `<div class="lrca-card" style="${pend ? "border-color:#f59e0b;" : frz ? "border-color:#38bdf8;" : ""}">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
-                        <b style="font-size:12.5px;">${"queen" === it.role ? "👸" : "👑"} ${h.esc(it.displayName || it.username)} <span style="color:#64748b;font-size:10px;">(@${h.esc(it.username)})</span></b>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                            ${avThumb}
+                            <b style="font-size:12.5px;">${"queen" === it.role ? "👸" : "👑"} ${h.esc(it.displayName || it.username)} <span style="color:#64748b;font-size:10px;">(@${h.esc(it.username)})</span></b>
+                        </div>
                         <div class="lrca-row" style="gap:4px;">
                             ${frz ? '<span class="lrca-tag lrca-t-blue">❄️ مجمد</span>' : ""}
                             ${it.badge ? `<span class="lrca-tag lrca-t-gold">${h.esc(it.badge)}</span>` : ""}
@@ -1766,20 +2016,16 @@ function renderMainBody() {
                     ${it.slogan ? `<div style="font-size:11px;color:#94a3b8;margin-bottom:7px;">«${h.esc(it.slogan)}»</div>` : ""}
                     <div class="lrca-row" style="gap:4px;">
                         ${pend ? `<button type="button" class="lrca-btn lrca-b-ok lrca-mini lrca-c-app" data-k="${h.esc(k)}">اعتماد ✓</button>` : ""}
-                        <button type="button" class="lrca-btn lrca-b-info lrca-mini lrca-c-ed" data-k="${h.esc(k)}">شعار</button>
-                        <button type="button" class="lrca-btn lrca-b-dark lrca-mini lrca-c-bdg" data-k="${h.esc(k)}">شارة ⭐</button>
-                        <button type="button" class="lrca-btn lrca-b-dark lrca-mini lrca-c-rol" data-k="${h.esc(k)}">اللقب</button>
+                        <button type="button" class="lrca-btn lrca-b-info lrca-mini lrca-c-edit" data-k="${h.esc(k)}"><i class="fas fa-edit"></i> تعديل</button>
                         <button type="button" class="lrca-btn lrca-b-warn lrca-mini lrca-c-adj" data-k="${h.esc(k)}">+/-</button>
-                        <button type="button" class="lrca-btn ${frz ? "lrca-b-ok" : "lrca-b-info"} lrca-mini lrca-c-frz" data-k="${h.esc(k)}">${frz ? "فك التجميد" : "تجميد ❄️"}</button>
+                        <button type="button" class="lrca-btn ${frz ? "lrca-b-ok" : "lrca-b-dark"} lrca-mini lrca-c-frz" data-k="${h.esc(k)}">${frz ? "فك التجميد" : "تجميد ❄️"}</button>
                         <button type="button" class="lrca-btn lrca-b-dng lrca-mini lrca-c-del" data-k="${h.esc(k)}" style="margin-right:auto;"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
             }).join("");
 
             c.querySelectorAll(".lrca-c-app").forEach(b => b.onclick = () => st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/status`).set("approved").then(() => { this.log("اعتماد مرشح", b.dataset.k); showToast("✅ تم الاعتماد"); }));
-            c.querySelectorAll(".lrca-c-ed").forEach(b => b.onclick = () => { const nv = prompt("الشعار الجديد:", st.candidates[b.dataset.k]?.slogan || ""); if (null !== nv) st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/slogan`).set(nv.trim().slice(0, 90)); });
-            c.querySelectorAll(".lrca-c-bdg").forEach(b => b.onclick = () => { const nv = prompt("شارة التمييز (اتركه فارغاً للإزالة):", st.candidates[b.dataset.k]?.badge || ""); if (null !== nv) st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/badge`).set(nv.trim().slice(0, 25)); });
-            c.querySelectorAll(".lrca-c-rol").forEach(b => b.onclick = () => { const cur = st.candidates[b.dataset.k]?.role; st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/role`).set("queen" === cur ? "king" : "queen"); });
+            c.querySelectorAll(".lrca-c-edit").forEach(b => b.onclick = () => this.openEditCandidate(b.dataset.k));
             c.querySelectorAll(".lrca-c-frz").forEach(b => b.onclick = () => { const cur = Boolean(st.candidates[b.dataset.k]?.frozen); st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/frozen`).set(!cur).then(() => { this.log(cur ? "فك تجميد مرشح" : "تجميد مرشح", b.dataset.k); showToast(cur ? "✅ تم فك التجميد" : "❄️ تم تجميد التصويت للمرشح"); }); });
             c.querySelectorAll(".lrca-c-adj").forEach(b => b.onclick = () => { const cur = Number(st.candidates[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10); if (!isNaN(val)) st.db?.ref(`${ROOT}/candidates/${b.dataset.k}/bonusVotes`).set(val).then(() => { this.log("تعديل أصوات", b.dataset.k, String(val)); showToast("✅ تم التعديل"); }); });
             c.querySelectorAll(".lrca-c-del").forEach(b => b.onclick = () => { if (confirm(`استبعاد وحذف (${b.dataset.k})؟`)) st.db?.ref(`${ROOT}/candidates/${b.dataset.k}`).remove().then(() => { this.log("استبعاد مرشح", b.dataset.k); showToast("🗑️ تم الاستبعاد"); }); });
@@ -1903,7 +2149,7 @@ function renderMainBody() {
         }
     };
 
-   // ==================== الواجهة العامة + التحميل عند الطلب ====================
+    // ==================== الواجهة العامة + التحميل عند الطلب ====================
     function syncHeavyStreams() {
         if (!st.db) return;
         const need = Boolean(document.getElementById("lrc-modal")?.classList.contains("open") || document.getElementById("lrc-admin-modal"));
