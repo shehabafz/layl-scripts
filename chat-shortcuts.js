@@ -26,24 +26,30 @@
             || /admin|custom-ids-dash/i.test(id);
     }
 
-    // فحص الصلاحية بدون التأثر بحركة الـ opacity / visibility أثناء فتح القائمة
-    function isElementAllowed(el) {
+    // فحص سريع بدون getComputedStyle للاستخدام داخل الحلقات (صفر Layout Thrashing)
+    function isElementAllowedFast(el) {
         if (!el || !el.isConnected) return !1;
         if (el.hidden || el.disabled || el.hasAttribute("disabled") || "true" === el.getAttribute("aria-disabled")) return !1;
-        if (el.classList.contains("d-none") || "none" === el.style.display) return !1;
+        return !el.classList.contains("d-none") && "none" !== el.style.display;
+    }
+
+    // فحص دقيق لعنصر واحد فقط لحظة الضغط الفعلي
+    function isElementAllowed(el) {
+        if (!isElementAllowedFast(el)) return !1;
         return "none" !== window.getComputedStyle(el).display;
     }
 
+    // استخراج النص بدون cloneNode (أسرع بكثير ولا ينشئ عناصر بالذاكرة)
     function getCleanBtnText(btn) {
         if (!btn) return "";
         const txtEl = btn.querySelector(".modern-classic-text, .modern-classic-game-title");
         if (txtEl) return stripCount(txtEl.textContent);
-        const cl = btn.cloneNode(!0);
-        cl.querySelectorAll(".badge,.addon-badge,[class*='badge'],[class*='dot'],[class*='count'],.sr-only,.visually-hidden").forEach(x => x.remove());
-        return stripCount(cl.textContent);
+        const span = btn.querySelector(":scope > span:not([class*='badge']):not([class*='count'])");
+        if (span) return stripCount(span.textContent);
+        return stripCount(btn.textContent);
     }
 
-    function waitFor(checkFn, maxMs = 1800, stepMs = 70) {
+    function waitFor(checkFn, maxMs = 1600, stepMs = 80) {
         return new Promise(resolve => {
             const first = checkFn();
             if (first) return resolve(first);
@@ -71,7 +77,7 @@
         el.classList.toggle("lsc-lock", Boolean(isLock));
         el.textContent = msg;
         requestAnimationFrame(() => el.classList.add("show"));
-        toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+        toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
     }
 
     function denyAccess(msg) {
@@ -130,64 +136,52 @@
         el.classList.remove("lsc-pulse");
         void el.offsetWidth;
         el.classList.add("lsc-pulse");
-        setTimeout(() => el.classList.remove("lsc-pulse"), 2600);
+        setTimeout(() => el.classList.remove("lsc-pulse"), 2400);
         if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) {
             try { el.focus({ preventScroll: !0 }); } catch (e) {}
         }
     }
 
-    // البحث الشامل عن أزرار الشريط الرئيسي للشات (يشمل button و div و li و a)
+    // بحث محصور في أشرطة التنقل فقط بدل مسح كامل الصفحة (مع كاش لنتيجة البحث)
+    const navCache = {};
     function findNavButton(kind) {
+        if (navCache[kind] && isElementAllowedFast(navCache[kind])) return navCache[kind];
         const cfg = {
             settings: {
-                sels: [
-                    "#settings-btn", "#btn-settings", "#nav-settings", "#sidebar-settings-btn", "#tab-settings",
-                    '[data-tab="settings"]', '[data-sidebar-tab="settings"]', '[data-target="settings"]',
-                    '[onclick*="renderSettings"]', '[onclick*="openSettings"]', '[onclick*="settings" i]'
-                ],
+                sels: ["#settings-btn", "#btn-settings", "#nav-settings", "#sidebar-settings-btn", "#tab-settings", '[data-tab="settings"]', '[onclick*="renderSettings"]', '[onclick*="openSettings"]'],
                 words: ["الضبط", "الإعدادات", "الاعدادات"],
-                icons: [".fa-cog", ".fa-gear", ".fa-sliders-h", ".fa-sliders"]
+                icons: [".fa-cog", ".fa-gear", ".fa-sliders-h"]
             },
             wall: {
-                sels: [
-                    "#wall-btn", "#btn-wall", "#nav-wall", "#sidebar-wall-btn", "#tab-wall",
-                    '[data-tab="wall"]', '[data-sidebar-tab="wall"]', '[data-target="wall"]',
-                    '[onclick*="openWall"]', '[onclick*="renderWall"]', '[onclick*="wall" i]'
-                ],
+                sels: ["#wall-btn", "#btn-wall", "#nav-wall", "#sidebar-wall-btn", "#tab-wall", '[data-tab="wall"]', '[onclick*="openWall"]', '[onclick*="renderWall"]'],
                 words: ["الحائط", "حائط"],
-                icons: [".fa-newspaper", ".fa-stream", ".fa-rss", ".fa-th-list"]
+                icons: [".fa-newspaper", ".fa-stream", ".fa-rss"]
             },
             rooms: {
-                sels: [
-                    "#rooms-btn", "#btn-rooms", "#nav-rooms", "#sidebar-rooms-btn", "#tab-rooms",
-                    '[data-tab="rooms"]', '[data-sidebar-tab="rooms"]', '[data-target="rooms"]',
-                    '[onclick*="openRooms"]', '[onclick*="renderRooms"]', '[onclick*="rooms" i]'
-                ],
+                sels: ["#rooms-btn", "#btn-rooms", "#nav-rooms", "#sidebar-rooms-btn", "#tab-rooms", '[data-tab="rooms"]', '[onclick*="openRooms"]', '[onclick*="renderRooms"]'],
                 words: ["الغرف", "الرومات"],
                 icons: [".fa-door-open", ".fa-home"]
             }
         }[kind];
         if (!cfg) return null;
 
-        const isOuterNav = el => el && isElementAllowed(el)
-            && !el.closest("#right-sidebar, #lsc-menu, #messages-container, #chat-form, .modal, .lrc-ov, .lrca-ov, #login-overlay");
+        const isOuterNav = el => isElementAllowedFast(el)
+            && !el.closest("#right-sidebar, #lsc-menu, #messages-container, #chat-form, .modal, #login-overlay");
 
         for (const sel of cfg.sels) {
-            try {
-                for (const el of document.querySelectorAll(sel)) {
-                    if (isOuterNav(el)) return el;
-                }
-            } catch (e) {}
+            const el = document.querySelector(sel);
+            if (isOuterNav(el)) { navCache[kind] = el; return el; }
         }
-        const candidates = document.querySelectorAll("button, a, li, [role='button'], [onclick], [data-tab], [data-sidebar], [data-target], .nav-item, .nav-link");
-        for (const el of candidates) {
+
+        const scope = document.querySelectorAll("header button, nav button, footer button, .navbar button, .bottom-bar button, .top-bar button, [class*='nav'] button, [class*='header'] button, [data-tab], [data-sidebar-tab]");
+        for (const el of scope) {
             if (!isOuterNav(el)) continue;
-            const meta = norm(`${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${getCleanBtnText(el)}`);
-            if (meta && meta.length < 30 && cfg.words.some(w => meta.includes(w))) return el;
+            const meta = norm(`${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${el.textContent || ""}`);
+            if (meta && meta.length < 30 && cfg.words.some(w => meta.includes(w))) { navCache[kind] = el; return el; }
         }
-        for (const el of candidates) {
+        for (const el of scope) {
             if (!isOuterNav(el)) continue;
-            if (cfg.icons.some(ic => el.querySelector(ic))) return el;
+            if (cfg.icons.some(ic => el.querySelector(ic))) { navCache[kind] = el; return el; }
         }
         return null;
     }
@@ -200,18 +194,16 @@
             openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
             return !0;
         }
-
         if ("function" === typeof window.renderSettings) {
             openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
             try { window.renderSettings(); } catch (e) {}
             const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1100);
             if (ok) { openSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
         }
-
         const navBtn = findNavButton("settings");
         if (navBtn) {
             navBtn.click();
-            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1600);
+            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1500);
             if (ok) { openSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
         }
         return !1;
@@ -229,7 +221,6 @@
             cont.querySelector(".quick-chat-card")
         );
 
-        // إذا لم تكن نافذة الحائط مفتوحة فعلياً، نفتحها أولاً عبر زر الحائط الأصلي لتهيئة التبويبات
         if (!isWallOpenNow() || !isWallInit()) {
             const navBtn = findNavButton("wall");
             if (navBtn) {
@@ -245,7 +236,7 @@
         }
 
         openSidebarTab("sidebar-wall-container", "الحائط");
-        await delay(100);
+        await delay(90);
         return Boolean(document.getElementById("btn-tab-quickchat") || document.getElementById("wall-posts-container"));
     }
 
@@ -257,7 +248,7 @@
         const navBtn = findNavButton("rooms");
         if (!navBtn) return !1;
         navBtn.click();
-        return Boolean(await waitFor(isReady, 2000));
+        return Boolean(await waitFor(isReady, 1800));
     }
 
     function findAddonsButtonsInDOM() {
@@ -267,24 +258,17 @@
         if (box) {
             return Array.from(box.querySelectorAll(".modern-classic-list > button.modern-classic-item, button.modern-classic-item"));
         }
-        const out = [], seen = new Set();
-        sb.querySelectorAll(".modern-classic-icon-wrapper").forEach(wrap => {
-            const btn = wrap.closest("button");
-            if (!btn || seen.has(btn) || btn.closest("#games-list")) return;
-            seen.add(btn);
-            out.push(btn);
-        });
-        return out;
+        return [];
     }
 
     function findGamesBtnInAddons() {
         const btns = findAddonsButtonsInDOM();
         for (const b of btns) {
-            if (!isElementAllowed(b)) continue;
+            if (!isElementAllowedFast(b)) continue;
             if (/openGamesView/i.test(b.getAttribute("onclick") || "")) return b;
         }
         for (const b of btns) {
-            if (!isElementAllowed(b)) continue;
+            if (!isElementAllowedFast(b)) continue;
             const txt = getCleanBtnText(b);
             if ("الألعاب" === txt || "الالعاب" === txt) return b;
         }
@@ -302,7 +286,6 @@
             return !0;
         }
 
-        // التحقق من صلاحية زر الإضافات عبر الضبط أولاً
         const settingsOk = await ensureSettingsView();
         if (settingsOk) {
             const addonsBtn = await waitFor(() => document.querySelector('#sidebar-settings-container .classic-btn-addons, #sidebar-settings-container button[onclick*="renderAddons"]'), 900);
@@ -319,10 +302,10 @@
             return !1;
         }
 
-        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1800);
+        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1600);
         if (!ok) return !1;
-        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 600);
-        await delay(180);
+        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 550);
+        await delay(160);
         showContainerOf(getBox(), "الإضافات");
         scanAddonsInDOM();
         return !0;
@@ -342,7 +325,6 @@
             return !0;
         }
 
-        // إذا لم تكن قائمة الألعاب محمّلة بعد، نتأكد أولاً من صلاحية زر الألعاب داخل الإضافات
         if (!hasBuiltIn()) {
             const addonsOk = await openAddonsMenu();
             if (addonsOk) {
@@ -355,16 +337,14 @@
                 return !1;
             }
         } else if ("function" === typeof window.openGamesView) {
-            // تشغيل الدالة الرسمية حتى تتفعّل مستمعات الألعاب ولو كانت القائمة مغلقة
             try { window.openGamesView(); } catch (e) {}
         }
 
-        const ok = await waitFor(hasBuiltIn, 1800);
+        const ok = await waitFor(hasBuiltIn, 1600);
         if (!ok) return !1;
-        await waitFor(hasCustom, 900);
-        await delay(140);
+        await waitFor(hasCustom, 850);
+        await delay(120);
         if (openView) openSidebarTab("sidebar-games-container", "الألعاب");
-        attachGamesListObserver();
         scanGamesInDOM();
         return !0;
     }
@@ -388,10 +368,12 @@
         return !0;
     }
 
-    // ==================== الكاش والاكتشاف التلقائي ====================
+    // ==================== الكاش المجمّع (كتابة واحدة فقط عند التغيير) ====================
     const liveMenuItems = new Map();
     const domAddonsMap = new Map();
     const domGamesMap = new Map();
+    let saveAddonsTimer = null;
+    let saveGamesTimer = null;
 
     function loadCaches() {
         try {
@@ -404,63 +386,81 @@
         } catch (e) {}
     }
 
-    function saveAddonsCache() {
-        try {
-            localStorage.setItem(ADDONS_CACHE_KEY, JSON.stringify(Array.from(domAddonsMap.values()).filter(a => !isRestrictedLabel(a.label, a.id)).slice(0, 80)));
-        } catch (e) {}
+    function scheduleSaveAddons() {
+        clearTimeout(saveAddonsTimer);
+        saveAddonsTimer = setTimeout(() => {
+            try {
+                const arr = Array.from(domAddonsMap.values()).filter(a => !isRestrictedLabel(a.label, a.id)).slice(0, 80);
+                localStorage.setItem(ADDONS_CACHE_KEY, JSON.stringify(arr));
+            } catch (e) {}
+        }, 900);
     }
 
-    function saveGamesCache() {
-        try {
-            localStorage.setItem(GAMES_CACHE_KEY, JSON.stringify(Array.from(domGamesMap.values()).slice(0, 60)));
-        } catch (e) {}
+    function scheduleSaveGames() {
+        clearTimeout(saveGamesTimer);
+        saveGamesTimer = setTimeout(() => {
+            try {
+                localStorage.setItem(GAMES_CACHE_KEY, JSON.stringify(Array.from(domGamesMap.values()).slice(0, 60)));
+            } catch (e) {}
+        }, 900);
     }
 
     function registerLiveItem(it) {
-        if (!it || !it.text) return;
+        if (!it || !it.text) return !1;
         const label = stripCount(it.text);
-        if (!label) return;
+        if (!label) return !1;
         liveMenuItems.set(label, it);
-        if (!isRestrictedLabel(label, it.id || "")) {
-            domAddonsMap.set(label, {
-                label,
-                id: it.id || "",
-                icon: normIcon(it.icon, "fas fa-puzzle-piece"),
-                color: safeColor(it.iconColor, "#D4AF37")
-            });
-            saveAddonsCache();
+        if (isRestrictedLabel(label, it.id || "")) return !1;
+        const nextId = it.id || "";
+        const nextIcon = normIcon(it.icon, "fas fa-puzzle-piece");
+        const nextColor = safeColor(it.iconColor, "#D4AF37");
+        const prev = domAddonsMap.get(label);
+        if (!prev || prev.id !== nextId || prev.icon !== nextIcon || prev.color !== nextColor) {
+            domAddonsMap.set(label, { label, id: nextId, icon: nextIcon, color: nextColor });
+            return !0;
         }
+        return !1;
     }
 
     function absorbLaylMenu() {
-        if (Array.isArray(window.__laylMenuQueue)) window.__laylMenuQueue.forEach(registerLiveItem);
-        const lm = window.LaylMenu;
-        if (!lm) return !1;
-        try {
-            Object.keys(lm).forEach(k => {
-                const v = lm[k];
-                if (Array.isArray(v)) v.forEach(x => { if (x && x.text && "function" === typeof x.onClick) registerLiveItem(x); });
-            });
-        } catch (e) {}
-        if ("function" === typeof lm.register && !lm.register.__lscWrapped) {
-            const orig = lm.register.bind(lm);
-            const wrapped = function (item) { registerLiveItem(item); return orig(item); };
-            wrapped.__lscWrapped = !0;
-            lm.register = wrapped;
+        let changed = !1;
+        if (Array.isArray(window.__laylMenuQueue)) {
+            window.__laylMenuQueue.forEach(it => { if (registerLiveItem(it)) changed = !0; });
         }
-        return !0;
+        const lm = window.LaylMenu;
+        if (lm) {
+            try {
+                Object.keys(lm).forEach(k => {
+                    const v = lm[k];
+                    if (Array.isArray(v)) v.forEach(x => {
+                        if (x && x.text && "function" === typeof x.onClick && registerLiveItem(x)) changed = !0;
+                    });
+                });
+            } catch (e) {}
+            if ("function" === typeof lm.register && !lm.register.__lscWrapped) {
+                const orig = lm.register.bind(lm);
+                const wrapped = function (item) {
+                    if (registerLiveItem(item)) scheduleSaveAddons();
+                    return orig(item);
+                };
+                wrapped.__lscWrapped = !0;
+                lm.register = wrapped;
+            }
+        }
+        if (changed) scheduleSaveAddons();
     }
 
     function scanAddonsInDOM() {
         const btns = findAddonsButtonsInDOM();
         if (!btns.length) return 0;
         let changed = !1, found = 0;
-        btns.forEach(btn => {
-            if (!isElementAllowed(btn)) return;
+        for (let i = 0; i < btns.length; i++) {
+            const btn = btns[i];
+            if (!isElementAllowedFast(btn)) continue;
             const label = getCleanBtnText(btn);
-            if (!label || label.length < 2 || /العودة|رجوع|إغلاق/.test(label)) return;
-            if ("الألعاب" === label || "الالعاب" === label) return;
-            if (isRestrictedLabel(label, btn.id || "")) return;
+            if (!label || label.length < 2 || /العودة|رجوع|إغلاق/.test(label)) continue;
+            if ("الألعاب" === label || "الالعاب" === label) continue;
+            if (isRestrictedLabel(label, btn.id || "")) continue;
             found++;
             const icoEl = btn.querySelector("i");
             const wrap = btn.querySelector(".modern-classic-icon-wrapper");
@@ -471,8 +471,8 @@
                 domAddonsMap.set(label, { label, id: btn.id || "", icon, color });
                 changed = !0;
             }
-        });
-        if (changed) saveAddonsCache();
+        }
+        if (changed) scheduleSaveAddons();
         return found;
     }
 
@@ -480,9 +480,10 @@
         const btns = document.querySelectorAll("#games-list button.modern-classic-game-item");
         if (!btns.length) return 0;
         let changed = !1, found = 0;
-        btns.forEach(btn => {
+        for (let i = 0; i < btns.length; i++) {
+            const btn = btns[i];
             const label = getCleanBtnText(btn);
-            if (!label) return;
+            if (!label) continue;
             found++;
             const icoEl = btn.querySelector(".modern-classic-game-icon-wrapper i");
             const wrap = btn.querySelector(".modern-classic-game-icon-wrapper");
@@ -493,18 +494,19 @@
                 domGamesMap.set(label, { label, icon, color });
                 changed = !0;
             }
-        });
-        if (changed) saveGamesCache();
+        }
+        if (changed) scheduleSaveGames();
         return found;
     }
 
     function wrapHooks() {
         if ("function" === typeof window.renderAddons && !window.renderAddons.__lscWrapped) {
             const orig = window.renderAddons;
+            let t = null;
             const wrapped = function (...args) {
                 const res = orig.apply(this, args);
-                setTimeout(scanAddonsInDOM, 220);
-                setTimeout(scanAddonsInDOM, 650);
+                clearTimeout(t);
+                t = setTimeout(scanAddonsInDOM, 500);
                 return res;
             };
             wrapped.__lscWrapped = !0;
@@ -512,10 +514,11 @@
         }
         if ("function" === typeof window.openGamesView && !window.openGamesView.__lscWrapped) {
             const orig = window.openGamesView;
+            let t = null;
             const wrapped = function (...args) {
                 const res = orig.apply(this, args);
-                setTimeout(() => { attachGamesListObserver(); scanGamesInDOM(); }, 250);
-                setTimeout(scanGamesInDOM, 750);
+                clearTimeout(t);
+                t = setTimeout(scanGamesInDOM, 650);
                 return res;
             };
             wrapped.__lscWrapped = !0;
@@ -549,14 +552,14 @@
             }
             const btns = findAddonsButtonsInDOM();
             for (const b of btns) {
-                if (!isElementAllowed(b)) continue;
+                if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
-                if (!isRestrictedLabel(txt, b.id || "") && txt === target) return b;
+                if (!isRestrictedLabel(txt, b.id || "") && txt === target) return isElementAllowed(b) ? b : null;
             }
             for (const b of btns) {
-                if (!isElementAllowed(b)) continue;
+                if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
-                if (!isRestrictedLabel(txt, b.id || "") && txt && target && txt.includes(target)) return b;
+                if (!isRestrictedLabel(txt, b.id || "") && txt && target && txt.includes(target)) return isElementAllowed(b) ? b : null;
             }
             return null;
         };
@@ -571,7 +574,7 @@
         const opened = await openAddonsMenu();
         if (!opened) return denyAccess("🔒 قائمة الإضافات غير متاحة لحسابك");
 
-        const btn = await waitFor(findAllowedBtn, 1200);
+        const btn = await waitFor(findAllowedBtn, 1100);
         if (!btn) return denyAccess("🔒 هذه الإضافة غير متاحة لحسابك");
         btn.click();
         showToast(`🧩 تم فتح: ${target}`);
@@ -595,7 +598,7 @@
             return null;
         };
 
-        const btn = await waitFor(findBtn, 1000);
+        const btn = await waitFor(findBtn, 900);
         if (!isElementAllowed(btn)) return denyAccess("🔒 هذه اللعبة غير متاحة لحسابك");
         btn.click();
         showToast(`🎮 تم فتح: ${target}`);
@@ -617,7 +620,7 @@
                 if (name && name.includes(target)) { matched = c; break; }
             }
         }
-        if (!matched || "none" === window.getComputedStyle(matched).display) {
+        if (!matched || !isElementAllowed(matched)) {
             return denyAccess("🔒 هذه الغرفة غير متاحة لحسابك");
         }
         matched.click();
@@ -700,7 +703,7 @@
             icon: "fas fa-gamepad", color: "#06b6d4", keys: "العاب لعب games",
             async run() {
                 if (await ensureGamesLoaded(!0)) showToast("🎮 تم فتح قسم الألعاب");
-                else denyAccess("🔒 قسم الألعاب غير متاحة لحسابك");
+                else denyAccess("🔒 قسم الألعاب غير متاح لحسابك");
             }
         },
         {
@@ -741,13 +744,12 @@
                 if (!(await ensureWallView())) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
                 const tab = await waitFor(() => document.getElementById("btn-tab-quickchat"), 1200);
                 if (!isElementAllowed(tab)) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 4; i++) {
                     tab.click();
                     await delay(180);
                     const qc = document.getElementById("quick-chat-content");
                     if (qc && !qc.classList.contains("d-none")) break;
                 }
-                // خطة احتياطية لإظهار التبويب فوراً مع إبقاء نقر الزر الرسمي
                 const qc = document.getElementById("quick-chat-content");
                 const posts = document.getElementById("wall-posts-tab-content");
                 if (qc && qc.classList.contains("d-none")) {
@@ -787,7 +789,7 @@
     const CORE_BY_LABEL = new Map();
     CORE_SHORTCUTS.forEach(item => CORE_BY_LABEL.set(item.label, item));
 
-    // ==================== بناء القائمة الحية عند كتابة / ====================
+    // ==================== بناء القائمة الحية عند كتابة / فقط ====================
     function getLiveItems() {
         absorbLaylMenu();
         wrapHooks();
@@ -851,8 +853,8 @@
     const TOKEN_RE = /«(إعداد|إضافة|لعبة|غرفة):\s*([^»]{1,90})»/g;
     const TRIGGER_RE = /(?:^|[\s\n])\/([^\n\/«»]{0,28})$/;
 
-    // ==================== التنسيقات ====================
-    if (!document.getElementById("lsc-styles")) {
+    function injectStyles() {
+        if (document.getElementById("lsc-styles")) return;
         const st = document.createElement("style");
         st.id = "lsc-styles";
         st.textContent = `
@@ -955,7 +957,9 @@
         (document.head || document.documentElement).appendChild(st);
     }
 
-    // ==================== تحويل النصوص داخل الرسائل الجديدة فقط ====================
+    // ==================== تحويل النصوص بدون أي تعديل DOM للرسائل العادية ====================
+    const processedEls = new WeakSet();
+
     function resolveVisualMeta(type, label) {
         if ("إعداد" === type) {
             const c = CORE_BY_LABEL.get(label);
@@ -1003,21 +1007,23 @@
     }
 
     function transformMessageEl(el) {
-        if (!el || "1" === el.dataset.lscDone) return;
-        el.dataset.lscDone = "1";
-        const txt = el.textContent || "";
-        if (!txt.includes("«") || !txt.includes(":")) return;
+        if (!el || processedEls.has(el)) return;
+        processedEls.add(el);
+        const txt = el.textContent;
+        if (!txt || -1 === txt.indexOf("«") || -1 === txt.indexOf(":")) return;
 
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
         const textNodes = [];
         let node;
         while ((node = walker.nextNode())) {
+            const v = node.nodeValue;
+            if (!v || -1 === v.indexOf("«") || -1 === v.indexOf(":")) continue;
             if (node.parentElement?.closest(".lsc-chip")) continue;
-            if (node.nodeValue && node.nodeValue.includes("«") && node.nodeValue.includes(":")) textNodes.push(node);
+            textNodes.push(node);
         }
 
-        textNodes.forEach(tn => {
-            const val = tn.nodeValue;
+        for (let i = 0; i < textNodes.length; i++) {
+            const tn = textNodes[i], val = tn.nodeValue;
             TOKEN_RE.lastIndex = 0;
             let last = 0, match, changed = !1;
             const frag = document.createDocumentFragment();
@@ -1034,13 +1040,15 @@
                 if (last < val.length) frag.appendChild(document.createTextNode(val.slice(last)));
                 tn.parentNode?.replaceChild(frag, tn);
             }
-        });
+        }
     }
 
-    function scanContainer(root) {
-        if (!root) return;
-        if (root.matches?.(".message-text, .quoted-text")) transformMessageEl(root);
-        else root.querySelectorAll(".message-text:not([data-lsc-done]), .quoted-text:not([data-lsc-done])").forEach(transformMessageEl);
+    function scanNodeFast(node) {
+        if (!node || 1 !== node.nodeType) return;
+        const raw = node.textContent;
+        if (!raw || -1 === raw.indexOf("«")) return; // تجاوز فوري لـ 99% من الرسائل
+        if (node.matches(".message-text, .quoted-text")) transformMessageEl(node);
+        else node.querySelectorAll(".message-text, .quoted-text").forEach(transformMessageEl);
     }
 
     function executeChip(type, label) {
@@ -1057,21 +1065,26 @@
         }
     }
 
-    ["pointerdown", "mousedown"].forEach(evName => {
-        document.addEventListener(evName, e => {
-            if (e.target.closest?.(".lsc-chip")) e.stopPropagation();
-        }, !0);
-    });
+    function bindContainerClicks(container) {
+        if (!container || "1" === container.dataset.lscClickBound) return;
+        container.dataset.lscClickBound = "1";
 
-    document.addEventListener("click", e => {
-        const chip = e.target.closest?.(".lsc-chip");
-        if (!chip) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        const type = chip.dataset.lscType, label = chip.dataset.lscLabel;
-        setTimeout(() => executeChip(type, label), 15);
-    }, !0);
+        const stopChipEvent = e => {
+            if (1 === e.target?.nodeType && e.target.closest(".lsc-chip")) e.stopPropagation();
+        };
+        container.addEventListener("pointerdown", stopChipEvent, !0);
+        container.addEventListener("mousedown", stopChipEvent, !0);
+        container.addEventListener("click", e => {
+            if (1 !== e.target?.nodeType) return;
+            const chip = e.target.closest(".lsc-chip");
+            if (!chip) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            const type = chip.dataset.lscType, label = chip.dataset.lscLabel;
+            setTimeout(() => executeChip(type, label), 15);
+        }, !0);
+    }
 
     // ==================== قائمة الاقتراحات بعلامة / ====================
     const menuState = {
@@ -1080,6 +1093,16 @@
         allItems: [], items: [], selIdx: 0,
         inputEl: null, menuEl: null
     };
+
+    function onOutsideTap(e) {
+        if (!menuState.open) return;
+        if (e.target === menuState.inputEl || e.target?.closest?.("#lsc-menu")) return;
+        closeMenu();
+    }
+
+    function onWindowResize() {
+        if (menuState.open) positionMenu();
+    }
 
     function ensureMenu() {
         if (menuState.menuEl) return menuState.menuEl;
@@ -1223,8 +1246,12 @@
     function openMenu() {
         const m = ensureMenu();
         menuState.allItems = getLiveItems();
-        menuState.open = !0;
-        m.classList.add("open");
+        if (!menuState.open) {
+            menuState.open = !0;
+            m.classList.add("open");
+            document.addEventListener("pointerdown", onOutsideTap, { passive: !0 });
+            window.addEventListener("resize", onWindowResize, { passive: !0 });
+        }
         renderMenuList();
     }
 
@@ -1232,12 +1259,16 @@
         if (!menuState.open) return;
         menuState.open = !1;
         menuState.menuEl?.classList.remove("open");
+        document.removeEventListener("pointerdown", onOutsideTap);
+        window.removeEventListener("resize", onWindowResize);
     }
 
     function inspectInput(inp) {
         menuState.inputEl = inp;
-        const caret = inp.selectionStart ?? inp.value.length;
-        const beforeCaret = inp.value.slice(0, caret);
+        const val = inp.value;
+        if (!val || -1 === val.indexOf("/")) { closeMenu(); return; }
+        const caret = inp.selectionStart ?? val.length;
+        const beforeCaret = val.slice(0, caret);
         const m = beforeCaret.match(TRIGGER_RE);
         if (!m) { closeMenu(); return; }
         const q = m[1] || "";
@@ -1250,12 +1281,12 @@
         else openMenu();
     }
 
-    // ==================== المراقبات الخفيفة المعزولة (صفر عمل أثناء الدردشة) ====================
+    // ==================== ربط الرسائل والمدخل (تجميع داخل rAF) ====================
     function attachChatInput(inp) {
         if (!inp || "1" === inp.dataset.lscBound) return;
         inp.dataset.lscBound = "1";
-        inp.addEventListener("input", () => inspectInput(inp));
-        inp.addEventListener("click", () => { if (inp.value.includes("/")) inspectInput(inp); });
+        inp.addEventListener("input", () => inspectInput(inp), { passive: !0 });
+        inp.addEventListener("click", () => { if (inp.value && -1 !== inp.value.indexOf("/")) inspectInput(inp); }, { passive: !0 });
         inp.addEventListener("keydown", e => {
             if (!menuState.open) return;
             if ("Escape" === e.key) {
@@ -1284,99 +1315,70 @@
     function observeMessages(container) {
         if (!container || "1" === container.dataset.lscObs) return;
         container.dataset.lscObs = "1";
-        scanContainer(container);
+        bindContainerClicks(container);
+
+        // مسح مبدئي خفيف بعد استقرار الواجهة
+        const initScan = () => {
+            if (container.textContent && -1 !== container.textContent.indexOf("«")) {
+                container.querySelectorAll(".message-text, .quoted-text").forEach(transformMessageEl);
+            }
+        };
+        if ("function" === typeof window.requestIdleCallback) window.requestIdleCallback(initScan, { timeout: 1500 });
+        else setTimeout(initScan, 400);
+
+        let queue = [];
+        let rafId = 0;
+        const flush = () => {
+            rafId = 0;
+            const batch = queue;
+            queue = [];
+            for (let i = 0; i < batch.length; i++) scanNodeFast(batch[i]);
+        };
+
         const mo = new MutationObserver(muts => {
-            for (const m of muts) {
-                for (const n of m.addedNodes) {
-                    if (1 === n.nodeType) scanContainer(n);
+            for (let i = 0; i < muts.length; i++) {
+                const nodes = muts[i].addedNodes;
+                for (let j = 0; j < nodes.length; j++) {
+                    if (1 === nodes[j].nodeType) queue.push(nodes[j]);
                 }
             }
+            if (queue.length && !rafId) rafId = requestAnimationFrame(flush);
         });
         mo.observe(container, { childList: !0 });
     }
 
-    // مراقب خفيف ومعزول على حاوية الضبط/الإضافات فقط (لا يشتغل إلا لحظة فتح الضبط أو الإضافات)
-    function attachSettingsObserver() {
-        const cont = document.getElementById("sidebar-settings-container");
-        if (!cont || "1" === cont.dataset.lscSetObs) return;
-        cont.dataset.lscSetObs = "1";
-        let t = null;
-        const mo = new MutationObserver(() => {
-            if (!cont.querySelector(".modern-classic-addons-container")) return;
-            clearTimeout(t);
-            t = setTimeout(() => {
-                if (scanAddonsInDOM() > 0 && menuState.open) {
-                    menuState.allItems = getLiveItems();
-                    renderMenuList();
-                }
-                // مسحة ثانية خفيفة لالتقاط إضافات LaylMenu المتأخرة
-                setTimeout(scanAddonsInDOM, 450);
-            }, 250);
-        });
-        mo.observe(cont, { childList: !0 });
+    // ==================== التشغيل المؤجل لما بعد إتمام تسجيل الدخول تماماً ====================
+    function isChatReady() {
+        const mc = document.getElementById("messages-container");
+        const lo = document.getElementById("login-overlay");
+        return Boolean(mc && null !== mc.offsetParent && (!lo || lo.classList.contains("d-none") || "none" === lo.style.display));
     }
 
-    // مراقب خفيف ومعزول على قائمة الألعاب فقط (لا يشتغل إلا لحظة تحميل الألعاب)
-    function attachGamesListObserver() {
-        const gCont = document.getElementById("sidebar-games-container");
-        if (gCont && "1" !== gCont.dataset.lscGmObs) {
-            gCont.dataset.lscGmObs = "1";
-            let t = null;
-            new MutationObserver(() => {
-                clearTimeout(t);
-                t = setTimeout(() => {
-                    attachGamesListObserver();
-                    if (scanGamesInDOM() > 0 && menuState.open) {
-                        menuState.allItems = getLiveItems();
-                        renderMenuList();
-                    }
-                }, 250);
-            }).observe(gCont, { childList: !0 });
-        }
-        const gList = document.getElementById("games-list");
-        if (gList && "1" !== gList.dataset.lscGlObs) {
-            gList.dataset.lscGlObs = "1";
-            let t2 = null;
-            new MutationObserver(() => {
-                clearTimeout(t2);
-                t2 = setTimeout(() => {
-                    if (scanGamesInDOM() > 0 && menuState.open) {
-                        menuState.allItems = getLiveItems();
-                        renderMenuList();
-                    }
-                }, 250);
-            }).observe(gList, { childList: !0 });
-        }
-    }
-
-    document.addEventListener("pointerdown", e => {
-        if (!menuState.open) return;
-        if (e.target.closest("#lsc-menu") || e.target === menuState.inputEl) return;
-        closeMenu();
-    });
-
-    window.addEventListener("resize", () => { if (menuState.open) positionMenu(); });
-
-    loadCaches();
-    let lmTries = 0;
-    const lmPoll = setInterval(() => {
+    let initialized = !1;
+    function startAfterLogin() {
+        if (initialized) return;
+        initialized = !0;
+        injectStyles();
+        loadCaches();
+        absorbLaylMenu();
         wrapHooks();
-        if (absorbLaylMenu() || ++lmTries >= 15) clearInterval(lmPoll);
-    }, 500);
 
-    let bootTries = 0;
-    function boot() {
         const inp = document.getElementById("chat-input");
         const box = document.getElementById("messages-container");
+        const prv = document.getElementById("private-chat-messages-inner");
         if (inp) attachChatInput(inp);
         if (box) observeMessages(box);
-        const prv = document.getElementById("private-chat-messages-inner");
         if (prv) observeMessages(prv);
-        attachSettingsObserver();
-        attachGamesListObserver();
-        wrapHooks();
-        if ((!inp || !box) && ++bootTries < 40) setTimeout(boot, 800);
     }
 
-    boot();
+    if (isChatReady()) {
+        setTimeout(startAfterLogin, 1200);
+    } else {
+        const waitLogin = setInterval(() => {
+            if (isChatReady()) {
+                clearInterval(waitLogin);
+                setTimeout(startAfterLogin, 1200);
+            }
+        }, 1000);
+    }
 }();
