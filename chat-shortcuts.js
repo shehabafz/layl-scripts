@@ -175,14 +175,14 @@
 
     function highlightEl(el) {
         if (!el) return;
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.remove("lsc-pulse");
-        void el.offsetWidth;
         el.classList.add("lsc-pulse");
+        requestAnimationFrame(() => {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) {
+                try { el.focus({ preventScroll: !0 }); } catch (e) {}
+            }
+        });
         setTimeout(() => el.classList.remove("lsc-pulse"), 2200);
-        if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) {
-            try { el.focus({ preventScroll: !0 }); } catch (e) {}
-        }
     }
 
     const navCache = {};
@@ -1190,7 +1190,7 @@
         }, !0);
     }
 
-    // ==================== قائمة الاقتراحات بعلامة / (مع visualViewport) ====================
+    // ==================== قائمة الاقتراحات بعلامة / (بدون Forced Reflow) ====================
     const menuState = {
         open: !1, cat: "الكل", query: "",
         slashIdx: -1, caretEnd: -1,
@@ -1204,8 +1204,13 @@
         closeMenu();
     }
 
+    let vpRaf = 0;
     function onViewportChange() {
-        if (menuState.open) positionMenu();
+        if (!menuState.open || vpRaf) return;
+        vpRaf = requestAnimationFrame(() => {
+            vpRaf = 0;
+            positionMenu();
+        });
     }
 
     function ensureMenu() {
@@ -1232,43 +1237,57 @@
                 menuState.cat = b.dataset.cat;
                 menuState.selIdx = 0;
                 m.querySelectorAll(".lsc-cat").forEach(x => x.classList.toggle("active", x === b));
-                renderMenuList();
+                renderMenuList(!1);
             };
         });
         return m;
     }
 
-    function positionMenu() {
-        const m = menuState.menuEl, inp = menuState.inputEl;
-        if (!m || !inp || !menuState.open) return;
-        const bar = inp.closest(".chat-input-container, .quick-chat-form-container, .wall-post-form-container, .private-chat-input-area") || inp;
-        const rect = bar.getBoundingClientRect();
+    function measureBar(inp) {
+        const bar = inp?.closest(".chat-input-container, .quick-chat-form-container, .wall-post-form-container, .private-chat-input-area") || inp;
+        if (!bar) return null;
+        const r = bar.getBoundingClientRect();
         const vv = window.visualViewport;
-        const vw = vv ? vv.width : window.innerWidth;
-        const vTop = vv ? vv.offsetTop : 0;
-        const vLeft = vv ? vv.offsetLeft : 0;
+        return {
+            top: r.top,
+            bottom: r.bottom,
+            right: r.right,
+            vw: vv ? vv.width : window.innerWidth,
+            vTop: vv ? vv.offsetTop : 0,
+            vLeft: vv ? vv.offsetLeft : 0,
+            vBottom: vv ? (vv.offsetTop + vv.height) : window.innerHeight,
+            winH: window.innerHeight
+        };
+    }
 
-        const mw = Math.min(355, Math.max(240, vw - 16));
+    function applyMenuPosition(rect) {
+        const m = menuState.menuEl;
+        if (!m || !rect) return;
+        const mw = Math.min(355, Math.max(240, rect.vw - 16));
         m.style.width = `${mw}px`;
 
         let left = rect.right - mw;
-        left = Math.max(vLeft + 8, Math.min(left, vLeft + vw - mw - 8));
+        left = Math.max(rect.vLeft + 8, Math.min(left, rect.vLeft + rect.vw - mw - 8));
         m.style.left = `${Math.round(left)}px`;
         m.style.right = "auto";
 
-        const spaceAbove = rect.top - vTop - 10;
+        const spaceAbove = rect.top - rect.vTop - 10;
         const listEl = m.querySelector("#lsc-mlist");
         if (spaceAbove >= 145) {
             if (listEl) listEl.style.maxHeight = `${Math.min(240, Math.max(95, Math.floor(spaceAbove - 92)))}px`;
             m.style.top = "auto";
-            m.style.bottom = `${Math.max(8, Math.round(window.innerHeight - rect.top + 8))}px`;
+            m.style.bottom = `${Math.max(8, Math.round(rect.winH - rect.top + 8))}px`;
         } else {
-            const vBottom = vv ? (vv.offsetTop + vv.height) : window.innerHeight;
-            const spaceBelow = Math.max(120, vBottom - rect.bottom - 10);
+            const spaceBelow = Math.max(120, rect.vBottom - rect.bottom - 10);
             if (listEl) listEl.style.maxHeight = `${Math.min(220, Math.max(90, Math.floor(spaceBelow - 92)))}px`;
             m.style.bottom = "auto";
-            m.style.top = `${Math.max(vTop + 8, Math.round(rect.bottom + 8))}px`;
+            m.style.top = `${Math.max(rect.vTop + 8, Math.round(rect.bottom + 8))}px`;
         }
+    }
+
+    function positionMenu() {
+        if (!menuState.open || !menuState.inputEl) return;
+        applyMenuPosition(measureBar(menuState.inputEl));
     }
 
     function getFilteredItems() {
@@ -1297,17 +1316,22 @@
         const start = menuState.slashIdx;
         const end = menuState.caretEnd;
         const token = `«${item.type}: ${item.label}» `;
+        closeMenu();
         if (start >= 0 && end >= start) {
             inp.value = val.slice(0, start) + token + val.slice(end);
             const pos = start + token.length;
-            inp.focus();
-            try { inp.setSelectionRange(pos, pos); } catch (e) {}
+            requestAnimationFrame(() => {
+                inp.focus();
+                try { inp.setSelectionRange(pos, pos); } catch (e) {}
+                inp.dispatchEvent(new Event("input", { bubbles: !0 }));
+            });
         } else {
             inp.value = (val ? val + " " : "") + token;
-            inp.focus();
+            requestAnimationFrame(() => {
+                inp.focus();
+                inp.dispatchEvent(new Event("input", { bubbles: !0 }));
+            });
         }
-        inp.dispatchEvent(new Event("input", { bubbles: !0 }));
-        closeMenu();
     }
 
     async function runSilentSync(kind, btn) {
@@ -1330,11 +1354,11 @@
         else if (prevTab) openSidebarTab(prevTab);
 
         menuState.allItems = getLiveItems();
-        renderMenuList();
+        renderMenuList(!1);
         showToast(cnt > 0 ? `✅ تم التحديث (${cnt})` : "⚠️ تعذر الجلب حالياً", cnt <= 0);
     }
 
-    function renderMenuList() {
+    function renderMenuList(fromKeyNav = !1) {
         const m = ensureMenu();
         const listEl = m.querySelector("#lsc-mlist");
         const { recents, main } = getFilteredItems();
@@ -1385,28 +1409,33 @@
             b.onclick = () => insertSelected(menuState.items[Number(b.dataset.idx)]);
         });
 
-        const activeRow = listEl.querySelector(".lsc-item.sel");
-        if (activeRow) activeRow.scrollIntoView({ block: "nearest" });
-        positionMenu();
+        requestAnimationFrame(() => {
+            if (!menuState.open) return;
+            if (fromKeyNav) listEl.querySelector(".lsc-item.sel")?.scrollIntoView({ block: "nearest" });
+            else listEl.scrollTop = 0;
+        });
     }
 
     function openMenu() {
+        const rect = measureBar(menuState.inputEl);
         const m = ensureMenu();
         menuState.allItems = getLiveItems();
         if (!menuState.open) {
             menuState.open = !0;
+            applyMenuPosition(rect);
             m.classList.add("open");
             document.addEventListener("pointerdown", onOutsideTap, { passive: !0 });
             window.addEventListener("resize", onViewportChange, { passive: !0 });
             window.visualViewport?.addEventListener("resize", onViewportChange, { passive: !0 });
             window.visualViewport?.addEventListener("scroll", onViewportChange, { passive: !0 });
         }
-        renderMenuList();
+        renderMenuList(!1);
     }
 
     function closeMenu() {
         if (!menuState.open) return;
         menuState.open = !1;
+        if (vpRaf) { cancelAnimationFrame(vpRaf); vpRaf = 0; }
         menuState.menuEl?.classList.remove("open");
         document.removeEventListener("pointerdown", onOutsideTap);
         window.removeEventListener("resize", onViewportChange);
@@ -1428,7 +1457,7 @@
         menuState.caretEnd = caret;
         menuState.query = q;
         menuState.selIdx = 0;
-        if (menuState.open) renderMenuList();
+        if (menuState.open) renderMenuList(!1);
         else openMenu();
     }
 
@@ -1447,13 +1476,13 @@
                 e.preventDefault(); e.stopImmediatePropagation();
                 if (menuState.items.length) {
                     menuState.selIdx = (menuState.selIdx + 1) % menuState.items.length;
-                    renderMenuList();
+                    renderMenuList(!0);
                 }
             } else if ("ArrowUp" === e.key) {
                 e.preventDefault(); e.stopImmediatePropagation();
                 if (menuState.items.length) {
                     menuState.selIdx = (menuState.selIdx - 1 + menuState.items.length) % menuState.items.length;
-                    renderMenuList();
+                    renderMenuList(!0);
                 }
             } else if ("Enter" === e.key || "Tab" === e.key) {
                 if (menuState.items.length) {
