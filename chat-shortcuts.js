@@ -5,9 +5,30 @@
 
     const ADDONS_CACHE_KEY = "lsc_dynamic_addons_v3";
     const GAMES_CACHE_KEY = "lsc_dynamic_games_v2";
+    const RECENT_CACHE_KEY = "lsc_recent_v1";
+
+    const SUPPORTED_INPUT_IDS = new Set([
+        "chat-input",
+        "quick-chat-input",
+        "wall-post-input",
+        "private-chat-input"
+    ]);
+
+    const MSG_TEXT_SEL = ".message-text, .quoted-text, .quick-chat-text, .wall-post-text, .wall-comment-text, .private-message-text, .private-msg-text, .pm-text";
+    const SKIP_PARENT_SEL = ".lsc-chip, .user-identity, .message-time, .quick-chat-time, .wall-post-time, button, a, input, textarea, script, style";
+
     const norm = s => String(s || "").replace(/\s+/g, " ").trim();
     const stripCount = s => norm(s).replace(/\s*\(\d+\)\s*$/, "").trim();
     const esc = s => String(s || "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+
+    const normAr = s => String(s || "")
+        .toLowerCase()
+        .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+        .replace(/[أإآٱ]/g, "ا")
+        .replace(/ة/g, "ه")
+        .replace(/ى/g, "ي")
+        .replace(/\s+/g, " ")
+        .trim();
 
     function normIcon(ico, fallback = "fas fa-bolt") {
         const s = norm(ico);
@@ -22,11 +43,11 @@
     }
 
     function isRestrictedLabel(txt, id = "") {
-        return /لوحة تحكم|لوحه التحكم|لوحات التحكم|لوحة الاقتراحات|إدارة التقويم|ادارة التقويم|إدارة الغرفة|ادارة الغرفة|إرسال إعلان|ارسال اعلان|إرسال استفتاء|ارسال استفتاء/i.test(txt)
+        return /لوحة\s*تحكم|لوحه\s*التحكم|لوحات\s*التحكم|لوحة\s*الاقتراحات|(?:^|\s)[إا]دارة\s|إرسال\s*إعلان|ارسال\s*اعلان|إرسال\s*استفتاء|ارسال\s*استفتاء/i.test(txt)
             || /admin|custom-ids-dash/i.test(id);
     }
 
-    // فحص سريع بدون getComputedStyle للاستخدام داخل الحلقات (صفر Layout Thrashing)
+    // فحص فوري بدون getComputedStyle (صفر Layout Reflow)
     function isElementAllowedFast(el) {
         if (!el || !el.isConnected) return !1;
         if (el.hidden || el.disabled || el.hasAttribute("disabled") || "true" === el.getAttribute("aria-disabled")) return !1;
@@ -39,7 +60,6 @@
         return "none" !== window.getComputedStyle(el).display;
     }
 
-    // استخراج النص بدون cloneNode (أسرع بكثير ولا ينشئ عناصر بالذاكرة)
     function getCleanBtnText(btn) {
         if (!btn) return "";
         const txtEl = btn.querySelector(".modern-classic-text, .modern-classic-game-title");
@@ -49,7 +69,7 @@
         return stripCount(btn.textContent);
     }
 
-    function waitFor(checkFn, maxMs = 1600, stepMs = 80) {
+    function waitFor(checkFn, maxMs = 1500, stepMs = 80) {
         return new Promise(resolve => {
             const first = checkFn();
             if (first) return resolve(first);
@@ -63,10 +83,31 @@
     }
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
+    const runIdle = fn => "function" === typeof window.requestIdleCallback
+        ? window.requestIdleCallback(fn, { timeout: 1800 })
+        : setTimeout(fn, 250);
+
+    // ==================== تهيئة الواجهة والكاش عند أول حاجة فعلية فقط ====================
+    let uiReady = !1;
+    let cachesLoaded = !1;
+
+    function ensureBootedUI() {
+        if (!cachesLoaded) {
+            cachesLoaded = !0;
+            loadCaches();
+            absorbLaylMenu();
+            wrapHooks();
+        }
+        if (!uiReady) {
+            uiReady = !0;
+            injectStyles();
+        }
+    }
 
     // ==================== تنبيه خفيف وأدوات فتح القوائم ====================
     let toastTimer = null;
     function showToast(msg, isLock = !1) {
+        ensureBootedUI();
         let el = document.getElementById("lsc-toast");
         if (!el) {
             el = document.createElement("div");
@@ -89,7 +130,8 @@
         const sb = document.getElementById("right-sidebar");
         if (!sb) return "";
         const tabs = sb.querySelectorAll("#sidebar-content > .sidebar-tab-content");
-        for (const t of tabs) {
+        for (let i = 0; i < tabs.length; i++) {
+            const t = tabs[i];
             if (!t.classList.contains("d-none") && "none" !== t.style.display) return t.id;
         }
         return "";
@@ -101,11 +143,12 @@
         sb.classList.remove("d-none");
         if ("none" === sb.style.display) sb.style.display = "";
         sb.classList.add("open");
-        sb.querySelectorAll("#sidebar-content > .sidebar-tab-content").forEach(el => {
-            const show = el.id === tabId;
+        const tabs = sb.querySelectorAll("#sidebar-content > .sidebar-tab-content");
+        for (let i = 0; i < tabs.length; i++) {
+            const el = tabs[i], show = el.id === tabId;
             el.classList.toggle("d-none", !show);
             if (show && "none" === el.style.display) el.style.display = "";
-        });
+        }
         const ttl = document.getElementById("sidebar-title");
         if (ttl && title) ttl.textContent = title;
         const ws = document.getElementById("wall-settings-container");
@@ -136,13 +179,12 @@
         el.classList.remove("lsc-pulse");
         void el.offsetWidth;
         el.classList.add("lsc-pulse");
-        setTimeout(() => el.classList.remove("lsc-pulse"), 2400);
+        setTimeout(() => el.classList.remove("lsc-pulse"), 2200);
         if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) {
             try { el.focus({ preventScroll: !0 }); } catch (e) {}
         }
     }
 
-    // بحث محصور في أشرطة التنقل فقط بدل مسح كامل الصفحة (مع كاش لنتيجة البحث)
     const navCache = {};
     function findNavButton(kind) {
         if (navCache[kind] && isElementAllowedFast(navCache[kind])) return navCache[kind];
@@ -168,18 +210,20 @@
         const isOuterNav = el => isElementAllowedFast(el)
             && !el.closest("#right-sidebar, #lsc-menu, #messages-container, #chat-form, .modal, #login-overlay");
 
-        for (const sel of cfg.sels) {
-            const el = document.querySelector(sel);
+        for (let i = 0; i < cfg.sels.length; i++) {
+            const el = document.querySelector(cfg.sels[i]);
             if (isOuterNav(el)) { navCache[kind] = el; return el; }
         }
 
         const scope = document.querySelectorAll("header button, nav button, footer button, .navbar button, .bottom-bar button, .top-bar button, [class*='nav'] button, [class*='header'] button, [data-tab], [data-sidebar-tab]");
-        for (const el of scope) {
+        for (let i = 0; i < scope.length; i++) {
+            const el = scope[i];
             if (!isOuterNav(el)) continue;
             const meta = norm(`${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${el.textContent || ""}`);
             if (meta && meta.length < 30 && cfg.words.some(w => meta.includes(w))) { navCache[kind] = el; return el; }
         }
-        for (const el of scope) {
+        for (let i = 0; i < scope.length; i++) {
+            const el = scope[i];
             if (!isOuterNav(el)) continue;
             if (cfg.icons.some(ic => el.querySelector(ic))) { navCache[kind] = el; return el; }
         }
@@ -225,18 +269,19 @@
             const navBtn = findNavButton("wall");
             if (navBtn) {
                 navBtn.click();
-                await waitFor(() => isWallOpenNow() && isWallInit(), 1600);
+                await waitFor(() => isWallOpenNow() && isWallInit(), 1500);
             } else if ("function" === typeof window.openWall) {
                 try { window.openWall(); } catch (e) {}
-                await waitFor(isWallInit, 1400);
+                await waitFor(isWallInit, 1300);
             } else if ("function" === typeof window.renderWall) {
                 try { window.renderWall(); } catch (e) {}
-                await waitFor(isWallInit, 1400);
+                await waitFor(isWallInit, 1300);
             }
         }
 
         openSidebarTab("sidebar-wall-container", "الحائط");
         await delay(90);
+        bindWallAndQuickChat();
         return Boolean(document.getElementById("btn-tab-quickchat") || document.getElementById("wall-posts-container"));
     }
 
@@ -248,26 +293,24 @@
         const navBtn = findNavButton("rooms");
         if (!navBtn) return !1;
         navBtn.click();
-        return Boolean(await waitFor(isReady, 1800));
+        return Boolean(await waitFor(isReady, 1600));
     }
 
     function findAddonsButtonsInDOM() {
         const sb = document.getElementById("right-sidebar");
         if (!sb) return [];
         const box = sb.querySelector(".modern-classic-addons-container");
-        if (box) {
-            return Array.from(box.querySelectorAll(".modern-classic-list > button.modern-classic-item, button.modern-classic-item"));
-        }
-        return [];
+        return box ? Array.from(box.querySelectorAll(".modern-classic-list > button.modern-classic-item, button.modern-classic-item")) : [];
     }
 
     function findGamesBtnInAddons() {
         const btns = findAddonsButtonsInDOM();
-        for (const b of btns) {
-            if (!isElementAllowedFast(b)) continue;
-            if (/openGamesView/i.test(b.getAttribute("onclick") || "")) return b;
+        for (let i = 0; i < btns.length; i++) {
+            const b = btns[i];
+            if (isElementAllowedFast(b) && /openGamesView/i.test(b.getAttribute("onclick") || "")) return b;
         }
-        for (const b of btns) {
+        for (let i = 0; i < btns.length; i++) {
+            const b = btns[i];
             if (!isElementAllowedFast(b)) continue;
             const txt = getCleanBtnText(b);
             if ("الألعاب" === txt || "الالعاب" === txt) return b;
@@ -302,10 +345,10 @@
             return !1;
         }
 
-        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1600);
+        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1500);
         if (!ok) return !1;
         await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 550);
-        await delay(160);
+        await delay(150);
         showContainerOf(getBox(), "الإضافات");
         scanAddonsInDOM();
         return !0;
@@ -340,10 +383,10 @@
             try { window.openGamesView(); } catch (e) {}
         }
 
-        const ok = await waitFor(hasBuiltIn, 1600);
+        const ok = await waitFor(hasBuiltIn, 1500);
         if (!ok) return !1;
         await waitFor(hasCustom, 850);
-        await delay(120);
+        await delay(110);
         if (openView) openSidebarTab("sidebar-games-container", "الألعاب");
         scanGamesInDOM();
         return !0;
@@ -368,10 +411,11 @@
         return !0;
     }
 
-    // ==================== الكاش المجمّع (كتابة واحدة فقط عند التغيير) ====================
+    // ==================== الكاش المجمّع (يُحمّل ويُحفظ عند الحاجة فقط) ====================
     const liveMenuItems = new Map();
     const domAddonsMap = new Map();
     const domGamesMap = new Map();
+    let recentList = [];
     let saveAddonsTimer = null;
     let saveGamesTimer = null;
 
@@ -384,6 +428,16 @@
             const g = JSON.parse(localStorage.getItem(GAMES_CACHE_KEY) || "[]");
             if (Array.isArray(g)) g.forEach(x => { if (x?.label) domGamesMap.set(x.label, x); });
         } catch (e) {}
+        try {
+            const r = JSON.parse(localStorage.getItem(RECENT_CACHE_KEY) || "[]");
+            if (Array.isArray(r)) recentList = r.filter(x => x && x.type && x.label && !isRestrictedLabel(x.label)).slice(0, 3);
+        } catch (e) {}
+    }
+
+    function recordRecent(type, label) {
+        if (!type || !label || isRestrictedLabel(label)) return;
+        recentList = [{ type, label }, ...recentList.filter(x => !(x.type === type && x.label === label))].slice(0, 3);
+        try { localStorage.setItem(RECENT_CACHE_KEY, JSON.stringify(recentList)); } catch (e) {}
     }
 
     function scheduleSaveAddons() {
@@ -393,7 +447,7 @@
                 const arr = Array.from(domAddonsMap.values()).filter(a => !isRestrictedLabel(a.label, a.id)).slice(0, 80);
                 localStorage.setItem(ADDONS_CACHE_KEY, JSON.stringify(arr));
             } catch (e) {}
-        }, 900);
+        }, 1000);
     }
 
     function scheduleSaveGames() {
@@ -402,7 +456,7 @@
             try {
                 localStorage.setItem(GAMES_CACHE_KEY, JSON.stringify(Array.from(domGamesMap.values()).slice(0, 60)));
             } catch (e) {}
-        }, 900);
+        }, 1000);
     }
 
     function registerLiveItem(it) {
@@ -440,14 +494,14 @@
             if ("function" === typeof lm.register && !lm.register.__lscWrapped) {
                 const orig = lm.register.bind(lm);
                 const wrapped = function (item) {
-                    if (registerLiveItem(item)) scheduleSaveAddons();
+                    if (registerLiveItem(item) && cachesLoaded) scheduleSaveAddons();
                     return orig(item);
                 };
                 wrapped.__lscWrapped = !0;
                 lm.register = wrapped;
             }
         }
-        if (changed) scheduleSaveAddons();
+        if (changed && cachesLoaded) scheduleSaveAddons();
     }
 
     function scanAddonsInDOM() {
@@ -506,7 +560,7 @@
             const wrapped = function (...args) {
                 const res = orig.apply(this, args);
                 clearTimeout(t);
-                t = setTimeout(scanAddonsInDOM, 500);
+                t = setTimeout(() => { if (cachesLoaded) scanAddonsInDOM(); }, 550);
                 return res;
             };
             wrapped.__lscWrapped = !0;
@@ -518,7 +572,7 @@
             const wrapped = function (...args) {
                 const res = orig.apply(this, args);
                 clearTimeout(t);
-                t = setTimeout(scanGamesInDOM, 650);
+                t = setTimeout(() => { if (cachesLoaded) scanGamesInDOM(); }, 650);
                 return res;
             };
             wrapped.__lscWrapped = !0;
@@ -551,12 +605,14 @@
                 if (byId && isElementAllowed(byId) && !isRestrictedLabel(getCleanBtnText(byId), byId.id)) return byId;
             }
             const btns = findAddonsButtonsInDOM();
-            for (const b of btns) {
+            for (let i = 0; i < btns.length; i++) {
+                const b = btns[i];
                 if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
                 if (!isRestrictedLabel(txt, b.id || "") && txt === target) return isElementAllowed(b) ? b : null;
             }
-            for (const b of btns) {
+            for (let i = 0; i < btns.length; i++) {
+                const b = btns[i];
                 if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
                 if (!isRestrictedLabel(txt, b.id || "") && txt && target && txt.includes(target)) return isElementAllowed(b) ? b : null;
@@ -588,12 +644,12 @@
 
         const findBtn = () => {
             const btns = document.querySelectorAll("#games-list button.modern-classic-game-item");
-            for (const b of btns) {
-                if (getCleanBtnText(b) === target) return b;
+            for (let i = 0; i < btns.length; i++) {
+                if (getCleanBtnText(btns[i]) === target) return btns[i];
             }
-            for (const b of btns) {
-                const title = getCleanBtnText(b);
-                if (title && title.includes(target)) return b;
+            for (let i = 0; i < btns.length; i++) {
+                const title = getCleanBtnText(btns[i]);
+                if (title && title.includes(target)) return btns[i];
             }
             return null;
         };
@@ -610,14 +666,14 @@
         await ensureRoomsLoaded();
         const cards = document.querySelectorAll("#sidebar-rooms-container .room-card");
         let matched = null;
-        for (const c of cards) {
-            const name = norm(c.querySelector(".fw-bold")?.textContent || "");
-            if (name === target) { matched = c; break; }
+        for (let i = 0; i < cards.length; i++) {
+            const name = norm(cards[i].querySelector(".fw-bold")?.textContent || "");
+            if (name === target) { matched = cards[i]; break; }
         }
         if (!matched) {
-            for (const c of cards) {
-                const name = norm(c.querySelector(".fw-bold")?.textContent || "");
-                if (name && name.includes(target)) { matched = c; break; }
+            for (let i = 0; i < cards.length; i++) {
+                const name = norm(cards[i].querySelector(".fw-bold")?.textContent || "");
+                if (name && name.includes(target)) { matched = cards[i]; break; }
             }
         }
         if (!matched || !isElementAllowed(matched)) {
@@ -761,6 +817,7 @@
                     if (pTab) { pTab.classList.remove("active"); pTab.setAttribute("aria-selected", "false"); }
                     tab.click();
                 }
+                bindWallAndQuickChat();
                 showToast("⚡ تم فتح: الدردشة السريعة");
             }
         },
@@ -790,61 +847,79 @@
     CORE_SHORTCUTS.forEach(item => CORE_BY_LABEL.set(item.label, item));
 
     // ==================== بناء القائمة الحية عند كتابة / فقط ====================
+    function buildSearchText(it) {
+        return normAr(`${it.label} ${it.cat} ${it.hint} ${it.keys || ""}`);
+    }
+
     function getLiveItems() {
+        ensureBootedUI();
         absorbLaylMenu();
-        wrapHooks();
         scanAddonsInDOM();
         scanGamesInDOM();
 
-        const result = CORE_SHORTCUTS.map(c => Object.assign({ type: "إعداد" }, c));
+        const result = CORE_SHORTCUTS.map(c => {
+            const it = Object.assign({ type: "إعداد" }, c);
+            it._q = buildSearchText(it);
+            return it;
+        });
         const seenAddons = new Set();
 
         liveMenuItems.forEach((it, label) => {
             if (isRestrictedLabel(label, it.id || "")) return;
             if ("function" === typeof it.condition && !it.condition()) return;
             seenAddons.add(label);
-            result.push({
+            const row = {
                 type: "إضافة", label, cat: "الإضافات", hint: "الإضافات ◂ فتح مباشر",
                 icon: normIcon(it.icon, "fas fa-puzzle-piece"),
                 color: safeColor(it.iconColor, "#D4AF37"),
                 keys: `اضافة اضافات ${label}`
-            });
+            };
+            row._q = buildSearchText(row);
+            result.push(row);
         });
 
         domAddonsMap.forEach((it, label) => {
             if (seenAddons.has(label) || isRestrictedLabel(label, it.id || "")) return;
             seenAddons.add(label);
-            result.push({
+            const row = {
                 type: "إضافة", label, cat: "الإضافات", hint: "الإضافات ◂ فتح مباشر",
                 icon: it.icon || "fas fa-puzzle-piece",
                 color: it.color || "#D4AF37",
                 keys: `اضافة اضافات ${label}`
-            });
+            };
+            row._q = buildSearchText(row);
+            result.push(row);
         });
 
         domGamesMap.forEach((it, label) => {
-            result.push({
+            const row = {
                 type: "لعبة", label, cat: "الألعاب", hint: "الألعاب ◂ تشغيل مباشر",
                 icon: it.icon || "fas fa-gamepad",
-                color: it.color || "#06b6d4",
+                color: it.color || "#22d3ee",
                 keys: `لعبة العاب ${label}`
-            });
+            };
+            row._q = buildSearchText(row);
+            result.push(row);
         });
 
         const seenRooms = new Set();
-        document.querySelectorAll("#sidebar-rooms-container .room-card").forEach(card => {
+        const cards = document.querySelectorAll("#sidebar-rooms-container .room-card");
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
             const label = norm(card.querySelector(".fw-bold")?.textContent || "");
-            if (!label || seenRooms.has(label)) return;
+            if (!label || seenRooms.has(label)) continue;
             seenRooms.add(label);
             const locked = Boolean(card.querySelector(".fa-lock"));
-            result.push({
+            const row = {
                 type: "غرفة", label, cat: "الغرف والحائط",
                 hint: locked ? "دخول للغرفة (برمز سري 🔒)" : "دخول مباشر للغرفة",
                 icon: locked ? "fas fa-lock" : "fas fa-door-open",
-                color: locked ? "#f59e0b" : "#10b981",
+                color: locked ? "#f59e0b" : "#34d399",
                 keys: `روم غرفة غرف ${label}`
-            });
-        });
+            };
+            row._q = buildSearchText(row);
+            result.push(row);
+        }
 
         return result;
     }
@@ -859,12 +934,12 @@
         st.id = "lsc-styles";
         st.textContent = `
         #lsc-menu{
-            position:fixed;z-index:2147483640;direction:rtl;
-            width:min(365px,calc(100vw - 16px));
-            background:linear-gradient(180deg,#171a2d 0%,#0d0f1b 100%);
+            position:fixed;z-index:2147483645;direction:rtl;
+            width:min(355px,calc(100vw - 16px));
+            background:#131627;
             border:1px solid rgba(212,175,55,.45);
-            border-radius:16px;
-            box-shadow:0 16px 40px rgba(0,0,0,.78);
+            border-radius:14px;
+            box-shadow:0 12px 30px rgba(0,0,0,.72);
             color:#f8fafc;font-family:system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
             display:none;flex-direction:column;overflow:hidden;box-sizing:border-box;
         }
@@ -891,11 +966,15 @@
             cursor:pointer;white-space:nowrap;font-family:inherit;
         }
         .lsc-cat.active{background:#D4AF37;color:#111;border-color:#D4AF37}
-        .lsc-mlist{max-height:245px;overflow-y:auto;padding:6px;-webkit-overflow-scrolling:touch}
+        .lsc-mlist{max-height:240px;overflow-y:auto;padding:6px;-webkit-overflow-scrolling:touch}
         .lsc-mlist::-webkit-scrollbar{width:5px}
         .lsc-mlist::-webkit-scrollbar-thumb{background:rgba(212,175,55,.35);border-radius:10px}
+        .lsc-sec-lbl{
+            font-size:10.5px;font-weight:800;color:#94a3b8;padding:4px 8px 3px;
+            display:flex;align-items:center;gap:5px;
+        }
         .lsc-item{
-            width:100%;background:transparent;border:1px solid transparent;border-radius:11px;
+            width:100%;background:transparent;border:1px solid transparent;border-radius:10px;
             padding:7px 9px;display:flex;align-items:center;gap:9px;text-align:right;
             cursor:pointer;color:#f1f5f9;font-family:inherit;box-sizing:border-box;
         }
@@ -919,37 +998,41 @@
         .lsc-chip{
             display:inline-flex;align-items:center;gap:6px;vertical-align:middle;
             margin:2px 3px;padding:4px 11px 4px 9px;border-radius:20px;
-            background:linear-gradient(135deg,#1a1d30,#111322);
+            background:#16192b;
             border:1px solid rgba(212,175,55,.65);
-            color:#fef3c7!important;font-size:12px;font-weight:800;line-height:1.35;
+            color:#f8fafc!important;font-size:12px;font-weight:800;line-height:1.35;
             cursor:pointer;font-family:inherit;direction:rtl;
-            box-shadow:0 2px 8px rgba(0,0,0,.22);
             max-width:100%;white-space:nowrap;
         }
-        .lsc-chip:active{transform:scale(.96)}
+        .lsc-chip:active{opacity:.85}
         .lsc-chip-ico{font-size:12px;flex-shrink:0}
         .lsc-chip-go{
             font-size:9.5px;color:#111;background:#D4AF37;
             padding:1px 6px;border-radius:10px;font-weight:900;margin-right:2px;
         }
+        .lsc-chip[data-lsc-type="إعداد"]{border-color:rgba(167,139,250,.65)}
+        .lsc-chip[data-lsc-type="إعداد"] .lsc-chip-go{background:#a78bfa}
+        .lsc-chip[data-lsc-type="لعبة"]{border-color:rgba(34,211,238,.65)}
+        .lsc-chip[data-lsc-type="لعبة"] .lsc-chip-go{background:#22d3ee}
+        .lsc-chip[data-lsc-type="غرفة"]{border-color:rgba(52,211,153,.65)}
+        .lsc-chip[data-lsc-type="غرفة"] .lsc-chip-go{background:#34d399}
+
         .quoted-text .lsc-chip{padding:2px 7px;font-size:11px}
         .quoted-text .lsc-chip-go{display:none}
+        .quick-chat-text .lsc-chip,.wall-post-text .lsc-chip{font-size:11.5px;padding:3px 9px 3px 8px}
 
         .lsc-pulse{
-            animation:lscPulseGlow 1.1s ease-in-out 2!important;
-            outline:2px solid #D4AF37!important;outline-offset:2px;border-radius:12px;
-        }
-        @keyframes lscPulseGlow{
-            0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,.2)}
-            50%{box-shadow:0 0 0 7px rgba(212,175,55,.55)}
+            outline:2px solid #D4AF37!important;
+            outline-offset:2px;
+            border-radius:12px;
         }
 
         #lsc-toast{
-            position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(14px);
+            position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(10px);
             background:#121526;border:1px solid rgba(212,175,55,.7);color:#fde68a;
             padding:7px 16px;border-radius:24px;font-size:12px;font-weight:800;
-            box-shadow:0 10px 26px rgba(0,0,0,.6);z-index:2147483647;
-            opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;direction:rtl;
+            box-shadow:0 8px 20px rgba(0,0,0,.55);z-index:2147483647;
+            opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;direction:rtl;
         }
         #lsc-toast.lsc-lock{background:#2d1118;border-color:#ef4444;color:#fecaca}
         #lsc-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -957,7 +1040,7 @@
         (document.head || document.documentElement).appendChild(st);
     }
 
-    // ==================== تحويل النصوص بدون أي تعديل DOM للرسائل العادية ====================
+    // ==================== تحويل النصوص بدون لمس DOM للرسائل العادية ====================
     const processedEls = new WeakSet();
 
     function resolveVisualMeta(type, label) {
@@ -978,9 +1061,9 @@
         }
         if ("لعبة" === type) {
             const cached = domGamesMap.get(stripCount(label));
-            return { icon: cached?.icon || "fas fa-gamepad", color: cached?.color || "#06b6d4", actionText: "لعب", valid: !0 };
+            return { icon: cached?.icon || "fas fa-gamepad", color: cached?.color || "#22d3ee", actionText: "لعب", valid: !0 };
         }
-        if ("غرفة" === type) return { icon: "fas fa-door-open", color: "#10b981", actionText: "دخول", valid: !0 };
+        if ("غرفة" === type) return { icon: "fas fa-door-open", color: "#34d399", actionText: "دخول", valid: !0 };
         return { valid: !1 };
     }
 
@@ -1012,13 +1095,15 @@
         const txt = el.textContent;
         if (!txt || -1 === txt.indexOf("«") || -1 === txt.indexOf(":")) return;
 
+        ensureBootedUI();
+
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
         const textNodes = [];
         let node;
         while ((node = walker.nextNode())) {
             const v = node.nodeValue;
             if (!v || -1 === v.indexOf("«") || -1 === v.indexOf(":")) continue;
-            if (node.parentElement?.closest(".lsc-chip")) continue;
+            if (node.parentElement?.closest(SKIP_PARENT_SEL)) continue;
             textNodes.push(node);
         }
 
@@ -1043,31 +1128,50 @@
         }
     }
 
-    function scanNodeFast(node) {
+    function scanNodeFast(node, allowFallback = !1) {
         if (!node || 1 !== node.nodeType) return;
-        const raw = node.textContent;
-        if (!raw || -1 === raw.indexOf("«")) return; // تجاوز فوري لـ 99% من الرسائل
-        if (node.matches(".message-text, .quoted-text")) transformMessageEl(node);
-        else node.querySelectorAll(".message-text, .quoted-text").forEach(transformMessageEl);
-    }
-
-    function executeChip(type, label) {
-        try {
-            if ("إعداد" === type) {
-                const item = CORE_BY_LABEL.get(label);
-                if (item) item.run();
-                else denyAccess();
-            } else if ("إضافة" === type) runDynamicAddon(label);
-            else if ("لعبة" === type) runDynamicGame(label);
-            else if ("غرفة" === type) runDynamicRoom(label);
-        } catch (err) {
-            showToast("⚠️ تعذر فتح الاختصار حالياً", !0);
+        if (node.matches(MSG_TEXT_SEL)) {
+            transformMessageEl(node);
+            return;
+        }
+        const targets = node.querySelectorAll(MSG_TEXT_SEL);
+        if (targets.length) {
+            for (let i = 0; i < targets.length; i++) transformMessageEl(targets[i]);
+        } else if (allowFallback) {
+            const raw = node.textContent;
+            if (raw && -1 !== raw.indexOf("«") && -1 !== raw.indexOf(":")) transformMessageEl(node);
         }
     }
 
+    // قفل لمنع التكرار عند الضغط السريع مرتين
+    let execBusy = !1;
+    let execResetTimer = null;
+    async function executeChip(type, label) {
+        if (execBusy) return;
+        execBusy = !0;
+        clearTimeout(execResetTimer);
+        execResetTimer = setTimeout(() => { execBusy = !1; }, 2500);
+        try {
+            ensureBootedUI();
+            if ("إعداد" === type) {
+                const item = CORE_BY_LABEL.get(label);
+                if (item) await item.run();
+                else denyAccess();
+            } else if ("إضافة" === type) await runDynamicAddon(label);
+            else if ("لعبة" === type) await runDynamicGame(label);
+            else if ("غرفة" === type) await runDynamicRoom(label);
+        } catch (err) {
+            showToast("⚠️ تعذر فتح الاختصار حالياً", !0);
+        } finally {
+            clearTimeout(execResetTimer);
+            setTimeout(() => { execBusy = !1; }, 220);
+        }
+    }
+
+    const clickBound = new WeakSet();
     function bindContainerClicks(container) {
-        if (!container || "1" === container.dataset.lscClickBound) return;
-        container.dataset.lscClickBound = "1";
+        if (!container || clickBound.has(container)) return;
+        clickBound.add(container);
 
         const stopChipEvent = e => {
             if (1 === e.target?.nodeType && e.target.closest(".lsc-chip")) e.stopPropagation();
@@ -1086,7 +1190,7 @@
         }, !0);
     }
 
-    // ==================== قائمة الاقتراحات بعلامة / ====================
+    // ==================== قائمة الاقتراحات بعلامة / (مع visualViewport) ====================
     const menuState = {
         open: !1, cat: "الكل", query: "",
         slashIdx: -1, caretEnd: -1,
@@ -1100,11 +1204,12 @@
         closeMenu();
     }
 
-    function onWindowResize() {
+    function onViewportChange() {
         if (menuState.open) positionMenu();
     }
 
     function ensureMenu() {
+        ensureBootedUI();
         if (menuState.menuEl) return menuState.menuEl;
         const m = document.createElement("div");
         m.id = "lsc-menu";
@@ -1136,27 +1241,58 @@
     function positionMenu() {
         const m = menuState.menuEl, inp = menuState.inputEl;
         if (!m || !inp || !menuState.open) return;
-        const bar = inp.closest(".chat-input-container") || inp;
+        const bar = inp.closest(".chat-input-container, .quick-chat-form-container, .wall-post-form-container, .private-chat-input-area") || inp;
         const rect = bar.getBoundingClientRect();
-        const bottomGap = Math.max(8, window.innerHeight - rect.top + 8);
-        const rightGap = Math.max(8, window.innerWidth - rect.right + 4);
-        m.style.bottom = `${bottomGap}px`;
-        m.style.right = `${Math.min(rightGap, Math.max(8, window.innerWidth - m.offsetWidth - 8))}px`;
-        m.style.left = "auto";
+        const vv = window.visualViewport;
+        const vw = vv ? vv.width : window.innerWidth;
+        const vTop = vv ? vv.offsetTop : 0;
+        const vLeft = vv ? vv.offsetLeft : 0;
+
+        const mw = Math.min(355, Math.max(240, vw - 16));
+        m.style.width = `${mw}px`;
+
+        let left = rect.right - mw;
+        left = Math.max(vLeft + 8, Math.min(left, vLeft + vw - mw - 8));
+        m.style.left = `${Math.round(left)}px`;
+        m.style.right = "auto";
+
+        const spaceAbove = rect.top - vTop - 10;
+        const listEl = m.querySelector("#lsc-mlist");
+        if (spaceAbove >= 145) {
+            if (listEl) listEl.style.maxHeight = `${Math.min(240, Math.max(95, Math.floor(spaceAbove - 92)))}px`;
+            m.style.top = "auto";
+            m.style.bottom = `${Math.max(8, Math.round(window.innerHeight - rect.top + 8))}px`;
+        } else {
+            const vBottom = vv ? (vv.offsetTop + vv.height) : window.innerHeight;
+            const spaceBelow = Math.max(120, vBottom - rect.bottom - 10);
+            if (listEl) listEl.style.maxHeight = `${Math.min(220, Math.max(90, Math.floor(spaceBelow - 92)))}px`;
+            m.style.bottom = "auto";
+            m.style.top = `${Math.max(vTop + 8, Math.round(rect.bottom + 8))}px`;
+        }
     }
 
     function getFilteredItems() {
-        const q = menuState.query.trim().toLowerCase();
-        return menuState.allItems.filter(it => {
-            if (!q && "الكل" !== menuState.cat && it.cat !== menuState.cat) return !1;
-            if (!q) return !0;
-            return `${it.label} ${it.cat} ${it.hint} ${it.keys || ""}`.toLowerCase().includes(q);
-        });
+        const q = normAr(menuState.query);
+        if (q) {
+            return { recents: [], main: menuState.allItems.filter(it => it._q.includes(q)) };
+        }
+        const main = "الكل" === menuState.cat
+            ? menuState.allItems
+            : menuState.allItems.filter(it => it.cat === menuState.cat);
+
+        let recents = [];
+        if ("الكل" === menuState.cat && recentList.length) {
+            recents = recentList
+                .map(r => menuState.allItems.find(it => it.type === r.type && it.label === r.label))
+                .filter(Boolean);
+        }
+        return { recents, main };
     }
 
     function insertSelected(item) {
         const inp = menuState.inputEl;
         if (!inp || !item) return;
+        recordRecent(item.type, item.label);
         const val = inp.value;
         const start = menuState.slashIdx;
         const end = menuState.caretEnd;
@@ -1201,9 +1337,10 @@
     function renderMenuList() {
         const m = ensureMenu();
         const listEl = m.querySelector("#lsc-mlist");
-        const items = getFilteredItems();
-        menuState.items = items;
-        if (menuState.selIdx >= items.length) menuState.selIdx = 0;
+        const { recents, main } = getFilteredItems();
+        const flat = [...recents, ...main];
+        menuState.items = flat;
+        if (menuState.selIdx >= flat.length) menuState.selIdx = 0;
 
         const hasAddons = menuState.allItems.some(x => "إضافة" === x.type);
         const hasGames = menuState.allItems.some(x => "لعبة" === x.type);
@@ -1218,17 +1355,27 @@
             syncHtml = `<button type="button" class="lsc-sync-btn" data-sync="rooms"><i class="fas fa-sync-alt"></i> جلب قائمة الغرف الآن</button>`;
         }
 
-        if (!items.length) {
+        const renderRow = (it, idx) => `
+            <button type="button" class="lsc-item ${idx === menuState.selIdx ? "sel" : ""}" data-idx="${idx}">
+                <div class="lsc-iico" style="color:${esc(it.color)};"><i class="${esc(it.icon)}"></i></div>
+                <div class="lsc-itxt">
+                    <div class="lsc-ilbl">${esc(it.label)}</div>
+                    <div class="lsc-ihint">${esc(it.hint)}</div>
+                </div>
+            </button>`;
+
+        if (!flat.length) {
             listEl.innerHTML = syncHtml + '<div class="lsc-empty">لا يوجد اختصار مطابق — جرّب كلمة أخرى</div>';
         } else {
-            listEl.innerHTML = syncHtml + items.map((it, i) => `
-                <button type="button" class="lsc-item ${i === menuState.selIdx ? "sel" : ""}" data-idx="${i}">
-                    <div class="lsc-iico" style="color:${esc(it.color)};"><i class="${esc(it.icon)}"></i></div>
-                    <div class="lsc-itxt">
-                        <div class="lsc-ilbl">${esc(it.label)}</div>
-                        <div class="lsc-ihint">${esc(it.hint)}</div>
-                    </div>
-                </button>`).join("");
+            let html = syncHtml;
+            let idx = 0;
+            if (recents.length) {
+                html += '<div class="lsc-sec-lbl"><i class="fas fa-history" style="color:#D4AF37;"></i> الأخيرة</div>';
+                for (let i = 0; i < recents.length; i++) html += renderRow(recents[i], idx++);
+                html += '<div class="lsc-sec-lbl"><i class="fas fa-bolt" style="color:#94a3b8;"></i> جميع الاختصارات</div>';
+            }
+            for (let i = 0; i < main.length; i++) html += renderRow(main[i], idx++);
+            listEl.innerHTML = html;
         }
 
         const syncBtn = listEl.querySelector("[data-sync]");
@@ -1250,7 +1397,9 @@
             menuState.open = !0;
             m.classList.add("open");
             document.addEventListener("pointerdown", onOutsideTap, { passive: !0 });
-            window.addEventListener("resize", onWindowResize, { passive: !0 });
+            window.addEventListener("resize", onViewportChange, { passive: !0 });
+            window.visualViewport?.addEventListener("resize", onViewportChange, { passive: !0 });
+            window.visualViewport?.addEventListener("scroll", onViewportChange, { passive: !0 });
         }
         renderMenuList();
     }
@@ -1260,19 +1409,21 @@
         menuState.open = !1;
         menuState.menuEl?.classList.remove("open");
         document.removeEventListener("pointerdown", onOutsideTap);
-        window.removeEventListener("resize", onWindowResize);
+        window.removeEventListener("resize", onViewportChange);
+        window.visualViewport?.removeEventListener("resize", onViewportChange);
+        window.visualViewport?.removeEventListener("scroll", onViewportChange);
     }
 
     function inspectInput(inp) {
         menuState.inputEl = inp;
         const val = inp.value;
-        if (!val || -1 === val.indexOf("/")) { closeMenu(); return; }
+        if (!val || -1 === val.indexOf("/")) { if (menuState.open) closeMenu(); return; }
         const caret = inp.selectionStart ?? val.length;
         const beforeCaret = val.slice(0, caret);
         const m = beforeCaret.match(TRIGGER_RE);
-        if (!m) { closeMenu(); return; }
+        if (!m) { if (menuState.open) closeMenu(); return; }
         const q = m[1] || "";
-        if (/^\s/.test(q)) { closeMenu(); return; }
+        if (/^\s/.test(q)) { if (menuState.open) closeMenu(); return; }
         menuState.slashIdx = beforeCaret.lastIndexOf("/");
         menuState.caretEnd = caret;
         menuState.query = q;
@@ -1281,14 +1432,15 @@
         else openMenu();
     }
 
-    // ==================== ربط الرسائل والمدخل (تجميع داخل rAF) ====================
+    // ==================== ربط المدخلات والحاويات بمعالجة مجزّأة (Chunked rAF) ====================
+    const inputBound = new WeakSet();
     function attachChatInput(inp) {
-        if (!inp || "1" === inp.dataset.lscBound) return;
-        inp.dataset.lscBound = "1";
+        if (!inp || inputBound.has(inp)) return;
+        inputBound.add(inp);
         inp.addEventListener("input", () => inspectInput(inp), { passive: !0 });
         inp.addEventListener("click", () => { if (inp.value && -1 !== inp.value.indexOf("/")) inspectInput(inp); }, { passive: !0 });
         inp.addEventListener("keydown", e => {
-            if (!menuState.open) return;
+            if (!menuState.open || menuState.inputEl !== inp) return;
             if ("Escape" === e.key) {
                 e.preventDefault(); e.stopImmediatePropagation(); closeMenu();
             } else if ("ArrowDown" === e.key) {
@@ -1312,30 +1464,48 @@
         }, !0);
     }
 
-    function observeMessages(container) {
-        if (!container || "1" === container.dataset.lscObs) return;
-        container.dataset.lscObs = "1";
+    const obsBound = new WeakSet();
+    function observeMessages(container, allowFallback = !1, skipWhenWallClosed = !1) {
+        if (!container || obsBound.has(container)) return;
+        obsBound.add(container);
         bindContainerClicks(container);
 
-        // مسح مبدئي خفيف بعد استقرار الواجهة
-        const initScan = () => {
-            if (container.textContent && -1 !== container.textContent.indexOf("«")) {
-                container.querySelectorAll(".message-text, .quoted-text").forEach(transformMessageEl);
-            }
+        const isWallClosed = () => {
+            if (!skipWhenWallClosed) return !1;
+            const sb = document.getElementById("right-sidebar");
+            const wc = document.getElementById("sidebar-wall-container");
+            return !sb || !sb.classList.contains("open") || !wc || wc.classList.contains("d-none");
         };
-        if ("function" === typeof window.requestIdleCallback) window.requestIdleCallback(initScan, { timeout: 1500 });
-        else setTimeout(initScan, 400);
 
         let queue = [];
         let rafId = 0;
+
+        // تقطيع العمل إلى 12 عنصر كحد أقصى في الإطار لمنع أي تعليق على الجوالات القديمة
         const flush = () => {
             rafId = 0;
-            const batch = queue;
-            queue = [];
-            for (let i = 0; i < batch.length; i++) scanNodeFast(batch[i]);
+            if (isWallClosed()) { queue.length = 0; return; }
+            const limit = Math.min(queue.length, 12);
+            for (let i = 0; i < limit; i++) scanNodeFast(queue[i], allowFallback);
+            if (queue.length > limit) {
+                queue = queue.slice(limit);
+                rafId = requestAnimationFrame(flush);
+            } else {
+                queue.length = 0;
+            }
         };
 
+        // مسح أولي مجزّأ أثناء خمول المتصفح فقط
+        if (!isWallClosed()) {
+            runIdle(() => {
+                if (isWallClosed()) return;
+                const ch = container.children;
+                for (let i = 0; i < ch.length; i++) queue.push(ch[i]);
+                if (queue.length && !rafId) rafId = requestAnimationFrame(flush);
+            });
+        }
+
         const mo = new MutationObserver(muts => {
+            if (isWallClosed()) return;
             for (let i = 0; i < muts.length; i++) {
                 const nodes = muts[i].addedNodes;
                 for (let j = 0; j < nodes.length; j++) {
@@ -1347,38 +1517,102 @@
         mo.observe(container, { childList: !0 });
     }
 
-    // ==================== التشغيل المؤجل لما بعد إتمام تسجيل الدخول تماماً ====================
-    function isChatReady() {
+    function scanExistingVisible(container, allowFallback = !1) {
+        if (!container) return;
+        const ch = container.children;
+        let idx = 0;
+        const step = () => {
+            const end = Math.min(idx + 12, ch.length);
+            for (; idx < end; idx++) scanNodeFast(ch[idx], allowFallback);
+            if (idx < ch.length) requestAnimationFrame(step);
+        };
+        if (ch.length) requestAnimationFrame(step);
+    }
+
+    function bindWallAndQuickChat() {
+        document.querySelectorAll("#quick-chat-messages").forEach(el => {
+            observeMessages(el, !1, !0);
+            scanExistingVisible(el, !1);
+        });
+        document.querySelectorAll("#wall-posts-container").forEach(el => {
+            observeMessages(el, !1, !0);
+            scanExistingVisible(el, !1);
+        });
+    }
+
+    // مراقب خفيف جداً على سمة class فقط (لا يشتغل إلا لحظة فتح نافذة الحائط)
+    let wallClassWatched = !1;
+    function watchWallOpenOnce() {
+        if (wallClassWatched) return;
+        const wc = document.getElementById("sidebar-wall-container");
+        if (!wc) return;
+        wallClassWatched = !0;
+        let t = null;
+        new MutationObserver(() => {
+            if (wc.classList.contains("d-none")) return;
+            clearTimeout(t);
+            t = setTimeout(bindWallAndQuickChat, 250);
+        }).observe(wc, { attributes: !0, attributeFilter: ["class"] });
+    }
+
+    // ==================== التشغيل المؤجل لما بعد تسجيل الدخول (صفر مؤقتات دائمة) ====================
+    function isLoginHidden() {
         const mc = document.getElementById("messages-container");
+        if (!mc) return !1;
         const lo = document.getElementById("login-overlay");
-        return Boolean(mc && null !== mc.offsetParent && (!lo || lo.classList.contains("d-none") || "none" === lo.style.display));
+        return !lo || lo.classList.contains("d-none") || "none" === lo.style.display;
     }
 
     let initialized = !1;
     function startAfterLogin() {
         if (initialized) return;
         initialized = !0;
-        injectStyles();
-        loadCaches();
-        absorbLaylMenu();
-        wrapHooks();
 
-        const inp = document.getElementById("chat-input");
-        const box = document.getElementById("messages-container");
-        const prv = document.getElementById("private-chat-messages-inner");
-        if (inp) attachChatInput(inp);
-        if (box) observeMessages(box);
-        if (prv) observeMessages(prv);
+        const mainInp = document.getElementById("chat-input");
+        const mainBox = document.getElementById("messages-container");
+        const prvBox = document.getElementById("private-chat-messages-inner");
+        if (mainInp) attachChatInput(mainInp);
+        if (mainBox) observeMessages(mainBox, !1, !1);
+        if (prvBox) observeMessages(prvBox, !0, !1);
+        watchWallOpenOnce();
+
+        // ربط كسول تلقائي لأي مربع كتابة مدعوم لحظة الضغط بداخله
+        document.addEventListener("focusin", e => {
+            const t = e.target;
+            if (!t || !SUPPORTED_INPUT_IDS.has(t.id)) return;
+            attachChatInput(t);
+            if ("quick-chat-input" === t.id || "wall-post-input" === t.id) bindWallAndQuickChat();
+            else if ("private-chat-input" === t.id) {
+                const pb = document.getElementById("private-chat-messages-inner");
+                if (pb) observeMessages(pb, !0, !1);
+            }
+        }, { passive: !0 });
     }
 
-    if (isChatReady()) {
-        setTimeout(startAfterLogin, 1200);
+    function scheduleStart() {
+        setTimeout(() => runIdle(startAfterLogin), 2200);
+    }
+
+    if (isLoginHidden()) {
+        scheduleStart();
     } else {
-        const waitLogin = setInterval(() => {
-            if (isChatReady()) {
-                clearInterval(waitLogin);
-                setTimeout(startAfterLogin, 1200);
-            }
-        }, 1000);
+        const lo = document.getElementById("login-overlay");
+        if (lo) {
+            const loginObs = new MutationObserver(() => {
+                if (isLoginHidden()) {
+                    loginObs.disconnect();
+                    scheduleStart();
+                }
+            });
+            loginObs.observe(lo, { attributes: !0, attributeFilter: ["class", "style"] });
+        } else {
+            let tries = 0;
+            const t = setInterval(() => {
+                if (isLoginHidden() || ++tries >= 20) {
+                    clearInterval(t);
+                    if (isLoginHidden()) scheduleStart();
+                }
+            }, 1500);
+        }
     }
 }();
