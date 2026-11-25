@@ -60,6 +60,11 @@
         return "none" !== window.getComputedStyle(el).display;
     }
 
+    // فحص الظهور الفعلي داخل الشاشة (يُستخدم فقط أثناء انتظار فتح القوائم بعد الضغط)
+    function isVisibleInDOM(el) {
+        return isElementAllowed(el) && el.getClientRects().length > 0;
+    }
+
     function getCleanBtnText(btn) {
         if (!btn) return "";
         const txtEl = btn.querySelector(".modern-classic-text, .modern-classic-game-title");
@@ -149,7 +154,7 @@
         return "";
     }
 
-    function openSidebarTab(tabId, title) {
+    function showSidebarTab(tabId, title) {
         const sb = document.getElementById("right-sidebar");
         if (!sb) return !1;
         sb.classList.remove("d-none");
@@ -172,7 +177,7 @@
         const sb = document.getElementById("right-sidebar");
         if (!sb || !el) return !1;
         const tab = el.closest(".sidebar-tab-content");
-        if (tab && tab.id) return openSidebarTab(tab.id, title);
+        if (tab && tab.id) return showSidebarTab(tab.id, title);
         sb.classList.remove("d-none");
         if ("none" === sb.style.display) sb.style.display = "";
         sb.classList.add("open");
@@ -180,6 +185,9 @@
     }
 
     function closeSidebarSilently() {
+        if ("function" === typeof window.closeSidebar) {
+            try { window.closeSidebar(); return; } catch (e) {}
+        }
         const closeBtn = document.getElementById("close-sidebar");
         if (closeBtn) closeBtn.click();
         else document.getElementById("right-sidebar")?.classList.remove("open");
@@ -197,127 +205,59 @@
         setTimeout(() => el.classList.remove("lsc-pulse"), 2200);
     }
 
-    // بحث دقيق ومُخزّن في الكاش عن أزرار الشريط الرئيسي (لا يعمل إلا لحظة الضغط على اختصار)
-    const navCache = {};
+    // ربط مباشر بأزرار الشريط السفلي الرسمية في الشات
+    const NAV_IDS = {
+        settings: "settings-btn",
+        wall: "wall-tab-btn",
+        rooms: "rooms-tab-btn"
+    };
+
     function findNavButton(kind) {
-        if (navCache[kind] && isElementAllowedFast(navCache[kind])) return navCache[kind];
-        const cfg = {
-            settings: {
-                sels: [
-                    "#settings-btn", "#btn-settings", "#nav-settings", "#sidebar-settings-btn", "#tab-settings", "#open-settings-btn", "#toggle-settings",
-                    '[data-tab="settings"]', '[data-sidebar-tab="settings"]', '[data-target="settings"]', '[data-panel="settings"]',
-                    '[onclick*="renderSettings"]', '[onclick*="openSettings"]', '[onclick*="settings" i]'
-                ],
-                words: ["الضبط", "الاعدادات", "اعدادات", "ضبط"],
-                icons: [".fa-cog", ".fa-cogs", ".fa-gear", ".fa-sliders-h", ".fa-sliders", ".fa-wrench"]
-            },
-            wall: {
-                sels: [
-                    "#wall-btn", "#btn-wall", "#nav-wall", "#sidebar-wall-btn", "#tab-wall", "#open-wall-btn", "#toggle-wall",
-                    '[data-tab="wall"]', '[data-sidebar-tab="wall"]', '[data-target="wall"]', '[data-panel="wall"]',
-                    '[onclick*="openWall"]', '[onclick*="renderWall"]', '[onclick*="wall" i]'
-                ],
-                words: ["الحائط", "حائط", "المنشورات"],
-                icons: [".fa-newspaper", ".fa-stream", ".fa-rss", ".fa-th-list", ".fa-feather-alt", ".fa-feather"]
-            },
-            rooms: {
-                sels: [
-                    "#rooms-btn", "#btn-rooms", "#nav-rooms", "#sidebar-rooms-btn", "#tab-rooms", "#open-rooms-btn", "#toggle-rooms",
-                    '[data-tab="rooms"]', '[data-sidebar-tab="rooms"]', '[data-target="rooms"]', '[data-panel="rooms"]',
-                    '[onclick*="openRooms"]', '[onclick*="renderRooms"]', '[onclick*="rooms" i]'
-                ],
-                words: ["الغرف", "الرومات", "غرف", "رومات"],
-                icons: [".fa-door-open", ".fa-home", ".fa-building"]
-            }
-        }[kind];
-        if (!cfg) return null;
-
-        const EXCLUDE_SEL = "#right-sidebar, #lsc-menu, #messages-container, #chat-form, #emoji-picker-content, .emoji-picker, .modal, #login-overlay, #private-chat-window";
-        const isOuterNav = el => isElementAllowedFast(el) && !el.closest(EXCLUDE_SEL);
-
-        for (let i = 0; i < cfg.sels.length; i++) {
-            try {
-                const list = document.querySelectorAll(cfg.sels[i]);
-                for (let j = 0; j < list.length; j++) {
-                    if (isOuterNav(list[j]) && isElementAllowed(list[j])) {
-                        navCache[kind] = list[j];
-                        return list[j];
-                    }
-                }
-            } catch (e) {}
-        }
-
-        const scope = document.querySelectorAll("button, a, [role='button'], [onclick], [data-tab], [data-sidebar-tab], [data-target], [data-bs-original-title], .nav-item, .nav-link, .tab-btn, .footer-btn");
-        for (let i = 0; i < scope.length; i++) {
-            const el = scope[i];
-            if (!isOuterNav(el)) continue;
-            const rawMeta = `${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${el.getAttribute("data-bs-original-title") || ""} ${el.getAttribute("data-original-title") || ""} ${el.textContent || ""}`;
-            const meta = normAr(rawMeta);
-            if (meta && meta.length < 36 && cfg.words.some(w => meta.includes(w))) {
-                if (isElementAllowed(el)) { navCache[kind] = el; return el; }
-            }
-        }
-        for (let i = 0; i < scope.length; i++) {
-            const el = scope[i];
-            if (!isOuterNav(el)) continue;
-            if (cfg.icons.some(ic => el.querySelector(ic))) {
-                if (isElementAllowed(el)) { navCache[kind] = el; return el; }
-            }
-        }
-        return null;
+        const id = NAV_IDS[kind];
+        if (!id) return null;
+        const el = document.getElementById(id);
+        return isElementAllowedFast(el) ? el : null;
     }
 
     async function ensureSettingsView() {
         const cont = document.getElementById("sidebar-settings-container");
         if (!cont) return !1;
 
-        if (cont.querySelector(".classic-settings-container")) {
-            if (!isTabOpen("sidebar-settings-container")) {
-                const navBtn = findNavButton("settings");
-                if (navBtn) {
-                    navBtn.click();
-                    await delay(120);
-                }
-                openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
-            }
+        if (isTabOpen("sidebar-settings-container") && cont.querySelector(".classic-settings-container")) {
             return !0;
         }
 
-        // إذا كان التبويب مفتوحاً حالياً على الإضافات نرجع للضبط
-        const backBtn = cont.querySelector(".modern-classic-btn-back");
-        if (backBtn && isTabOpen("sidebar-settings-container")) {
-            backBtn.click();
+        if (isTabOpen("sidebar-settings-container")) {
+            const backBtn = cont.querySelector(".modern-classic-btn-back");
+            if (backBtn) backBtn.click();
+            else if ("function" === typeof window.renderSettings) { try { window.renderSettings(); } catch (e) {} }
             const okBack = await waitFor(() => cont.querySelector(".classic-settings-container"), 1200);
             if (okBack) return !0;
         }
 
-        // فتح الضبط عبر الزر الرسمي للشات أولاً لتهيئة كل المستمعات والبيانات من أول مرة
-        if (!isTabOpen("sidebar-settings-container")) {
-            const navBtn = findNavButton("settings");
-            if (navBtn) {
-                navBtn.click();
-                const okNav = await waitFor(() => cont.querySelector(".classic-settings-container, .modern-classic-addons-container"), 1500);
-                if (okNav) {
-                    if (!cont.querySelector(".classic-settings-container")) {
-                        const b2 = cont.querySelector(".modern-classic-btn-back");
-                        if (b2) b2.click();
-                        else if ("function" === typeof window.renderSettings) { try { window.renderSettings(); } catch (e) {} }
-                        await waitFor(() => cont.querySelector(".classic-settings-container"), 1100);
-                    }
-                    if (cont.querySelector(".classic-settings-container")) {
-                        openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
-                        return !0;
-                    }
+        const navBtn = findNavButton("settings");
+        if (navBtn && !isTabOpen("sidebar-settings-container")) {
+            navBtn.click();
+            const okNav = await waitFor(() => cont.querySelector(".classic-settings-container, .modern-classic-addons-container"), 1500);
+            if (okNav) {
+                if (!cont.querySelector(".classic-settings-container")) {
+                    const b2 = cont.querySelector(".modern-classic-btn-back");
+                    if (b2) b2.click();
+                    else if ("function" === typeof window.renderSettings) { try { window.renderSettings(); } catch (e) {} }
+                    await waitFor(() => cont.querySelector(".classic-settings-container"), 1200);
+                }
+                if (cont.querySelector(".classic-settings-container")) {
+                    showSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
+                    return !0;
                 }
             }
         }
 
-        // خطة بديلة عبر الدالة الرسمية مباشرة
         if ("function" === typeof window.renderSettings) {
-            openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
+            showSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
             try { window.renderSettings(); } catch (e) {}
-            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1300);
-            if (ok) { openSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
+            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1500);
+            if (ok) { showSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
         }
         return !1;
     }
@@ -327,42 +267,63 @@
         const sb = document.getElementById("right-sidebar");
         if (!cont || !sb) return !1;
 
-        const isWallInit = () => Boolean(
-            cont.querySelector('#btn-tab-posts[data-events-bound="true"]') ||
-            cont.querySelector('#btn-tab-quickchat[data-events-bound="true"]') ||
-            cont.querySelector(".wall-post-card") ||
-            cont.querySelector(".quick-chat-card")
+        const isWallReady = () => Boolean(
+            document.getElementById("btn-tab-quickchat") ||
+            document.getElementById("btn-tab-posts") ||
+            cont.querySelector(".wall-post-card, .quick-chat-card")
         );
 
-        if (!isTabOpen("sidebar-wall-container") || !isWallInit()) {
+        if (!isTabOpen("sidebar-wall-container")) {
             const navBtn = findNavButton("wall");
             if (navBtn) {
                 navBtn.click();
-                await waitFor(() => isTabOpen("sidebar-wall-container") && isWallInit(), 2200);
-            } else if ("function" === typeof window.openWall) {
-                try { window.openWall(); } catch (e) {}
-                await waitFor(isWallInit, 1800);
-            } else if ("function" === typeof window.renderWall) {
-                try { window.renderWall(); } catch (e) {}
-                await waitFor(isWallInit, 1800);
+                await waitFor(() => isTabOpen("sidebar-wall-container") && isWallReady(), 1600);
             }
         }
 
-        openSidebarTab("sidebar-wall-container", "الحائط");
+        if (!isWallReady() && "function" === typeof window.loadWallSidebar) {
+            showSidebarTab("sidebar-wall-container", "الحائط");
+            try { await window.loadWallSidebar(); } catch (e) {}
+            await waitFor(isWallReady, 1800);
+        }
+
+        if (!isTabOpen("sidebar-wall-container")) {
+            showSidebarTab("sidebar-wall-container", "الحائط");
+        }
+
         await delay(140);
         bindWallAndQuickChat();
-        return Boolean(document.getElementById("btn-tab-quickchat") || document.getElementById("wall-posts-container"));
+        return isWallReady();
     }
 
-    async function ensureRoomsLoaded() {
+    async function ensureRoomsLoaded(openView = !1) {
         const cont = document.getElementById("sidebar-rooms-container");
         if (!cont) return !1;
         const isReady = () => cont.querySelector(".room-card");
-        if (isReady()) return !0;
+
+        if (isReady()) {
+            if (openView && !isTabOpen("sidebar-rooms-container")) {
+                const navBtn = findNavButton("rooms");
+                if (navBtn) navBtn.click();
+                else showSidebarTab("sidebar-rooms-container", "الغرف");
+            }
+            return !0;
+        }
+
         const navBtn = findNavButton("rooms");
-        if (!navBtn) return !1;
-        navBtn.click();
-        return Boolean(await waitFor(isReady, 1800));
+        if (navBtn && !isTabOpen("sidebar-rooms-container")) {
+            navBtn.click();
+            const ok = await waitFor(isReady, 1400);
+            if (ok) return !0;
+        }
+
+        if ("function" === typeof window.renderRoomsGrid) {
+            if (openView) showSidebarTab("sidebar-rooms-container", "الغرف");
+            try { await window.renderRoomsGrid(); } catch (e) {}
+            return Boolean(await waitFor(isReady, 1500));
+        }
+
+        return Boolean(await waitFor(isReady, 1000));
     }
 
     function findAddonsButtonsInDOM() {
@@ -375,7 +336,7 @@
     function findAddonsTriggerInSettings() {
         const cont = document.getElementById("sidebar-settings-container");
         if (!cont) return null;
-        const direct = cont.querySelector('.classic-btn-addons, button[onclick*="renderAddons"], [data-action="addons"]');
+        const direct = cont.querySelector('.classic-btn-addons, button[onclick*="renderAddons"], button[onclick*="loadAddons"]');
         if (direct && isElementAllowed(direct)) return direct;
         const btns = cont.querySelectorAll("button, a, [role='button']");
         for (let i = 0; i < btns.length; i++) {
@@ -420,17 +381,23 @@
             const addonsBtn = await waitFor(findAddonsTriggerInSettings, 1200);
             if (addonsBtn) {
                 addonsBtn.click();
-                const appeared = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 900);
-                if (!appeared && "function" === typeof window.renderAddons) {
-                    try { window.renderAddons(); } catch (e) {}
+                const appeared = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1000);
+                if (!appeared) {
+                    if ("function" === typeof window.loadAddons) { try { await window.loadAddons(); } catch (e) {} }
+                    else if ("function" === typeof window.renderAddons) { try { window.renderAddons(); } catch (e) {} }
                 }
+            } else if ("function" === typeof window.loadAddons) {
+                try { await window.loadAddons(); } catch (e) {}
             } else if ("function" === typeof window.renderAddons) {
                 try { window.renderAddons(); } catch (e) {}
             } else {
                 return !1;
             }
+        } else if ("function" === typeof window.loadAddons) {
+            showSidebarTab("sidebar-settings-container", "الإضافات");
+            try { await window.loadAddons(); } catch (e) {}
         } else if ("function" === typeof window.renderAddons) {
-            openSidebarTab("sidebar-settings-container", "الإضافات");
+            showSidebarTab("sidebar-settings-container", "الإضافات");
             try { window.renderAddons(); } catch (e) {}
         } else {
             return !1;
@@ -438,8 +405,8 @@
 
         const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1800);
         if (!ok) return !1;
-        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 700);
-        await delay(160);
+        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 800);
+        await delay(150);
         showContainerOf(getBox(), "الإضافات");
         scanAddonsInDOM();
         return !0;
@@ -453,36 +420,40 @@
         const hasBuiltIn = () => document.querySelectorAll("#games-list button.modern-classic-game-item").length > 0;
         const hasCustom = () => Boolean(document.querySelector('#games-list[data-layl-added="true"]'));
 
-        if (hasBuiltIn() && hasCustom() && isTabOpen("sidebar-games-container")) {
+        if (hasBuiltIn() && hasCustom() && (!openView || isTabOpen("sidebar-games-container"))) {
             scanGamesInDOM();
             return !0;
+        }
+
+        // تحميل ملفات وتنسيقات الألعاب الرسمية عند الطلب قبل فتح القائمة
+        if ("function" === typeof window.ensureGamesStylesLoaded) {
+            try { await window.ensureGamesStylesLoaded(); } catch (e) {}
+        }
+        if ("function" === typeof window.ensureGamesManagerLoaded) {
+            try { await window.ensureGamesManagerLoaded(); } catch (e) {}
+        }
+
+        if ("function" === typeof window.openGamesView) {
+            try { await window.openGamesView(); } catch (e) {}
+            await waitFor(hasBuiltIn, 1500);
         }
 
         if (!hasBuiltIn()) {
             const addonsOk = await openAddonsMenu();
             if (addonsOk) {
                 const gamesBtn = await waitFor(findGamesBtnInAddons, 900);
-                if (gamesBtn) {
-                    gamesBtn.click();
-                } else if ("function" === typeof window.openGamesView) {
-                    try { window.openGamesView(); } catch (e) {}
-                } else {
-                    return !1;
-                }
-            } else if ("function" === typeof window.openGamesView) {
-                try { window.openGamesView(); } catch (e) {}
+                if (!gamesBtn) return !1;
+                gamesBtn.click();
             } else {
                 return !1;
             }
-        } else if ("function" === typeof window.openGamesView) {
-            try { window.openGamesView(); } catch (e) {}
         }
 
         const ok = await waitFor(hasBuiltIn, 2000);
         if (!ok) return !1;
         await waitFor(hasCustom, 1800);
         await delay(140);
-        if (openView) openSidebarTab("sidebar-games-container", "الألعاب");
+        if (openView) showSidebarTab("sidebar-games-container", "الألعاب");
         scanGamesInDOM();
         return !0;
     }
@@ -492,20 +463,33 @@
         if (!ok) return denyAccess("🔒 قائمة الضبط غير متاحة لحسابك");
 
         if (expandPrivacy) {
-            const hdr = await waitFor(() => document.querySelector("#privacy-group .settings-group-header, #privacy-group [aria-expanded], #privacy-group button"), 1200);
-            if (hdr && "true" !== hdr.getAttribute("aria-expanded")) {
-                hdr.click();
-                await delay(200);
-                if ("true" !== hdr.getAttribute("aria-expanded") && !isElementAllowed(document.querySelector(selector))) {
-                    hdr.click();
-                    await delay(200);
+            const alreadyVisible = isVisibleInDOM(document.querySelector(selector));
+            if (!alreadyVisible) {
+                const hdr = await waitFor(() => document.querySelector("#privacy-group .settings-group-header, #privacy-group [aria-expanded], #privacy-group button"), 1200);
+                if (hdr) {
+                    if ("true" !== hdr.getAttribute("aria-expanded")) {
+                        hdr.click();
+                        await waitFor(() => isVisibleInDOM(document.querySelector(selector)), 650);
+                    }
+                    if (!isVisibleInDOM(document.querySelector(selector))) {
+                        hdr.click();
+                        await waitFor(() => isVisibleInDOM(document.querySelector(selector)), 650);
+                    }
+                } else if ("function" === typeof window.toggleSettingsGroup) {
+                    try { window.toggleSettingsGroup("privacy-group"); } catch (e) {}
+                    await delay(220);
                 }
             }
         }
+
         const target = await waitFor(() => {
             const el = document.querySelector(selector);
+            return isVisibleInDOM(el) ? el : null;
+        }, 1600) || (() => {
+            const el = document.querySelector(selector);
             return isElementAllowed(el) ? el : null;
-        }, 1500);
+        })();
+
         if (!target) return denyAccess();
         if (clickTarget) target.click();
         else highlightEl(target);
@@ -769,7 +753,7 @@
     async function runDynamicRoom(label) {
         const target = norm(label);
         const targetNorm = normAr(target);
-        await ensureRoomsLoaded();
+        await ensureRoomsLoaded(!1);
         const cards = document.querySelectorAll("#sidebar-rooms-container .room-card");
         let matched = null;
         for (let i = 0; i < cards.length; i++) {
@@ -865,15 +849,16 @@
             icon: "fas fa-gamepad", color: "#06b6d4", keys: "العاب لعب games",
             async run() {
                 if (await ensureGamesLoaded(!0)) showToast("🎮 تم فتح قسم الألعاب");
-                else denyAccess("🔒 قسم الألعاب غير متاح لحسابك");
+                else denyAccess("🔒 قسم الألعاب غير متاحة لحسابك");
             }
         },
         {
             label: "قائمة الغرف", cat: "الغرف والحائط", hint: "تصفح جميع غرف الشات",
             icon: "fas fa-door-open", color: "#10b981", keys: "غرف رومات rooms",
             async run() {
-                await ensureRoomsLoaded();
-                if (!openSidebarTab("sidebar-rooms-container", "الغرف")) return denyAccess();
+                if (!(await ensureRoomsLoaded(!0))) {
+                    if (!showSidebarTab("sidebar-rooms-container", "الغرف")) return denyAccess();
+                }
                 showToast("🚪 تم فتح قائمة الغرف");
             }
         },
@@ -881,12 +866,12 @@
             label: "إنشاء غرفة جديدة", cat: "الغرف والحائط", hint: "الغرف ◂ إنشاء غرفة خاصة",
             icon: "fas fa-plus-circle", color: "#22c55e", keys: "انشاء غرفة جديدة روم",
             async run() {
-                await ensureRoomsLoaded();
-                openSidebarTab("sidebar-rooms-container", "الغرف");
+                await ensureRoomsLoaded(!0);
+                showSidebarTab("sidebar-rooms-container", "الغرف");
                 const btn = await waitFor(() => {
                     const el = document.querySelector('#sidebar-rooms-container button[onclick*="openCreateRoomModal"]');
                     return isElementAllowed(el) ? el : null;
-                }, 1200);
+                }, 1400);
                 if (!btn) return denyAccess("🔒 إنشاء الغرف غير متاح لصلاحيات حسابك");
                 btn.click();
                 showToast("⚡ تم فتح: إنشاء غرفة جديدة");
@@ -909,20 +894,34 @@
                 if (!(await ensureWallView())) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
                 const tab = await waitFor(() => {
                     const el = document.getElementById("btn-tab-quickchat");
-                    return isElementAllowed(el) ? el : null;
-                }, 1800);
-                if (!tab) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
-                const getQc = () => document.querySelector("#sidebar-wall-container #quick-chat-content") || document.getElementById("quick-chat-content");
-                for (let i = 0; i < 6; i++) {
-                    tab.click();
-                    await delay(200);
-                    const qc = getQc();
-                    if (qc && !qc.classList.contains("d-none")) break;
+                    return isVisibleInDOM(el) ? el : null;
+                }, 2000) || document.getElementById("btn-tab-quickchat");
+                if (!isElementAllowed(tab)) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
+
+                const isQcOpen = () => {
+                    const qc = document.getElementById("quick-chat-content");
+                    return Boolean(qc && !qc.classList.contains("d-none") && "none" !== qc.style.display);
+                };
+
+                if (!isQcOpen()) {
+                    for (let i = 0; i < 4; i++) {
+                        tab.click();
+                        await delay(200);
+                        if (isQcOpen()) break;
+                    }
                 }
-                const qc = getQc();
-                const posts = document.getElementById("wall-posts-tab-content");
-                if (qc && qc.classList.contains("d-none")) {
-                    qc.classList.remove("d-none");
+                if (!isQcOpen() && "function" === typeof window.switchWallSubTab) {
+                    try { window.switchWallSubTab("quickchat"); } catch (e) {}
+                    await delay(160);
+                    if (!isQcOpen()) {
+                        try { window.switchWallSubTab("quick-chat"); } catch (e) {}
+                        await delay(160);
+                    }
+                }
+                if (!isQcOpen()) {
+                    const qc = document.getElementById("quick-chat-content");
+                    const posts = document.getElementById("wall-posts-tab-content");
+                    if (qc) qc.classList.remove("d-none");
                     if (posts) posts.classList.add("d-none");
                     tab.classList.add("active");
                     tab.setAttribute("aria-selected", "true");
@@ -942,7 +941,7 @@
                 const btn = await waitFor(() => {
                     const el = document.querySelector("#story-add-btn-wall-stories-container, .story-add-btn");
                     return isElementAllowed(el) ? el : null;
-                }, 1600);
+                }, 1800);
                 if (!btn) return denyAccess("🔒 نشر الستوري غير متاح لحسابك");
                 btn.click();
                 showToast("⚡ تم فتح: نشر ستوري");
@@ -1266,7 +1265,7 @@
         if (execBusy) return;
         execBusy = !0;
         clearTimeout(execResetTimer);
-        execResetTimer = setTimeout(() => { execBusy = !1; }, 2800);
+        execResetTimer = setTimeout(() => { execBusy = !1; }, 4000);
         try {
             ensureBootedUI();
             if ("إعداد" === type) {
@@ -1463,11 +1462,11 @@
         } else if ("games" === kind) {
             if (await ensureGamesLoaded(!1)) cnt = scanGamesInDOM();
         } else if ("rooms" === kind) {
-            if (await ensureRoomsLoaded()) cnt = document.querySelectorAll("#sidebar-rooms-container .room-card").length;
+            if (await ensureRoomsLoaded(!1)) cnt = document.querySelectorAll("#sidebar-rooms-container .room-card").length;
         }
 
         if (!wasOpen) closeSidebarSilently();
-        else if (prevTab) openSidebarTab(prevTab);
+        else if (prevTab) showSidebarTab(prevTab);
 
         menuState.allItems = getLiveItems();
         renderMenuList(!1);
