@@ -126,6 +126,18 @@
         return !1;
     }
 
+    function isTabOpen(tabId) {
+        const sb = document.getElementById("right-sidebar");
+        const tab = document.getElementById(tabId);
+        return Boolean(
+            sb && tab
+            && sb.classList.contains("open")
+            && !sb.classList.contains("d-none")
+            && !tab.classList.contains("d-none")
+            && "none" !== tab.style.display
+        );
+    }
+
     function getActiveTabId() {
         const sb = document.getElementById("right-sidebar");
         if (!sb) return "";
@@ -185,47 +197,72 @@
         setTimeout(() => el.classList.remove("lsc-pulse"), 2200);
     }
 
+    // بحث دقيق ومُخزّن في الكاش عن أزرار الشريط الرئيسي (لا يعمل إلا لحظة الضغط على اختصار)
     const navCache = {};
     function findNavButton(kind) {
         if (navCache[kind] && isElementAllowedFast(navCache[kind])) return navCache[kind];
         const cfg = {
             settings: {
-                sels: ["#settings-btn", "#btn-settings", "#nav-settings", "#sidebar-settings-btn", "#tab-settings", '[data-tab="settings"]', '[onclick*="renderSettings"]', '[onclick*="openSettings"]'],
-                words: ["الضبط", "الإعدادات", "الاعدادات"],
-                icons: [".fa-cog", ".fa-gear", ".fa-sliders-h"]
+                sels: [
+                    "#settings-btn", "#btn-settings", "#nav-settings", "#sidebar-settings-btn", "#tab-settings", "#open-settings-btn", "#toggle-settings",
+                    '[data-tab="settings"]', '[data-sidebar-tab="settings"]', '[data-target="settings"]', '[data-panel="settings"]',
+                    '[onclick*="renderSettings"]', '[onclick*="openSettings"]', '[onclick*="settings" i]'
+                ],
+                words: ["الضبط", "الاعدادات", "اعدادات", "ضبط"],
+                icons: [".fa-cog", ".fa-cogs", ".fa-gear", ".fa-sliders-h", ".fa-sliders", ".fa-wrench"]
             },
             wall: {
-                sels: ["#wall-btn", "#btn-wall", "#nav-wall", "#sidebar-wall-btn", "#tab-wall", '[data-tab="wall"]', '[onclick*="openWall"]', '[onclick*="renderWall"]'],
-                words: ["الحائط", "حائط"],
-                icons: [".fa-newspaper", ".fa-stream", ".fa-rss"]
+                sels: [
+                    "#wall-btn", "#btn-wall", "#nav-wall", "#sidebar-wall-btn", "#tab-wall", "#open-wall-btn", "#toggle-wall",
+                    '[data-tab="wall"]', '[data-sidebar-tab="wall"]', '[data-target="wall"]', '[data-panel="wall"]',
+                    '[onclick*="openWall"]', '[onclick*="renderWall"]', '[onclick*="wall" i]'
+                ],
+                words: ["الحائط", "حائط", "المنشورات"],
+                icons: [".fa-newspaper", ".fa-stream", ".fa-rss", ".fa-th-list", ".fa-feather-alt", ".fa-feather"]
             },
             rooms: {
-                sels: ["#rooms-btn", "#btn-rooms", "#nav-rooms", "#sidebar-rooms-btn", "#tab-rooms", '[data-tab="rooms"]', '[onclick*="openRooms"]', '[onclick*="renderRooms"]'],
-                words: ["الغرف", "الرومات"],
-                icons: [".fa-door-open", ".fa-home"]
+                sels: [
+                    "#rooms-btn", "#btn-rooms", "#nav-rooms", "#sidebar-rooms-btn", "#tab-rooms", "#open-rooms-btn", "#toggle-rooms",
+                    '[data-tab="rooms"]', '[data-sidebar-tab="rooms"]', '[data-target="rooms"]', '[data-panel="rooms"]',
+                    '[onclick*="openRooms"]', '[onclick*="renderRooms"]', '[onclick*="rooms" i]'
+                ],
+                words: ["الغرف", "الرومات", "غرف", "رومات"],
+                icons: [".fa-door-open", ".fa-home", ".fa-building"]
             }
         }[kind];
         if (!cfg) return null;
 
-        const isOuterNav = el => isElementAllowedFast(el)
-            && !el.closest("#right-sidebar, #lsc-menu, #messages-container, #chat-form, .modal, #login-overlay");
+        const EXCLUDE_SEL = "#right-sidebar, #lsc-menu, #messages-container, #chat-form, #emoji-picker-content, .emoji-picker, .modal, #login-overlay, #private-chat-window";
+        const isOuterNav = el => isElementAllowedFast(el) && !el.closest(EXCLUDE_SEL);
 
         for (let i = 0; i < cfg.sels.length; i++) {
-            const el = document.querySelector(cfg.sels[i]);
-            if (isOuterNav(el)) { navCache[kind] = el; return el; }
+            try {
+                const list = document.querySelectorAll(cfg.sels[i]);
+                for (let j = 0; j < list.length; j++) {
+                    if (isOuterNav(list[j]) && isElementAllowed(list[j])) {
+                        navCache[kind] = list[j];
+                        return list[j];
+                    }
+                }
+            } catch (e) {}
         }
 
-        const scope = document.querySelectorAll("header button, nav button, footer button, .navbar button, .bottom-bar button, .top-bar button, [class*='nav'] button, [class*='header'] button, [data-tab], [data-sidebar-tab]");
+        const scope = document.querySelectorAll("button, a, [role='button'], [onclick], [data-tab], [data-sidebar-tab], [data-target], [data-bs-original-title], .nav-item, .nav-link, .tab-btn, .footer-btn");
         for (let i = 0; i < scope.length; i++) {
             const el = scope[i];
             if (!isOuterNav(el)) continue;
-            const meta = norm(`${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${el.textContent || ""}`);
-            if (meta && meta.length < 30 && cfg.words.some(w => meta.includes(w))) { navCache[kind] = el; return el; }
+            const rawMeta = `${el.getAttribute("title") || ""} ${el.getAttribute("aria-label") || ""} ${el.getAttribute("data-bs-original-title") || ""} ${el.getAttribute("data-original-title") || ""} ${el.textContent || ""}`;
+            const meta = normAr(rawMeta);
+            if (meta && meta.length < 36 && cfg.words.some(w => meta.includes(w))) {
+                if (isElementAllowed(el)) { navCache[kind] = el; return el; }
+            }
         }
         for (let i = 0; i < scope.length; i++) {
             const el = scope[i];
             if (!isOuterNav(el)) continue;
-            if (cfg.icons.some(ic => el.querySelector(ic))) { navCache[kind] = el; return el; }
+            if (cfg.icons.some(ic => el.querySelector(ic))) {
+                if (isElementAllowed(el)) { navCache[kind] = el; return el; }
+            }
         }
         return null;
     }
@@ -235,19 +272,51 @@
         if (!cont) return !1;
 
         if (cont.querySelector(".classic-settings-container")) {
-            openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
+            if (!isTabOpen("sidebar-settings-container")) {
+                const navBtn = findNavButton("settings");
+                if (navBtn) {
+                    navBtn.click();
+                    await delay(120);
+                }
+                openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
+            }
             return !0;
         }
+
+        // إذا كان التبويب مفتوحاً حالياً على الإضافات نرجع للضبط
+        const backBtn = cont.querySelector(".modern-classic-btn-back");
+        if (backBtn && isTabOpen("sidebar-settings-container")) {
+            backBtn.click();
+            const okBack = await waitFor(() => cont.querySelector(".classic-settings-container"), 1200);
+            if (okBack) return !0;
+        }
+
+        // فتح الضبط عبر الزر الرسمي للشات أولاً لتهيئة كل المستمعات والبيانات من أول مرة
+        if (!isTabOpen("sidebar-settings-container")) {
+            const navBtn = findNavButton("settings");
+            if (navBtn) {
+                navBtn.click();
+                const okNav = await waitFor(() => cont.querySelector(".classic-settings-container, .modern-classic-addons-container"), 1500);
+                if (okNav) {
+                    if (!cont.querySelector(".classic-settings-container")) {
+                        const b2 = cont.querySelector(".modern-classic-btn-back");
+                        if (b2) b2.click();
+                        else if ("function" === typeof window.renderSettings) { try { window.renderSettings(); } catch (e) {} }
+                        await waitFor(() => cont.querySelector(".classic-settings-container"), 1100);
+                    }
+                    if (cont.querySelector(".classic-settings-container")) {
+                        openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
+                        return !0;
+                    }
+                }
+            }
+        }
+
+        // خطة بديلة عبر الدالة الرسمية مباشرة
         if ("function" === typeof window.renderSettings) {
             openSidebarTab("sidebar-settings-container", "الضبط والإعدادات");
             try { window.renderSettings(); } catch (e) {}
-            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1100);
-            if (ok) { openSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
-        }
-        const navBtn = findNavButton("settings");
-        if (navBtn) {
-            navBtn.click();
-            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1500);
+            const ok = await waitFor(() => cont.querySelector(".classic-settings-container"), 1300);
             if (ok) { openSidebarTab("sidebar-settings-container", "الضبط والإعدادات"); return !0; }
         }
         return !1;
@@ -258,29 +327,29 @@
         const sb = document.getElementById("right-sidebar");
         if (!cont || !sb) return !1;
 
-        const isWallOpenNow = () => Boolean(sb.classList.contains("open") && !cont.classList.contains("d-none") && "none" !== cont.style.display);
         const isWallInit = () => Boolean(
             cont.querySelector('#btn-tab-posts[data-events-bound="true"]') ||
+            cont.querySelector('#btn-tab-quickchat[data-events-bound="true"]') ||
             cont.querySelector(".wall-post-card") ||
             cont.querySelector(".quick-chat-card")
         );
 
-        if (!isWallOpenNow() || !isWallInit()) {
+        if (!isTabOpen("sidebar-wall-container") || !isWallInit()) {
             const navBtn = findNavButton("wall");
             if (navBtn) {
                 navBtn.click();
-                await waitFor(() => isWallOpenNow() && isWallInit(), 1500);
+                await waitFor(() => isTabOpen("sidebar-wall-container") && isWallInit(), 2200);
             } else if ("function" === typeof window.openWall) {
                 try { window.openWall(); } catch (e) {}
-                await waitFor(isWallInit, 1300);
+                await waitFor(isWallInit, 1800);
             } else if ("function" === typeof window.renderWall) {
                 try { window.renderWall(); } catch (e) {}
-                await waitFor(isWallInit, 1300);
+                await waitFor(isWallInit, 1800);
             }
         }
 
         openSidebarTab("sidebar-wall-container", "الحائط");
-        await delay(90);
+        await delay(140);
         bindWallAndQuickChat();
         return Boolean(document.getElementById("btn-tab-quickchat") || document.getElementById("wall-posts-container"));
     }
@@ -293,7 +362,7 @@
         const navBtn = findNavButton("rooms");
         if (!navBtn) return !1;
         navBtn.click();
-        return Boolean(await waitFor(isReady, 1600));
+        return Boolean(await waitFor(isReady, 1800));
     }
 
     function findAddonsButtonsInDOM() {
@@ -301,6 +370,23 @@
         if (!sb) return [];
         const box = sb.querySelector(".modern-classic-addons-container");
         return box ? Array.from(box.querySelectorAll(".modern-classic-list > button.modern-classic-item, button.modern-classic-item")) : [];
+    }
+
+    function findAddonsTriggerInSettings() {
+        const cont = document.getElementById("sidebar-settings-container");
+        if (!cont) return null;
+        const direct = cont.querySelector('.classic-btn-addons, button[onclick*="renderAddons"], [data-action="addons"]');
+        if (direct && isElementAllowed(direct)) return direct;
+        const btns = cont.querySelectorAll("button, a, [role='button']");
+        for (let i = 0; i < btns.length; i++) {
+            const b = btns[i];
+            if (!isElementAllowedFast(b)) continue;
+            const txt = normAr(getCleanBtnText(b));
+            if ("الاضافات" === txt || "اضافات" === txt || txt.includes("الاضافات")) {
+                if (isElementAllowed(b)) return b;
+            }
+        }
+        return null;
     }
 
     function findGamesBtnInAddons() {
@@ -312,8 +398,8 @@
         for (let i = 0; i < btns.length; i++) {
             const b = btns[i];
             if (!isElementAllowedFast(b)) continue;
-            const txt = getCleanBtnText(b);
-            if ("الألعاب" === txt || "الالعاب" === txt) return b;
+            const txt = normAr(getCleanBtnText(b));
+            if ("الالعاب" === txt || "العاب" === txt) return b;
         }
         return null;
     }
@@ -331,12 +417,17 @@
 
         const settingsOk = await ensureSettingsView();
         if (settingsOk) {
-            const addonsBtn = await waitFor(() => document.querySelector('#sidebar-settings-container .classic-btn-addons, #sidebar-settings-container button[onclick*="renderAddons"]'), 900);
-            if (!isElementAllowed(addonsBtn)) return !1;
-            addonsBtn.click();
-            const appeared = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 500);
-            if (!appeared && "function" === typeof window.renderAddons) {
+            const addonsBtn = await waitFor(findAddonsTriggerInSettings, 1200);
+            if (addonsBtn) {
+                addonsBtn.click();
+                const appeared = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 900);
+                if (!appeared && "function" === typeof window.renderAddons) {
+                    try { window.renderAddons(); } catch (e) {}
+                }
+            } else if ("function" === typeof window.renderAddons) {
                 try { window.renderAddons(); } catch (e) {}
+            } else {
+                return !1;
             }
         } else if ("function" === typeof window.renderAddons) {
             openSidebarTab("sidebar-settings-container", "الإضافات");
@@ -345,10 +436,10 @@
             return !1;
         }
 
-        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1500);
+        const ok = await waitFor(() => getBox() && findAddonsButtonsInDOM().length > 0, 1800);
         if (!ok) return !1;
-        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 550);
-        await delay(150);
+        await waitFor(() => sb.querySelector('.modern-classic-list [data-lail-controlled="true"]'), 700);
+        await delay(160);
         showContainerOf(getBox(), "الإضافات");
         scanAddonsInDOM();
         return !0;
@@ -361,9 +452,8 @@
 
         const hasBuiltIn = () => document.querySelectorAll("#games-list button.modern-classic-game-item").length > 0;
         const hasCustom = () => Boolean(document.querySelector('#games-list[data-layl-added="true"]'));
-        const isGamesVisible = () => Boolean(sb.classList.contains("open") && !gamesCont.classList.contains("d-none"));
 
-        if (hasBuiltIn() && hasCustom() && isGamesVisible()) {
+        if (hasBuiltIn() && hasCustom() && isTabOpen("sidebar-games-container")) {
             scanGamesInDOM();
             return !0;
         }
@@ -371,9 +461,14 @@
         if (!hasBuiltIn()) {
             const addonsOk = await openAddonsMenu();
             if (addonsOk) {
-                const gamesBtn = findGamesBtnInAddons();
-                if (!gamesBtn) return !1;
-                gamesBtn.click();
+                const gamesBtn = await waitFor(findGamesBtnInAddons, 900);
+                if (gamesBtn) {
+                    gamesBtn.click();
+                } else if ("function" === typeof window.openGamesView) {
+                    try { window.openGamesView(); } catch (e) {}
+                } else {
+                    return !1;
+                }
             } else if ("function" === typeof window.openGamesView) {
                 try { window.openGamesView(); } catch (e) {}
             } else {
@@ -383,10 +478,10 @@
             try { window.openGamesView(); } catch (e) {}
         }
 
-        const ok = await waitFor(hasBuiltIn, 1500);
+        const ok = await waitFor(hasBuiltIn, 2000);
         if (!ok) return !1;
-        await waitFor(hasCustom, 850);
-        await delay(110);
+        await waitFor(hasCustom, 1800);
+        await delay(140);
         if (openView) openSidebarTab("sidebar-games-container", "الألعاب");
         scanGamesInDOM();
         return !0;
@@ -397,14 +492,21 @@
         if (!ok) return denyAccess("🔒 قائمة الضبط غير متاحة لحسابك");
 
         if (expandPrivacy) {
-            const hdr = document.querySelector("#privacy-group .settings-group-header");
+            const hdr = await waitFor(() => document.querySelector("#privacy-group .settings-group-header, #privacy-group [aria-expanded], #privacy-group button"), 1200);
             if (hdr && "true" !== hdr.getAttribute("aria-expanded")) {
                 hdr.click();
-                await delay(140);
+                await delay(200);
+                if ("true" !== hdr.getAttribute("aria-expanded") && !isElementAllowed(document.querySelector(selector))) {
+                    hdr.click();
+                    await delay(200);
+                }
             }
         }
-        const target = await waitFor(() => document.querySelector(selector), 900);
-        if (!isElementAllowed(target)) return denyAccess();
+        const target = await waitFor(() => {
+            const el = document.querySelector(selector);
+            return isElementAllowed(el) ? el : null;
+        }, 1500);
+        if (!target) return denyAccess();
         if (clickTarget) target.click();
         else highlightEl(target);
         if (label) showToast(`⚡ تم فتح: ${label}`);
@@ -583,6 +685,7 @@
     // ==================== تنفيذ الاختصارات مع فحص الصلاحيات ====================
     async function runDynamicAddon(label) {
         const target = stripCount(label);
+        const targetNorm = normAr(target);
         if (isRestrictedLabel(target)) return denyAccess();
 
         const live = liveMenuItems.get(target);
@@ -609,13 +712,14 @@
                 const b = btns[i];
                 if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
-                if (!isRestrictedLabel(txt, b.id || "") && txt === target) return isElementAllowed(b) ? b : null;
+                if (!isRestrictedLabel(txt, b.id || "") && normAr(txt) === targetNorm) return isElementAllowed(b) ? b : null;
             }
             for (let i = 0; i < btns.length; i++) {
                 const b = btns[i];
                 if (!isElementAllowedFast(b)) continue;
                 const txt = getCleanBtnText(b);
-                if (!isRestrictedLabel(txt, b.id || "") && txt && target && txt.includes(target)) return isElementAllowed(b) ? b : null;
+                const tNorm = normAr(txt);
+                if (!isRestrictedLabel(txt, b.id || "") && tNorm && targetNorm && tNorm.includes(targetNorm)) return isElementAllowed(b) ? b : null;
             }
             return null;
         };
@@ -630,7 +734,7 @@
         const opened = await openAddonsMenu();
         if (!opened) return denyAccess("🔒 قائمة الإضافات غير متاحة لحسابك");
 
-        const btn = await waitFor(findAllowedBtn, 1100);
+        const btn = await waitFor(findAllowedBtn, 1500);
         if (!btn) return denyAccess("🔒 هذه الإضافة غير متاحة لحسابك");
         btn.click();
         showToast(`🧩 تم فتح: ${target}`);
@@ -639,23 +743,24 @@
 
     async function runDynamicGame(label) {
         const target = stripCount(label);
+        const targetNorm = normAr(target);
         const loaded = await ensureGamesLoaded(!0);
         if (!loaded) return denyAccess("🔒 قسم الألعاب غير متاح لحسابك");
 
         const findBtn = () => {
             const btns = document.querySelectorAll("#games-list button.modern-classic-game-item");
             for (let i = 0; i < btns.length; i++) {
-                if (getCleanBtnText(btns[i]) === target) return btns[i];
+                if (normAr(getCleanBtnText(btns[i])) === targetNorm && isElementAllowed(btns[i])) return btns[i];
             }
             for (let i = 0; i < btns.length; i++) {
-                const title = getCleanBtnText(btns[i]);
-                if (title && title.includes(target)) return btns[i];
+                const title = normAr(getCleanBtnText(btns[i]));
+                if (title && title.includes(targetNorm) && isElementAllowed(btns[i])) return btns[i];
             }
             return null;
         };
 
-        const btn = await waitFor(findBtn, 900);
-        if (!isElementAllowed(btn)) return denyAccess("🔒 هذه اللعبة غير متاحة لحسابك");
+        const btn = await waitFor(findBtn, 1500);
+        if (!btn) return denyAccess("🔒 هذه اللعبة غير متاحة لحسابك");
         btn.click();
         showToast(`🎮 تم فتح: ${target}`);
         return !0;
@@ -663,17 +768,18 @@
 
     async function runDynamicRoom(label) {
         const target = norm(label);
+        const targetNorm = normAr(target);
         await ensureRoomsLoaded();
         const cards = document.querySelectorAll("#sidebar-rooms-container .room-card");
         let matched = null;
         for (let i = 0; i < cards.length; i++) {
-            const name = norm(cards[i].querySelector(".fw-bold")?.textContent || "");
-            if (name === target) { matched = cards[i]; break; }
+            const name = normAr(cards[i].querySelector(".fw-bold")?.textContent || "");
+            if (name === targetNorm) { matched = cards[i]; break; }
         }
         if (!matched) {
             for (let i = 0; i < cards.length; i++) {
-                const name = norm(cards[i].querySelector(".fw-bold")?.textContent || "");
-                if (name && name.includes(target)) { matched = cards[i]; break; }
+                const name = normAr(cards[i].querySelector(".fw-bold")?.textContent || "");
+                if (name && name.includes(targetNorm)) { matched = cards[i]; break; }
             }
         }
         if (!matched || !isElementAllowed(matched)) {
@@ -777,8 +883,11 @@
             async run() {
                 await ensureRoomsLoaded();
                 openSidebarTab("sidebar-rooms-container", "الغرف");
-                const btn = await waitFor(() => document.querySelector('#sidebar-rooms-container button[onclick*="openCreateRoomModal"]'), 900);
-                if (!isElementAllowed(btn)) return denyAccess("🔒 إنشاء الغرف غير متاح لصلاحيات حسابك");
+                const btn = await waitFor(() => {
+                    const el = document.querySelector('#sidebar-rooms-container button[onclick*="openCreateRoomModal"]');
+                    return isElementAllowed(el) ? el : null;
+                }, 1200);
+                if (!btn) return denyAccess("🔒 إنشاء الغرف غير متاح لصلاحيات حسابك");
                 btn.click();
                 showToast("⚡ تم فتح: إنشاء غرفة جديدة");
             }
@@ -798,15 +907,19 @@
             icon: "fas fa-bolt", color: "#f59e0b", keys: "سريعة دردشة حائط",
             async run() {
                 if (!(await ensureWallView())) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
-                const tab = await waitFor(() => document.getElementById("btn-tab-quickchat"), 1200);
-                if (!isElementAllowed(tab)) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
-                for (let i = 0; i < 4; i++) {
+                const tab = await waitFor(() => {
+                    const el = document.getElementById("btn-tab-quickchat");
+                    return isElementAllowed(el) ? el : null;
+                }, 1800);
+                if (!tab) return denyAccess("🔒 الدردشة السريعة غير متاحة لحسابك");
+                const getQc = () => document.querySelector("#sidebar-wall-container #quick-chat-content") || document.getElementById("quick-chat-content");
+                for (let i = 0; i < 6; i++) {
                     tab.click();
-                    await delay(180);
-                    const qc = document.getElementById("quick-chat-content");
+                    await delay(200);
+                    const qc = getQc();
                     if (qc && !qc.classList.contains("d-none")) break;
                 }
-                const qc = document.getElementById("quick-chat-content");
+                const qc = getQc();
                 const posts = document.getElementById("wall-posts-tab-content");
                 if (qc && qc.classList.contains("d-none")) {
                     qc.classList.remove("d-none");
@@ -826,8 +939,11 @@
             icon: "fas fa-plus-circle", color: "#f43f5e", keys: "ستوري قصة نشر story",
             async run() {
                 if (!(await ensureWallView())) return denyAccess("🔒 نشر الستوري غير متاح لحسابك");
-                const btn = await waitFor(() => document.querySelector("#story-add-btn-wall-stories-container, .story-add-btn"), 1200);
-                if (!isElementAllowed(btn)) return denyAccess("🔒 نشر الستوري غير متاح لحسابك");
+                const btn = await waitFor(() => {
+                    const el = document.querySelector("#story-add-btn-wall-stories-container, .story-add-btn");
+                    return isElementAllowed(el) ? el : null;
+                }, 1600);
+                if (!btn) return denyAccess("🔒 نشر الستوري غير متاح لحسابك");
                 btn.click();
                 showToast("⚡ تم فتح: نشر ستوري");
             }
@@ -1150,7 +1266,7 @@
         if (execBusy) return;
         execBusy = !0;
         clearTimeout(execResetTimer);
-        execResetTimer = setTimeout(() => { execBusy = !1; }, 2500);
+        execResetTimer = setTimeout(() => { execBusy = !1; }, 2800);
         try {
             ensureBootedUI();
             if ("إعداد" === type) {
@@ -1509,7 +1625,6 @@
         let queue = [];
         let rafId = 0;
 
-        // تقطيع العمل إلى 12 عنصر كحد أقصى في الإطار لمنع أي تعليق على الجوالات القديمة
         const flush = () => {
             rafId = 0;
             if (isWallClosed()) { queue.length = 0; return; }
@@ -1523,7 +1638,6 @@
             }
         };
 
-        // مسح أولي مجزّأ أثناء خمول المتصفح فقط
         if (!isWallClosed()) {
             runIdle(() => {
                 if (isWallClosed()) return;
@@ -1569,7 +1683,6 @@
         });
     }
 
-    // مراقب خفيف جداً على سمة class فقط (لا يشتغل إلا لحظة فتح نافذة الحائط)
     let wallClassWatched = !1;
     function watchWallOpenOnce() {
         if (wallClassWatched) return;
@@ -1605,7 +1718,6 @@
         if (prvBox) observeMessages(prvBox, !0, !1);
         watchWallOpenOnce();
 
-        // ربط كسول تلقائي لأي مربع كتابة مدعوم لحظة الضغط بداخله
         document.addEventListener("focusin", e => {
             const t = e.target;
             if (!t || !SUPPORTED_INPUT_IDS.has(t.id)) return;
