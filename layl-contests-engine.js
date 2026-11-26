@@ -13,224 +13,109 @@
     };
 
     const ROOT = "layl_contests_v2";
+    const LEGACY_ROOT = "layl_royal_contest";
+    const LEGACY_CID = "royal_live";
 
     const TEMPLATES = {
         royal: {
-            id: "royal",
-            name: "ألقاب وترشيح",
-            icon: "fa-crown",
+            id: "royal", name: "ألقاب وترشيح", icon: "fa-crown",
             desc: "يرشّح العضو نفسه مع شعار انتخابي وصورة اختيارية (فئة واحدة أو فئتين)",
-            submitTitle: "مرحلة الترشيح",
-            submitVerb: "رشّح نفسك الآن",
-            entryLabel: "مرشح"
+            submitTitle: "مرحلة الترشيح", submitVerb: "رشّح نفسك الآن"
         },
         photo: {
-            id: "photo",
-            name: "تصوير وصور",
-            icon: "fa-camera",
+            id: "photo", name: "تصوير وصور", icon: "fa-camera",
             desc: "رفع صورة مضغوطة عالية الوضوح مع تصويت أعمى وتكبير Lightbox",
-            submitTitle: "مرحلة رفع الصور",
-            submitVerb: "شارك بصورتك الآن",
-            entryLabel: "صورة"
+            submitTitle: "مرحلة رفع الصور", submitVerb: "شارك بصورتك الآن"
         },
         talent: {
-            id: "talent",
-            name: "نصوص ومواهب",
-            icon: "fa-feather-alt",
-            desc: "مشاركات نصية (شعر، خواطر، نكت، قصص) مع بطاقات قراءة أنيقة",
-            submitTitle: "مرحلة استلام المواهب",
-            submitVerb: "أضف مشاركتك الآن",
-            entryLabel: "مشاركة"
+            id: "talent", name: "نصوص ومواهب", icon: "fa-feather-alt",
+            desc: "مشاركات نصية (شعر، خواطر، نكت، قصص) مع قراءة كاملة وتصويت أعمى",
+            submitTitle: "مرحلة استلام المواهب", submitVerb: "أضف مشاركتك الآن"
+        },
+        duo: {
+            id: "duo", name: "أفضل ثنائي", icon: "fa-user-friends",
+            desc: "يرشّح العضو نفسه مع شريكه ببطاقة ثنائية تجمع صورتيهما وشعاراً مشتركاً",
+            submitTitle: "مرحلة تسجيل الثنائيات", submitVerb: "سجّل ثنائيك الآن"
+        },
+        media: {
+            id: "media", name: "ذوق موسيقي ومقاطع", icon: "fa-music",
+            desc: "مشاركة رابط يوتيوب (أغنية/شيلة/مشهد) بمشغّل خفيف عند الضغط وتصويت أعمى",
+            submitTitle: "مرحلة إضافة المقاطع", submitVerb: "شارك بذوقك الآن"
+        },
+        raffle: {
+            id: "raffle", name: "سحب عشوائي (قرعة)", icon: "fa-dice",
+            desc: "دخول بضغطة زر ثم سحب عشوائي رسمي لعدد محدد من الفائزين (بمضاعفة فرص VIP)",
+            submitTitle: "باب التسجيل في السحب مفتوح", submitVerb: "احجز تذكرتك الآن 🎟️"
+        },
+        quiz: {
+            id: "quiz", name: "أسرع إجابة / صيد الكود", icon: "fa-bolt",
+            desc: "سؤال أو لغز أو كود سري؛ أول من يجيب صح يفوز تلقائياً بالترتيب الزمني",
+            submitTitle: "التحدي مفتوح الآن!", submitVerb: "أرسل إجابتك بسرعة ⚡"
+        },
+        bracket: {
+            id: "bracket", name: "بطولة خروج المغلوب (1 ضد 1)", icon: "fa-trophy",
+            desc: "مواجهات مباشرة 1 ضد 1 على جولات (ربع نهائي ⬅ نصف نهائي ⬅ نهائي)",
+            submitTitle: "التسجيل في البطولة", submitVerb: "انضم لقائمة المتنافسين ⚔️"
         },
         poll: {
-            id: "poll",
-            name: "تصويت مباشر / استفتاء",
-            icon: "fa-poll",
-            desc: "بدون ترشيح؛ تضيف الإدارة الخيارات وتبدأ مرحلة التصويت مباشرة",
-            submitTitle: "تجهيز الخيارات",
-            submitVerb: "صوّت الآن",
-            entryLabel: "خيار"
+            id: "poll", name: "تصويت مباشر / استفتاء", icon: "fa-poll",
+            desc: "بدون ترشيح؛ تضيف الإدارة الخيارات وتبدأ مرحلة التصويت فوراً",
+            submitTitle: "تجهيز الخيارات", submitVerb: "صوّت الآن"
         },
         prediction: {
-            id: "prediction",
-            name: "توقعات وتحدي",
-            icon: "fa-bullseye",
-            desc: "يرسل الأعضاء توقعاتهم قبل الإغلاق، ثم تحدد الإدارة الإجابة الصحيحة لفرز الفائزين",
-            submitTitle: "مرحلة استقبال التوقعات",
-            submitVerb: "سجّل توقعك الآن",
-            entryLabel: "توقع"
+            id: "prediction", name: "توقعات وتحدي", icon: "fa-bullseye",
+            desc: "يرسل الأعضاء توقعاتهم قبل الإغلاق، وتحدد الإدارة الإجابة الصحيحة لفرز الفائزين",
+            submitTitle: "استقبال التوقعات", submitVerb: "سجّل توقعك الآن"
         }
     };
 
     const THEMES = {
         gold: {
-            id: "gold",
-            name: "ذهبي ملكي",
-            accent: "#D4AF37",
-            accent2: "#f59e0b",
-            soft: "rgba(212,175,55,.16)",
-            border: "rgba(212,175,55,.45)",
-            text: "#fde68a",
-            shellBg: "linear-gradient(180deg,#161829 0%,#0b0c14 100%)",
-            btnText: "#111111"
+            id: "gold", name: "ذهبي ملكي", accent: "#D4AF37", accent2: "#f59e0b",
+            soft: "rgba(212,175,55,.16)", border: "rgba(212,175,55,.46)", text: "#fde68a",
+            shellBg: "linear-gradient(180deg,#161829 0%,#0b0c14 100%)", btnText: "#111111"
         },
         maroon: {
-            id: "maroon",
-            name: "عنابي وذهبي",
-            accent: "#D4AF37",
-            accent2: "#9f1239",
-            soft: "rgba(159,18,57,.22)",
-            border: "rgba(212,175,55,.48)",
-            text: "#fecdd3",
-            shellBg: "linear-gradient(180deg,#230d16 0%,#10070b 100%)",
-            btnText: "#111111"
+            id: "maroon", name: "عنابي وذهبي", accent: "#D4AF37", accent2: "#9f1239",
+            soft: "rgba(159,18,57,.24)", border: "rgba(212,175,55,.48)", text: "#fecdd3",
+            shellBg: "linear-gradient(180deg,#230d16 0%,#10070b 100%)", btnText: "#111111"
         },
         silver: {
-            id: "silver",
-            name: "فضي داكن",
-            accent: "#cbd5e1",
-            accent2: "#94a3b8",
-            soft: "rgba(203,213,225,.14)",
-            border: "rgba(203,213,225,.42)",
-            text: "#f1f5f9",
-            shellBg: "linear-gradient(180deg,#181b22 0%,#0b0d11 100%)",
-            btnText: "#0f172a"
+            id: "silver", name: "فضي داكن", accent: "#cbd5e1", accent2: "#94a3b8",
+            soft: "rgba(203,213,225,.15)", border: "rgba(203,213,225,.42)", text: "#f1f5f9",
+            shellBg: "linear-gradient(180deg,#181b22 0%,#0b0d11 100%)", btnText: "#0f172a"
         },
         blue: {
-            id: "blue",
-            name: "أزرق ملكي",
-            accent: "#38bdf8",
-            accent2: "#2563eb",
-            soft: "rgba(56,189,248,.16)",
-            border: "rgba(56,189,248,.45)",
-            text: "#bae6fd",
-            shellBg: "linear-gradient(180deg,#0f1c2e 0%,#080d17 100%)",
-            btnText: "#081220"
+            id: "blue", name: "أزرق ملكي", accent: "#38bdf8", accent2: "#2563eb",
+            soft: "rgba(56,189,248,.16)", border: "rgba(56,189,248,.45)", text: "#bae6fd",
+            shellBg: "linear-gradient(180deg,#0f1c2e 0%,#080d17 100%)", btnText: "#081220"
         },
         purple: {
-            id: "purple",
-            name: "بنفسجي ملكي",
-            accent: "#c084fc",
-            accent2: "#7c3aed",
-            soft: "rgba(192,132,252,.16)",
-            border: "rgba(192,132,252,.45)",
-            text: "#e9d5ff",
-            shellBg: "linear-gradient(180deg,#1d1230 0%,#0d0816 100%)",
-            btnText: "#11081f"
+            id: "purple", name: "بنفسجي ملكي", accent: "#c084fc", accent2: "#7c3aed",
+            soft: "rgba(192,132,252,.16)", border: "rgba(192,132,252,.45)", text: "#e9d5ff",
+            shellBg: "linear-gradient(180deg,#1d1230 0%,#0d0816 100%)", btnText: "#11081f"
+        },
+        emerald: {
+            id: "emerald", name: "زمردي فاخر", accent: "#34d399", accent2: "#059669",
+            soft: "rgba(16,185,129,.16)", border: "rgba(52,211,153,.45)", text: "#a7f3d0",
+            shellBg: "linear-gradient(180deg,#0c211c 0%,#060f0d 100%)", btnText: "#052017"
         }
     };
 
     const PRESETS = [
-        {
-            key: "royal_kq",
-            label: "👑 ملك وملكة الشات",
-            data: {
-                title: "مسابقة ملك وملكة شات ليل",
-                subtitle: "رشّح نفسك وتنافس على التاج والجوائز الملكية الفاخرة",
-                template: "royal",
-                theme: "gold",
-                icon: "fa-crown",
-                mode: "dual",
-                cat1Label: "ملك الشات",
-                cat1Icon: "👑",
-                cat2Label: "ملكة الشات",
-                cat2Icon: "👸",
-                nomHours: 48,
-                voteHours: 72,
-                blindVoting: !1,
-                hideLiveVotes: !1,
-                showInMenu: !0,
-                pinTop: !0
-            }
-        },
-        {
-            key: "best_photo",
-            label: "📸 أفضل تصوير (أعمى)",
-            data: {
-                title: "مسابقة أفضل تصوير",
-                subtitle: "ارفع أفضل لقطة بعدستك؛ التصويت مجهول الهوية لضمان العدل التام",
-                template: "photo",
-                theme: "maroon",
-                icon: "fa-camera",
-                mode: "single",
-                cat1Label: "أفضل صورة",
-                cat1Icon: "📸",
-                cat2Label: "",
-                cat2Icon: "",
-                nomHours: 48,
-                voteHours: 72,
-                blindVoting: !0,
-                hideLiveVotes: !1,
-                showInMenu: !0,
-                pinTop: !0
-            }
-        },
-        {
-            key: "best_poet",
-            label: "✍️ أفضل شاعر / خاطرة",
-            data: {
-                title: "مسابقة أمير الحرف والقافية",
-                subtitle: "شارك بأجمل بيت شعر أو خاطرة من إبداعك وتنافس على اللقب",
-                template: "talent",
-                theme: "silver",
-                icon: "fa-feather-alt",
-                mode: "single",
-                cat1Label: "مشاركة أدبية",
-                cat1Icon: "✍️",
-                cat2Label: "",
-                cat2Icon: "",
-                nomHours: 48,
-                voteHours: 48,
-                blindVoting: !0,
-                hideLiveVotes: !1,
-                showInMenu: !0,
-                pinTop: !1
-            }
-        },
-        {
-            key: "quick_poll",
-            label: "🗳️ استفتاء وتصويت مباشر",
-            data: {
-                title: "استفتاء شات ليل الأسبوعي",
-                subtitle: "شارك برأيك واختر الأفضل من الخيارات المطروحة",
-                template: "poll",
-                theme: "blue",
-                icon: "fa-poll",
-                mode: "single",
-                cat1Label: "خيار",
-                cat1Icon: "⭐",
-                cat2Label: "",
-                cat2Icon: "",
-                nomHours: 0,
-                voteHours: 48,
-                blindVoting: !1,
-                hideLiveVotes: !1,
-                showInMenu: !0,
-                pinTop: !1
-            }
-        },
-        {
-            key: "match_predict",
-            label: "🎯 تحدي التوقعات",
-            data: {
-                title: "تحدي توقع النتيجة",
-                subtitle: "سجّل توقعك قبل إغلاق الوقت وادخل قائمة الفائزين",
-                template: "prediction",
-                theme: "purple",
-                icon: "fa-bullseye",
-                mode: "single",
-                cat1Label: "توقع",
-                cat1Icon: "🎯",
-                cat2Label: "",
-                cat2Icon: "",
-                nomHours: 24,
-                voteHours: 0,
-                blindVoting: !0,
-                hideLiveVotes: !0,
-                showInMenu: !0,
-                pinTop: !1
-            }
-        }
+        { key: "royal_kq", label: "👑 ملك وملكة الشات", data: { title: "مسابقة ملك وملكة شات ليل", subtitle: "رشّح نفسك وتنافس على التاج والجوائز الملكية الفاخرة", template: "royal", theme: "gold", icon: "fa-crown", mode: "dual", cat1Label: "ملك الشات", cat2Label: "ملكة الشات", nomHours: 48, voteHours: 72, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "best_photo", label: "📸 أفضل تصوير", data: { title: "مسابقة أفضل تصوير", subtitle: "ارفع أجمل لقطة بعدستك؛ التصويت مجهول الهوية لضمان العدل", template: "photo", theme: "maroon", icon: "fa-camera", mode: "single", nomHours: 48, voteHours: 72, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "best_design", label: "🎨 أجمل تصميم", data: { title: "مسابقة أجمل تصميم وبروفايل", subtitle: "شارك بأجمل تصميم أو لقطة بروفايل وتنافس على اللقب", template: "photo", theme: "purple", icon: "fa-palette", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
+        { key: "best_poet", label: "✍️ شاعر / خاطرة", data: { title: "مسابقة أمير الحرف والقافية", subtitle: "شارك بأجمل بيت شعر أو خاطرة من إبداعك", template: "talent", theme: "silver", icon: "fa-feather-alt", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
+        { key: "best_joke", label: "😂 أفضل نكتة", data: { title: "مسابقة أظرف نكتة وموقف", subtitle: "ارسم البسمة بموقف طريف أو نكتة ذكية واكسب الأصوات", template: "talent", theme: "gold", icon: "fa-laugh-squint", mode: "single", nomHours: 24, voteHours: 24, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
+        { key: "best_duo", label: "💑 أفضل ثنائي", data: { title: "مسابقة أفضل ثنائي في ليل", subtitle: "سجّل نفسك مع شريكك المفضل وتنافسوا على لقب الثنائي الذهبي", template: "duo", theme: "maroon", icon: "fa-user-friends", mode: "single", nomHours: 48, voteHours: 72, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "music_taste", label: "🎵 الذوق الموسيقي", data: { title: "مسابقة أفضل ذوق موسيقي", subtitle: "شارك برابط أغنيتك أو شيلتك المفضلة — التصويت أعمى!", template: "media", theme: "purple", icon: "fa-music", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "lucky_raffle", label: "🎰 سحب عشوائي", data: { title: "السحب العشوائي الكبير", subtitle: "احجز تذكرتك بضغطة زر وادخل القرعة على جوائز شات ليل!", template: "raffle", theme: "emerald", icon: "fa-dice", mode: "single", nomHours: 24, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3 } },
+        { key: "fast_quiz", label: "⚡ أسرع إجابة", data: { title: "تحدي اللغز السريع", subtitle: "أول الأعضاء إجابةً بالشكل الصحيح يتوّجون فوراً!", template: "quiz", theme: "blue", icon: "fa-bolt", mode: "single", nomHours: 12, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3, quizPrompt: "اكتب سؤالك أو اللغز هنا...", correctAnswer: "" } },
+        { key: "voice_code", label: "🔑 صيد الكود", data: { title: "صيد الكود السري (الصوتي)", subtitle: "استمع للكود السري في الروم الصوتي وسجّله هنا بأسرع وقت!", template: "quiz", theme: "gold", icon: "fa-key", mode: "single", nomHours: 6, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3, quizPrompt: "أدخل الكود السري الذي تم ذكره في البث الصوتي:", correctAnswer: "" } },
+        { key: "knockout", label: "⚔️ خروج المغلوب", data: { title: "بطولة نجوم ليل (1 ضد 1)", subtitle: "مواجهات إقصائية مباشرة حتى يتوّج بطل واحد على العرش!", template: "bracket", theme: "maroon", icon: "fa-trophy", mode: "single", nomHours: 24, voteHours: 48, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "quick_poll", label: "🗳️ استفتاء مباشر", data: { title: "استفتاء شات ليل الأسبوعي", subtitle: "شارك برأيك واختر الأفضل من الخيارات المطروحة", template: "poll", theme: "blue", icon: "fa-poll", mode: "single", nomHours: 0, voteHours: 48, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
+        { key: "match_predict", label: "🎯 توقع نتيجة", data: { title: "تحدي توقع النتيجة", subtitle: "سجّل توقعك قبل إغلاق الوقت وادخل قائمة الفائزين", template: "prediction", theme: "emerald", icon: "fa-bullseye", mode: "single", nomHours: 24, voteHours: 0, blindVoting: !0, hideLiveVotes: !0, showInMenu: !0, pinTop: !1, maxWinners: 5 } }
     ];
 
     const DEFAULT_PRIZES = [
@@ -242,11 +127,20 @@
         { icon: "fa-comment-dots", title: "تصميم مميز لرسائل الشات العام", dur: "لمدة أسبوع" }
     ];
 
-    const DEFAULT_RULES = "• يحق لكل عضو المشاركة مرة واحدة فقط في المسابقة.\n• التصويت حق لكل عضو مسجل مرة واحدة (أو حسب نظام الفئات).\n• يُمنع التلاعب أو استخدام حسابات وهمية ويؤدي للاستبعاد الفوري.\n• في حال تعادل المركز الأول تحسم الإدارة النتيجة بالصوت الحاسم.";
+    const ROYAL_DEFAULT_PRIZES = [
+        { icon: "fa-medal", title: "وسام «ملك / ملكة الشات»", dur: "لمدة أسبوع" },
+        { icon: "fa-scroll", title: "بنر اسم خاص ومميز", dur: "دائم ♾️" },
+        { icon: "fa-hashtag", title: "رقم عضوية مميز (من اختيار الفائز)", dur: "لمدة أسبوع" },
+        { icon: "fa-crown", title: "ترقية ملك / ملكة الشات (أعلى نك في قائمة المتواجدون)", dur: "لمدة أسبوع" },
+        { icon: "fa-id-card", title: "تصميم ملكي خاص لبروفايل العضوية", dur: "لمدة أسبوع" },
+        { icon: "fa-comment-dots", title: "تصميم مميز لرسائل الشات العام", dur: "لمدة أسبوع" }
+    ];
+
+    const DEFAULT_RULES = "• يحق لكل عضو المشاركة مرة واحدة فقط في المسابقة.\n• التصويت حق لكل عضو مسجل مرة واحدة (أو حسب نظام الجولات/الفئات).\n• يُمنع التلاعب أو استخدام حسابات وهمية ويؤدي للاستبعاد الفوري.\n• في حال تعادل المركز الأول تحسم الإدارة النتيجة بالصوت الحاسم.";
 
     const DEFAULT_GLOBAL = {
         enabled: !0,
-        disabledMsg: "مركز المسابقات متوقف مؤقتاً للصيانة 🏆",
+        disabledMsg: "نظام المسابقات متوقف مؤقتاً للصيانة 🏆",
         showHubInMenu: !1,
         hubTitle: "مركز المسابقات",
         showToastAd: !0,
@@ -273,6 +167,16 @@
         managers: []
     };
 
+    const LEGACY_DEFAULT_SETTINGS = {
+        enabled: !0,
+        disabledMsg: "مسابقة ملك وملكة الشات متوقفة مؤقتاً للصيانة 👑",
+        allowGuestsVote: !1, allowSelfVote: !1, allowVoteChange: !1,
+        requireApproval: !1, hideLiveVotes: !1, showToastAd: !0,
+        maxCandidates: 0, vipVoteWeight: 2, bannerText: "", bannerTheme: "gold",
+        welcomeText: "", welcomeVersion: 0, rulesText: DEFAULT_RULES,
+        vipUsers: [], subAdmins: []
+    };
+
     const st = {
         db: null,
         admins: [],
@@ -282,6 +186,7 @@
         myAvatar: "",
         global: Object.assign({}, DEFAULT_GLOBAL),
         index: {},
+        legacy: { state: null, settings: Object.assign({}, LEGACY_DEFAULT_SETTINGS), banned: {}, hof: {} },
         activeCid: null,
         adminCid: null,
         viewMode: "hub",
@@ -295,11 +200,15 @@
         logs: [],
         myPresenceRef: null,
         myBanRef: null,
+        myLegacyBanRef: null,
         cmdRef: null,
+        legacyCmdRef: null,
         cmdUser: null,
         logsRef: null,
         bansRef: null,
+        legacyBansRef: null,
         hofRef: null,
+        legacyHofRef: null,
         adminPresenceRef: null,
         uiBuilt: !1,
         adminTab: "contests",
@@ -327,16 +236,103 @@
         (document.head || document.documentElement).appendChild(ms);
     }
 
+    const isLegacy = cid => cid === LEGACY_CID;
+
+    function buildLegacyMeta() {
+        const s = st.legacy.state;
+        if (!s || "object" !== typeof s || "cleared" === s.status) return null;
+        const oSet = Object.assign({}, LEGACY_DEFAULT_SETTINGS, st.legacy.settings || {});
+        const isDual = "dual" === s.mode;
+        const isActive = "active" === s.status;
+        return {
+            id: LEGACY_CID,
+            isLegacy: !0,
+            title: s.title || "مسابقة ملك وملكة الشات",
+            subtitle: "رشّح نفسك وتنافس على التاج والجوائز الملكية الفاخرة",
+            template: "royal",
+            theme: s.theme || "gold",
+            icon: "fa-crown",
+            mode: isDual ? "dual" : "single",
+            cat1Label: "ملك الشات", cat1Icon: "👑",
+            cat2Label: "ملكة الشات", cat2Icon: "👸",
+            status: isActive ? "active" : ("archived" === s.status ? "archived" : "idle"),
+            season: Number(s.season) || 1,
+            nomEnd: Number(s.nomEnd) || 0,
+            voteEnd: Number(s.voteEnd) || 0,
+            paused: Boolean(s.paused),
+            pausedPhase: "nomination" === s.pausedPhase ? "submission" : (s.pausedPhase || "submission"),
+            remainingMs: Number(s.remainingMs) || 0,
+            voteMultiplier: Math.max(1, Number(s.voteMultiplier) || 1),
+            tieBreaker: s.tieBreaker || null,
+            tieBreakerCat1: s.tieBreakerKing || null,
+            tieBreakerCat2: s.tieBreakerQueen || null,
+            showInMenu: isActive && !1 !== s.showInMenu,
+            pinTop: !1 !== s.pinTop,
+            resultsPublished: !1,
+            correctAnswer: "",
+            quizPrompt: "",
+            maxWinners: 1,
+            createdBy: s.startedBy || "الإدارة",
+            createdAt: Number(s.nomEnd) || 1,
+            cfg: Object.assign({}, DEFAULT_CONTEST_CFG, {
+                enabled: !1 !== oSet.enabled,
+                allowGuestsVote: Boolean(oSet.allowGuestsVote),
+                allowSelfVote: Boolean(oSet.allowSelfVote),
+                allowVoteChange: Boolean(oSet.allowVoteChange),
+                requireApproval: Boolean(oSet.requireApproval),
+                blindVoting: !1,
+                hideLiveVotes: Boolean(oSet.hideLiveVotes),
+                maxEntries: Number(oSet.maxCandidates) || 0,
+                allowPhotoWithEntry: !0,
+                bannerText: oSet.bannerText || "",
+                bannerTheme: oSet.bannerTheme || "gold",
+                welcomeText: oSet.welcomeText || "",
+                welcomeVersion: Number(oSet.welcomeVersion) || 0,
+                rulesText: oSet.rulesText || DEFAULT_RULES,
+                managers: Array.isArray(oSet.subAdmins) ? oSet.subAdmins : []
+            })
+        };
+    }
+
+    function getVoteKey(cid, myK, slotCat, isDual, bracketSlot = null) {
+        if (bracketSlot) return `${myK}_${bracketSlot}`;
+        if (!isDual) return myK;
+        if (isLegacy(cid)) return `${myK}_${"cat2" === slotCat ? "queen" : "king"}`;
+        return `${myK}_${slotCat}`;
+    }
+
     const h = {
         san: x => x ? String(x).replace(/[.#$\[\]\/]/g, "_").trim() : "",
         esc: x => String(x || "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])),
-        genId: (p = "c") => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+        genId: (p = "cnt") => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         isValidImg: av => Boolean(av && /^(https?:\/\/|data:image\/(jpeg|jpg|png|webp|gif);base64,)/i.test(String(av))),
         getTheme: k => THEMES[k] || THEMES.gold,
+        normAr(s) {
+            return String(s || "")
+                .trim().toLowerCase()
+                .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+                .replace(/[أإآ]/g, "ا")
+                .replace(/ة/g, "ه")
+                .replace(/ى/g, "ي")
+                .replace(/\s+/g, " ");
+        },
+        parseYtId(url) {
+            const s = String(url || "").trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+            const m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/|music\.youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/i);
+            return m ? m[1] : "";
+        },
         getContest(cid) {
-            const raw = cid && st.index ? st.index[cid] : null;
+            if (!cid) return null;
+            if (isLegacy(cid)) return buildLegacyMeta();
+            const raw = st.index ? st.index[cid] : null;
             if (!raw) return null;
-            return Object.assign({ id: cid }, raw, { cfg: Object.assign({}, DEFAULT_CONTEST_CFG, raw.cfg || {}) });
+            return Object.assign({ id: cid, isLegacy: !1 }, raw, { cfg: Object.assign({}, DEFAULT_CONTEST_CFG, raw.cfg || {}) });
+        },
+        getAllContestIds() {
+            const ids = Object.keys(st.index || {});
+            if (buildLegacyMeta() && !ids.includes(LEGACY_CID)) ids.unshift(LEGACY_CID);
+            return ids;
         },
         compressImg(file, mode = "avatar") {
             return new Promise((resolve, reject) => {
@@ -360,13 +356,13 @@
                             URL.revokeObjectURL(url);
                             resolve(data);
                         } else {
-                            const MAX = 240;
+                            const MAX = 220;
                             const side = Math.min(img.width, img.height);
                             const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
                             cv.width = MAX; cv.height = MAX;
                             ctx.drawImage(img, sx, sy, side, side, 0, 0, MAX, MAX);
                             let data = cv.toDataURL("image/jpeg", 0.78);
-                            if (data.length > 68000) data = cv.toDataURL("image/jpeg", 0.58);
+                            if (data.length > 65000) data = cv.toDataURL("image/jpeg", 0.6);
                             URL.revokeObjectURL(url);
                             resolve(data);
                         }
@@ -417,21 +413,37 @@
         isAdmin(cid = null) {
             if (h.isSuperAdmin() || h.isGlobalSubAdmin()) return !0;
             if (cid) return h.isContestManager(cid);
-            return Object.keys(st.index || {}).some(id => h.isContestManager(id));
+            return h.getAllContestIds().some(id => h.isContestManager(id));
         },
-        isVip() {
-            const list = st.global.vipUsers;
-            if (!Array.isArray(list) || !list.length) return !1;
+        isVip(cid = null) {
             const u = st.myUser || "", s = h.san(u);
-            return list.some(x => x === u || h.san(x) === s);
+            if (!u) return !1;
+            const gList = Array.isArray(st.global.vipUsers) ? st.global.vipUsers : [];
+            if (gList.some(x => x === u || h.san(x) === s)) return !0;
+            if (!cid || isLegacy(cid)) {
+                const lList = Array.isArray(st.legacy.settings?.vipUsers) ? st.legacy.settings.vipUsers : [];
+                if (lList.some(x => x === u || h.san(x) === s)) return !0;
+            }
+            return !1;
+        },
+        getVipWeight(cid = null) {
+            if (isLegacy(cid) && st.legacy.settings?.vipVoteWeight) return Math.max(1, Number(st.legacy.settings.vipVoteWeight) || 2);
+            return Math.max(1, Number(st.global.vipVoteWeight) || 2);
         },
         myKey() { return h.san(st.myUser || st.myUid || ""); },
         getMyBan(cid = null) {
-            const k = h.myKey(), b = (k && st.banned && st.banned[k]) ? st.banned[k] : null;
-            if (!b) return null;
-            if (b.expiresAt && Date.now() >= b.expiresAt) return null;
-            if (b.contestId && cid && b.contestId !== "all" && b.contestId !== cid) return null;
-            return b;
+            const k = h.myKey();
+            if (!k) return null;
+            const check = b => {
+                if (!b) return null;
+                if (b.expiresAt && Date.now() >= b.expiresAt) return null;
+                if (b.contestId && cid && "all" !== b.contestId && b.contestId !== cid) return null;
+                return b;
+            };
+            const mainBan = check(st.banned?.[k]);
+            if (mainBan) return mainBan;
+            if (!cid || isLegacy(cid)) return check(st.legacy.banned?.[k]);
+            return null;
         },
         fmtTime(ms) {
             if (ms < 0) ms = 0;
@@ -489,13 +501,200 @@
         fireConfetti() {
             const run = () => {
                 if (!window.confetti) return;
-                window.confetti({ particleCount: window.innerWidth < 600 ? 55 : 115, spread: 80, origin: { y: 0.6 }, colors: ["#D4AF37", "#fbbf24", "#ffffff", "#ef4444", "#a855f7", "#38bdf8"], zIndex: 2147483647 });
+                window.confetti({ particleCount: window.innerWidth < 600 ? 55 : 115, spread: 80, origin: { y: 0.6 }, colors: ["#D4AF37", "#fbbf24", "#ffffff", "#ef4444", "#a855f7", "#38bdf8", "#34d399"], zIndex: 2147483647 });
             };
             if (window.confetti) return run();
             const sc = document.createElement("script");
             sc.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
             sc.onload = run;
             document.head.appendChild(sc);
+        }
+    };
+
+    // ==================== محوّل الجسر المباشر (Live Bridge Adapter) ====================
+    const dbOps = {
+        saveEntry(cid, key, e) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                return st.db.ref(`${LEGACY_ROOT}/candidates/${key}`).set({
+                    uid: e.uid || "", username: e.username, displayName: e.displayName || e.username,
+                    html: e.html || h.esc(e.displayName || e.username), avatar: e.avatar || "",
+                    role: "cat2" === e.category ? "queen" : "king", slogan: e.text || "",
+                    badge: e.badge || "", frozen: Boolean(e.frozen), status: e.status || "approved",
+                    bonusVotes: Number(e.bonusVotes) || 0, joinedAt: e.joinedAt || Date.now()
+                });
+            }
+            return st.db.ref(`${ROOT}/data/${cid}/entries/${key}`).set(e);
+        },
+        updateEntry(cid, key, part) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                const up = {};
+                if (void 0 !== part.displayName) up.displayName = part.displayName;
+                if (void 0 !== part.html) up.html = part.html;
+                if (void 0 !== part.avatar) up.avatar = part.avatar;
+                if (void 0 !== part.text) up.slogan = part.text;
+                if (void 0 !== part.category) up.role = "cat2" === part.category ? "queen" : "king";
+                if (void 0 !== part.badge) up.badge = part.badge;
+                if (void 0 !== part.frozen) up.frozen = Boolean(part.frozen);
+                if (void 0 !== part.status) up.status = part.status;
+                if (void 0 !== part.bonusVotes) up.bonusVotes = Number(part.bonusVotes) || 0;
+                return st.db.ref(`${LEGACY_ROOT}/candidates/${key}`).update(up);
+            }
+            return st.db.ref(`${ROOT}/data/${cid}/entries/${key}`).update(part);
+        },
+        removeEntry(cid, key) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/candidates/${key}` : `${ROOT}/data/${cid}/entries/${key}`).remove();
+        },
+        approveAllPending(cid, entriesObj) {
+            if (!st.db) return Promise.resolve(0);
+            const up = {}; let cnt = 0;
+            Object.entries(entriesObj || {}).forEach(([k, e]) => { if (e && "pending" === e.status) { up[`${k}/status`] = "approved"; cnt++; } });
+            if (!cnt) return Promise.resolve(0);
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/candidates` : `${ROOT}/data/${cid}/entries`).update(up).then(() => cnt);
+        },
+        saveVote(cid, voteKey, v) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                return st.db.ref(`${LEGACY_ROOT}/votes/${voteKey}`).set({
+                    target: v.target, role: "cat2" === v.category ? "queen" : "king",
+                    voterName: v.voterName, weight: v.weight, ts: v.ts
+                });
+            }
+            return st.db.ref(`${ROOT}/data/${cid}/votes/${voteKey}`).set(v);
+        },
+        updateVotes(cid, up) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/votes` : `${ROOT}/data/${cid}/votes`).update(up);
+        },
+        removeVote(cid, voteKey) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/votes/${voteKey}` : `${ROOT}/data/${cid}/votes/${voteKey}`).remove();
+        },
+        wipeVotes(cid) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/votes` : `${ROOT}/data/${cid}/votes`).remove();
+        },
+        patchContest(cid, part) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                const up = {};
+                Object.entries(part).forEach(([k, v]) => {
+                    if ("pausedPhase" === k) up.pausedPhase = "submission" === v ? "nomination" : v;
+                    else if ("tieBreakerCat1" === k) up.tieBreakerKing = v;
+                    else if ("tieBreakerCat2" === k) up.tieBreakerQueen = v;
+                    else up[k] = v;
+                });
+                return st.db.ref(`${LEGACY_ROOT}/state`).update(up);
+            }
+            return st.db.ref(`${ROOT}/index/${cid}`).update(part);
+        },
+        patchContestCfg(cid, part) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                const up = {};
+                Object.entries(part).forEach(([k, v]) => {
+                    if ("maxEntries" === k) up.maxCandidates = v;
+                    else if ("managers" === k) up.subAdmins = v;
+                    else up[k] = v;
+                });
+                return st.db.ref(`${LEGACY_ROOT}/settings`).update(up);
+            }
+            return st.db.ref(`${ROOT}/index/${cid}/cfg`).update(part);
+        },
+        setPrizes(cid, list) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/prizes` : `${ROOT}/data/${cid}/prizes`).set(list);
+        },
+        broadcast(cid, text, theme = "gold") {
+            if (!st.db) return Promise.reject();
+            const payload = { text, theme, cid: cid || null, ts: Date.now(), by: st.myUser || "الإدارة" };
+            const ps = [st.db.ref(`${ROOT}/broadcast`).set(payload)];
+            if (isLegacy(cid)) ps.push(st.db.ref(`${LEGACY_ROOT}/broadcast`).set({ text, theme, ts: payload.ts, by: payload.by }));
+            return Promise.all(ps);
+        },
+        startNewSeason(cid, c) {
+            if (!st.db) return Promise.reject();
+            const noSub = "poll" === c.template, noVote = ["prediction", "raffle", "quiz"].includes(c.template);
+            const nomH = noSub ? 0 : ("quiz" === c.template ? 12 : 48);
+            const votH = noVote ? 0 : 72;
+            const now = Date.now(), nextSeason = (Number(c.season) || 0) + 1;
+            const nomEnd = noSub ? now - 1000 : now + nomH * 36e5;
+            const voteEnd = noVote ? nomEnd : nomEnd + votH * 36e5;
+            if (isLegacy(cid)) {
+                return st.db.ref(LEGACY_ROOT).update({
+                    state: {
+                        status: "active", season: nextSeason, title: c.title || "مسابقة ملك وملكة شات ليل",
+                        mode: c.mode || "single", nomEnd, voteEnd, paused: !1, voteMultiplier: 1,
+                        tieBreaker: null, tieBreakerKing: null, tieBreakerQueen: null,
+                        showInMenu: !0, pinTop: !0, startedBy: st.myUser || "الإدارة"
+                    },
+                    candidates: null, votes: null,
+                    broadcast: { text: `👑 انطلق الموسم #${nextSeason} — رشّح نفسك الآن!`, theme: "gold", ts: now, by: st.myUser || "الإدارة" }
+                });
+            }
+            const up = {};
+            up[`index/${cid}/status`] = "active";
+            up[`index/${cid}/season`] = nextSeason;
+            up[`index/${cid}/nomEnd`] = nomEnd;
+            up[`index/${cid}/voteEnd`] = voteEnd;
+            up[`index/${cid}/paused`] = !1;
+            up[`index/${cid}/voteMultiplier`] = 1;
+            up[`index/${cid}/tieBreaker`] = null;
+            up[`index/${cid}/tieBreakerCat1`] = null;
+            up[`index/${cid}/tieBreakerCat2`] = null;
+            up[`index/${cid}/resultsPublished`] = !1;
+            up[`index/${cid}/raffleWinners`] = null;
+            up[`index/${cid}/bracket`] = null;
+            up[`data/${cid}/entries`] = null;
+            up[`data/${cid}/votes`] = null;
+            return st.db.ref(ROOT).update(up);
+        },
+        banUser(key, data) {
+            if (!st.db) return Promise.reject();
+            const ps = [st.db.ref(`${ROOT}/banned/${key}`).set(data)];
+            if ("all" === data.contestId || isLegacy(data.contestId)) {
+                ps.push(st.db.ref(`${LEGACY_ROOT}/banned/${key}`).set({
+                    name: data.name, scope: data.scope, reason: data.reason,
+                    expiresAt: data.expiresAt, by: data.by, ts: data.ts
+                }));
+            }
+            return Promise.all(ps);
+        },
+        unbanUser(key) {
+            if (!st.db) return Promise.reject();
+            return Promise.all([
+                st.db.ref(`${ROOT}/banned/${key}`).remove(),
+                st.db.ref(`${LEGACY_ROOT}/banned/${key}`).remove()
+            ]);
+        },
+        clearPresence(cid) {
+            if (!st.db || !cid) return Promise.resolve();
+            return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/presence` : `${ROOT}/data/${cid}/presence`).remove();
+        },
+        sendCmd(sanUser, cmd, text) {
+            if (!st.db || !sanUser) return Promise.reject();
+            const payload = { cmd, text, ts: Date.now(), by: st.myUser || "الإدارة" };
+            return Promise.all([
+                st.db.ref(`${ROOT}/cmds/${sanUser}`).set(payload),
+                st.db.ref(`${LEGACY_ROOT}/cmds/${sanUser}`).set(payload)
+            ]);
+        },
+        pushHof(cid, item) {
+            if (!st.db) return Promise.reject();
+            if (isLegacy(cid)) {
+                return st.db.ref(`${LEGACY_ROOT}/hall_of_fame`).push({
+                    season: item.season || 1, name: item.name,
+                    role: "cat2" === item.catKey ? "queen" : "king",
+                    avatar: item.avatar || "", votes: item.votes || 0, date: item.date || Date.now()
+                });
+            }
+            return st.db.ref(`${ROOT}/hall_of_fame`).push(item);
+        },
+        removeHof(src, key) {
+            if (!st.db) return Promise.reject();
+            return st.db.ref("legacy" === src ? `${LEGACY_ROOT}/hall_of_fame/${key}` : `${ROOT}/hall_of_fame/${key}`).remove();
         }
     };
 
@@ -510,8 +709,8 @@
     }
 
     function pinTopMenuBtns() {
-        const pinnedIds = Object.keys(st.index || {})
-            .sort((a, b) => (st.index[b]?.createdAt || 0) - (st.index[a]?.createdAt || 0))
+        const pinnedIds = h.getAllContestIds()
+            .sort((a, b) => (h.getContest(b)?.createdAt || 0) - (h.getContest(a)?.createdAt || 0))
             .filter(cid => {
                 const c = h.getContest(cid);
                 return c && "active" === c.status && !1 !== c.showInMenu && Boolean(c.pinTop);
@@ -540,14 +739,16 @@
         }
     }
 
-    function computeVoteCounts(entriesObj, votesObj) {
+    function computeVoteCounts(entriesObj, votesObj, matchKey = null) {
         const counts = {};
         Object.keys(entriesObj || {}).forEach(k => {
             const e = entriesObj[k];
-            if (e) counts[k] = Number(e.bonusVotes) || 0;
+            if (e) counts[k] = matchKey ? 0 : (Number(e.bonusVotes) || 0);
         });
         Object.values(votesObj || {}).forEach(v => {
-            if (v && v.target && void 0 !== counts[v.target]) counts[v.target] += Math.max(1, Number(v.weight) || 1);
+            if (!v || !v.target || void 0 === counts[v.target]) return;
+            if (matchKey && v.matchKey !== matchKey) return;
+            counts[v.target] += Math.max(1, Number(v.weight) || 1);
         });
         return counts;
     }
@@ -577,6 +778,24 @@
             if (now < (c.nomEnd || 0)) return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
             return { phase: "judging", remaining: 0, paused: !1 };
         }
+        if ("raffle" === c.template) {
+            if (c.resultsPublished) return { phase: "results", remaining: 0, paused: !1 };
+            if (now < (c.nomEnd || 0)) return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
+            return { phase: "drawing", remaining: 0, paused: !1 };
+        }
+        if ("quiz" === c.template) {
+            const maxW = Math.max(1, Number(c.maxWinners) || 3);
+            const wonCnt = entriesObj ? Object.values(entriesObj).filter(e => e && e.isWinner).length : 0;
+            if (c.resultsPublished || (entriesObj && wonCnt >= maxW) || now >= (c.nomEnd || 0)) {
+                return { phase: "results", remaining: 0, paused: !1 };
+            }
+            return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
+        }
+        if ("bracket" === c.template) {
+            if (c.resultsPublished || c.bracket?.champion) return { phase: "results", remaining: 0, paused: !1 };
+            if (now < (c.nomEnd || 0)) return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
+            return { phase: "voting", remaining: Math.max(0, (c.voteEnd || 0) - now), paused: !1 };
+        }
         if ("poll" !== c.template && now < (c.nomEnd || 0)) {
             return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
         }
@@ -605,7 +824,7 @@
         if (!k) return;
         if (st.myPresenceRef) { st.myPresenceRef.remove().catch(() => {}); st.myPresenceRef = null; }
         if (!cid || !statusTxt) return;
-        const ref = st.db.ref(`${ROOT}/data/${cid}/presence/${k}`);
+        const ref = st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/presence/${k}` : `${ROOT}/data/${cid}/presence/${k}`);
         st.myPresenceRef = ref;
         ref.onDisconnect().remove();
         ref.set({ name: st.myUser || k, status: statusTxt, ts: Date.now() }).catch(() => {});
@@ -632,7 +851,7 @@
         if (!ad) {
             ad = document.createElement("div");
             ad.id = "lce-live-ad";
-            ad.innerHTML = `<div class="lce-ad-ico"><i class="fas fa-trophy"></i></div><div id="lce-ad-msg"></div><div class="lce-ad-btns"><button type="button" class="lce-ad-go" id="lce-ad-join">دخول</button><button type="button" class="lce-ad-x" id="lce-ad-hide" title="إغلاق"><i class="fas fa-times"></i></button></div>`;
+            ad.innerHTML = `<div class="lce-ad-ico"><i class="fas fa-crown"></i></div><div id="lce-ad-msg"></div><div class="lce-ad-btns"><button type="button" class="lce-ad-go" id="lce-ad-join">دخول</button><button type="button" class="lce-ad-x" id="lce-ad-hide" title="إغلاق"><i class="fas fa-times"></i></button></div>`;
             document.body.appendChild(ad);
             document.getElementById("lce-ad-hide").onclick = () => ad.classList.remove("show");
         }
@@ -660,12 +879,13 @@
 
         const fire = () => {
             if (!1 === st.global.showToastAd) return;
-            if (!h.isAdmin(cid) && !h.isVip() && (!1 === st.global.enabled || !1 === c.cfg?.enabled)) return;
+            if (!h.isAdmin(cid) && !h.isVip(cid) && (!1 === st.global.enabled || !1 === c.cfg?.enabled)) return;
             if (document.getElementById("lce-modal")?.classList.contains("open")) return;
             const cur = getPhaseInfo(h.getContest(cid)).phase;
             const tName = c.title || "المسابقة";
             if ("submission" === cur) showBannerToastAd(`🔥 بدأت (${tName})! شارك الآن قبل انتهاء الوقت.`, c.theme || "gold", cid);
             else if ("voting" === cur) showBannerToastAd(`🗳️ بدأ التصويت في (${tName})! ادخل وصوّت للأفضل.`, c.theme || "gold", cid);
+            else if ("drawing" === cur) showBannerToastAd(`🎰 أُغلق التسجيل في (${tName}) — جاري السحب الآن!`, "emerald", cid);
             else if ("judging" === cur) showBannerToastAd(`⚖️ أُغلق باب التوقعات في (${tName}) وبانتظار النتيجة.`, "purple", cid);
             else if ("results" === cur) showBannerToastAd(`🏆 ظهرت نتائج (${tName})! ادخل لتهنئة الفائزين.`, c.theme || "gold", cid);
         };
@@ -725,7 +945,6 @@
         .lce-inp:focus{border-color:var(--lce-ac)}
         .lce-pick-row{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.32);border:1px dashed var(--lce-bd);border-radius:12px;padding:9px 12px;margin-bottom:10px}
         .lce-pick-thumb{width:46px;height:46px;border-radius:50%;border:2px solid var(--lce-ac);background:#1e293b;display:flex;align-items:center;justify-content:center;color:var(--lce-ac);font-size:18px;flex-shrink:0;overflow:hidden}
-        .lce-pick-thumb.sq{border-radius:10px;width:64px;height:52px}
         .lce-pick-thumb img{width:100%;height:100%;object-fit:cover;display:block}
         .lce-upload-zone{border:2px dashed var(--lce-bd);border-radius:15px;padding:24px 16px;background:var(--lce-soft);cursor:pointer;text-align:center;margin-bottom:12px;transition:.2s}
         .lce-upload-zone:hover{filter:brightness(1.12)}
@@ -747,6 +966,19 @@
         .lce-card.cat2-card{border-top:3px solid #ec4899}
         .lce-photo-card{padding:0}
         .lce-photo-media{width:100%;height:185px;object-fit:cover;display:block;cursor:zoom-in;background:#090b12;border-bottom:1px solid rgba(255,255,255,.08)}
+        .lce-yt-wrap{position:relative;width:100%;height:168px;background:#05070e;cursor:pointer;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.08)}
+        .lce-yt-wrap img{width:100%;height:100%;object-fit:cover;display:block;opacity:.88;transition:.25s}
+        .lce-yt-wrap:hover img{opacity:1;transform:scale(1.03)}
+        .lce-yt-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(239,68,68,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 6px 24px rgba(0,0,0,.75);border:2px solid rgba(255,255,255,.8)}
+        .lce-duo-avs{display:flex;align-items:center;justify-content:center;margin:14px 0 8px}
+        .lce-duo-avs .lce-av{margin:0;width:68px;height:68px}
+        .lce-duo-avs .lce-av:last-child{margin-right:-16px}
+        .lce-duo-heart{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f43f5e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:2;margin:0 -8px;border:2px solid #131627;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+        .lce-match-card{background:linear-gradient(180deg,rgba(30,33,54,.96),rgba(14,16,28,.98));border:1px solid var(--lce-bd);border-radius:18px;padding:15px;margin-bottom:14px}
+        .lce-match-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+        .lce-vs-badge{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-weight:900;font-size:.85rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(239,68,68,.4);border:2px solid rgba(255,255,255,.25)}
+        .lce-match-side{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center}
+        .lce-match-side.voted{border-color:#10b981;background:rgba(16,185,129,.1)}
         .lce-photo-inner{padding:12px 13px 14px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;flex:1}
         .lce-role-tag{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:800;z-index:2;backdrop-filter:blur(6px)}
         .lce-role-tag.cat1{background:rgba(15,23,42,.82);color:#7dd3fc;border:1px solid rgba(56,189,248,.45)}
@@ -784,6 +1016,7 @@
         #lce-live-ad.th-maroon{border-color:rgba(212,175,55,.7);background:linear-gradient(135deg,#310c18,#12070c)}
         #lce-live-ad.th-purple{border-color:rgba(168,85,247,.75);background:linear-gradient(135deg,#221238,#100d1b)}
         #lce-live-ad.th-blue{border-color:rgba(56,189,248,.75);background:linear-gradient(135deg,#0f2338,#090f18)}
+        #lce-live-ad.th-emerald{border-color:rgba(52,211,153,.75);background:linear-gradient(135deg,#0c2c22,#081410)}
         #lce-live-ad.show{bottom:74px;opacity:1;visibility:visible;transition:bottom .4s cubic-bezier(.2,.8,.2,1),opacity .3s ease,visibility 0s linear 0s}
         .lce-ad-ico{width:32px;height:32px;border-radius:10px;background:rgba(212,175,55,.18);color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
         #lce-ad-msg{flex:1;min-width:0;font-size:12.5px;font-weight:700;line-height:1.45;color:#fef3c7;text-align:right}
@@ -794,7 +1027,8 @@
         @media(max-width:650px){
             .lce-ov{padding:0}.lce-shell{max-width:100%;height:100%;max-height:100%;border-radius:0;border:none}
             .lce-hdr{padding:11px 13px}.lce-brand{font-size:.96rem}.lce-ibtn span{display:none}.lce-body{padding:13px}
-            .lce-grid{grid-template-columns:1fr 1fr;gap:10px}.lce-card{padding:11px}.lce-photo-card{padding:0}.lce-av{width:62px;height:62px}.lce-photo-media{height:140px}
+            .lce-grid{grid-template-columns:1fr 1fr;gap:10px}.lce-card{padding:11px}.lce-photo-card{padding:0}.lce-av{width:62px;height:62px}.lce-photo-media{height:140px}.lce-yt-wrap{height:132px}
+            .lce-match-grid{grid-template-columns:1fr;gap:8px}.lce-vs-badge{margin:0 auto}
             #lce-live-ad{padding:9px 12px;gap:8px}#lce-ad-msg{font-size:12px}
         }
         @media(max-width:390px){.lce-grid{grid-template-columns:1fr}}
@@ -802,7 +1036,7 @@
         document.head.appendChild(s);
     }
     // ====== نهاية الجزء 1 من 3 ======
-// ====== بداية الجزء 2 من 3 ======
+    // ====== بداية الجزء 2 من 3 ======
     function applyModalTheme(themeKey) {
         const modal = document.getElementById("lce-modal");
         const shell = modal?.querySelector(".lce-shell");
@@ -859,6 +1093,19 @@
         document.getElementById("lce-txt-x").onclick = () => ov.remove();
     }
 
+    function activateYtEmbed(wrap) {
+        const ytId = wrap?.dataset?.yt;
+        if (!ytId) return;
+        document.querySelectorAll("#lce-modal .lce-yt-wrap.playing").forEach(other => {
+            if (other === wrap) return;
+            const oid = other.dataset.yt;
+            other.classList.remove("playing");
+            other.innerHTML = `<img src="https://img.youtube.com/vi/${h.esc(oid)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div>`;
+        });
+        wrap.classList.add("playing");
+        wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${h.esc(ytId)}?autoplay=1&rel=0&playsinline=1" style="width:100%;height:100%;border:0;display:block;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    }
+
     function ensureUserModal() {
         ensureBaseStyles();
         if (st.uiBuilt) return;
@@ -905,7 +1152,7 @@
     function maybeShowWelcome(cid, c) {
         if (!cid || !c) return;
         const txt = (c.cfg?.welcomeText || "").trim(), ver = String(c.cfg?.welcomeVersion || 1);
-        const storeKey = `lce_welc_${cid}`;
+        const storeKey = isLegacy(cid) ? "lrc_welc_v" : `lce_welc_${cid}`;
         try { if (!txt || localStorage.getItem(storeKey) === ver) return; } catch (e) { return; }
         document.getElementById("lce-welc-sub")?.remove();
         const ov = document.createElement("div");
@@ -921,7 +1168,8 @@
     function openPrizesModal() {
         document.getElementById("lce-prizes-sub")?.remove();
         const c = h.getContest(st.activeCid);
-        const list = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : DEFAULT_PRIZES;
+        const fallbackP = isLegacy(st.activeCid) ? ROYAL_DEFAULT_PRIZES : DEFAULT_PRIZES;
+        const list = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : fallbackP;
         const rules = (c?.cfg?.rulesText || DEFAULT_RULES).trim();
         const ov = document.createElement("div");
         ov.id = "lce-prizes-sub";
@@ -951,14 +1199,31 @@
         document.getElementById("lce-pz-ok").onclick = () => ov.remove();
     }
 
+    function getMergedHofList(filterCid = "") {
+        const arr = [];
+        Object.entries(st.hof || {}).forEach(([k, w]) => {
+            if (!w) return;
+            arr.push(Object.assign({ _src: "v2", _key: k }, w));
+        });
+        Object.entries(st.legacy.hof || {}).forEach(([k, w]) => {
+            if (!w) return;
+            arr.push({
+                _src: "legacy", _key: k, contestId: LEGACY_CID,
+                contestTitle: "مسابقة ملك وملكة الشات",
+                season: w.season || 1, name: w.name || "-",
+                categoryLabel: "queen" === w.role ? "👸 ملكة الشات" : "👑 ملك الشات",
+                avatar: w.avatar || "", votes: w.votes || 0, date: w.date || 0
+            });
+        });
+        return arr.filter(w => !filterCid || w.contestId === filterCid).sort((a, b) => (b.date || 0) - (a.date || 0));
+    }
+
     function openHofModal(filterCid = "") {
         document.getElementById("lce-hof-sub")?.remove();
         const renderHofBody = () => {
             const box = document.getElementById("lce-hof-list-box");
             if (!box) return;
-            const list = Object.values(st.hof || {})
-                .filter(w => !filterCid || w.contestId === filterCid)
-                .sort((a, b) => (b.date || 0) - (a.date || 0));
+            const list = getMergedHofList(filterCid);
             box.innerHTML = list.length ? list.map(w => `
                 <div class="lce-prize-item" style="margin-bottom:8px;">
                     ${h.isValidImg(w.avatar) ? `<img src="${h.esc(w.avatar)}" class="lce-hof-zoom" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;cursor:zoom-in;">` : `<div class="lce-prize-ico"><i class="fas fa-crown"></i></div>`}
@@ -983,8 +1248,11 @@
         document.body.appendChild(ov);
         ov.onclick = e => { if (e.target === ov) ov.remove(); };
         document.getElementById("lce-hf-x").onclick = () => ov.remove();
-        if (st.db && !Object.keys(st.hof || {}).length) {
-            st.db.ref(`${ROOT}/hall_of_fame`).once("value", sn => { st.hof = sn.val() || {}; renderHofBody(); });
+        if (st.db) {
+            Promise.all([
+                st.db.ref(`${ROOT}/hall_of_fame`).once("value").then(s => { st.hof = s.val() || {}; }),
+                st.db.ref(`${LEGACY_ROOT}/hall_of_fame`).once("value").then(s => { st.legacy.hof = s.val() || {}; })
+            ]).then(renderHofBody).catch(renderHofBody);
         } else renderHofBody();
     }
 
@@ -1013,6 +1281,10 @@
         return `<div class="lce-av"><i class="fas ${h.esc(icon)}"></i></div>`;
     }
 
+    function renderDuoAvatars(av1, av2) {
+        return `<div class="lce-duo-avs">${renderAvatar(av1, "fa-user")}<div class="lce-duo-heart"><i class="fas fa-heart"></i></div>${renderAvatar(av2, "fa-user")}</div>`;
+    }
+
     function getCatMeta(c, catKey) {
         if ("dual" !== c.mode) return { label: c.cat1Label || "مشارك", icon: c.cat1Icon || "👑", cls: "cat1" };
         if ("cat2" === catKey) return { label: c.cat2Label || "الفئة الثانية", icon: c.cat2Icon || "👸", cls: "cat2" };
@@ -1024,6 +1296,7 @@
         const map = {
             submission: ["rgba(56,189,248,.18)", "#7dd3fc", "📝 باب المشاركة مفتوح"],
             voting: ["rgba(16,185,129,.18)", "#6ee7b7", "🗳️ التصويت مفتوح"],
+            drawing: ["rgba(52,211,153,.2)", "#6ee7b7", "🎰 جاري السحب"],
             judging: ["rgba(192,132,252,.18)", "#e9d5ff", "⚖️ مرحلة الفرز"],
             tiebreaker: ["rgba(239,68,68,.2)", "#fca5a5", "⚖️ تعادل بالصدارة"],
             results: ["rgba(212,175,55,.2)", "#fde68a", "🏆 النتائج والتتويج"],
@@ -1032,6 +1305,108 @@
         };
         const [bg, fg, txt] = map[ph] || map.idle;
         return `<span style="background:${bg};color:${fg};padding:2px 9px;border-radius:12px;font-size:.72rem;font-weight:800;">${txt}</span>`;
+    }
+
+    // ==================== محرك القرعة والسحب العشوائي ====================
+    function runRaffleDraw(cid, c) {
+        if (!st.db || !h.isAdmin(cid)) return;
+        const pool = getApprovedEntries(st.data.entries);
+        if (!pool.length) return showToast("لا يوجد مشاركون في السحب بعد!", 3000, "red");
+        const count = Math.min(pool.length, Math.max(1, Number(c.maxWinners) || 1));
+        if (!confirm(`إجراء السحب العشوائي الآن لاختيار (${count}) فائز من أصل (${pool.length}) مشارك؟`)) return;
+
+        const weighted = [];
+        pool.forEach(e => {
+            const w = Math.max(1, Number(e.tickets) || 1);
+            for (let i = 0; i < w; i++) weighted.push(e.key);
+        });
+        const picked = [];
+        const pickedSet = new Set();
+        let guard = 0;
+        while (picked.length < count && guard++ < 5000) {
+            const k = weighted[Math.floor(Math.random() * weighted.length)];
+            if (k && !pickedSet.has(k)) { pickedSet.add(k); picked.push(k); }
+        }
+
+        const up = {};
+        Object.keys(st.data.entries || {}).forEach(k => { up[`data/${cid}/entries/${k}/isWinner`] = pickedSet.has(k); });
+        up[`index/${cid}/resultsPublished`] = !0;
+        up[`index/${cid}/raffleWinners`] = picked;
+        st.db.ref(ROOT).update(up).then(() => {
+            contestsAdmin.log("سحب عشوائي", c.title, picked.join(", "));
+            dbOps.broadcast(cid, `🎰 تمت القرعة في (${c.title}) وظهرت أسماء الفائزين!`, c.theme || "emerald");
+            showToast("🎉 تم السحب العشوائي وإعلان الفائزين!", 4000, "gold");
+        }).catch(() => alert("❌ تعذر حفظ نتيجة السحب."));
+    }
+
+    // ==================== محرك بطولة خروج المغلوب (1 ضد 1) ====================
+    function buildBracketRound(keysList, roundNum) {
+        const arr = keysList.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        const matches = [];
+        for (let i = 0; i < arr.length; i += 2) {
+            const a = arr[i], b = arr[i + 1] || null;
+            matches.push({ id: `r${roundNum}_m${matches.length}`, a, b, winner: b ? null : a });
+        }
+        return matches;
+    }
+
+    function startBracketTournament(cid, c) {
+        const list = getApprovedEntries(st.data.entries).map(e => e.key);
+        if (list.length < 2) return showToast("تحتاج على الأقل مشاركين اثنين لبدء البطولة!", 3500, "red");
+        if (!confirm(`سحب قرعة الجولة الأولى بين (${list.length}) متنافس وبدء التصويت؟`)) return;
+        const matches = buildBracketRound(list, 1);
+        const now = Date.now(), dur = Math.max(36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 24 * 36e5);
+        dbOps.patchContest(cid, {
+            nomEnd: now - 1000,
+            voteEnd: now + dur,
+            bracket: { round: 1, matches, champion: null }
+        }).then(() => {
+            contestsAdmin.log("قرعة بطولة", c.title, `${list.length} متنافس`);
+            dbOps.broadcast(cid, `⚔️ بدأت مواجهات الجولة #1 في (${c.title})! صوّت الآن.`, c.theme || "maroon");
+            showToast("⚔️ تم سحب القرعة وبدأت المواجهات!", 3500, "gold");
+        });
+    }
+
+    function advanceBracketRound(cid, c) {
+        const br = c.bracket;
+        if (!br || !Array.isArray(br.matches) || !br.matches.length) return;
+        const winners = [];
+        for (const m of br.matches) {
+            if (!m.b) { winners.push(m.a); continue; }
+            if (m.winner) { winners.push(m.winner); continue; }
+            const cnts = computeVoteCounts(st.data.entries, st.data.votes, m.id);
+            const va = cnts[m.a] || 0, vb = cnts[m.b] || 0;
+            if (va === vb) {
+                const nA = st.data.entries?.[m.a]?.displayName || m.a;
+                const nB = st.data.entries?.[m.b]?.displayName || m.b;
+                return showToast(`⚖️ تعادل بين (${nA}) و (${nB})! احسم المواجهة أولاً بزر "تأهيل" أسفلها.`, 4500, "red");
+            }
+            winners.push(va > vb ? m.a : m.b);
+        }
+        if (winners.length === 1) {
+            if (!confirm("تتويج بطل البطولة وإعلان النتيجة النهائية؟")) return;
+            dbOps.patchContest(cid, { resultsPublished: !0, bracket: { round: br.round, matches: br.matches, champion: winners[0] } }).then(() => {
+                contestsAdmin.log("تتويج بطل البطولة", c.title, winners[0]);
+                dbOps.broadcast(cid, `🏆 تُوّج بطل (${c.title})! ادخل للتهنئة.`, c.theme || "gold");
+                showToast("🏆 تم تتويج البطل بنجاح!", 4000, "gold");
+            });
+            return;
+        }
+        if (!confirm(`تأهيل (${winners.length}) متنافس إلى الجولة #${br.round + 1}؟`)) return;
+        const nextRound = br.round + 1;
+        const nextMatches = buildBracketRound(winners, nextRound);
+        dbOps.patchContest(cid, {
+            voteEnd: Date.now() + 24 * 36e5,
+            bracket: { round: nextRound, matches: nextMatches, champion: null }
+        }).then(() => {
+            contestsAdmin.log("جولة جديدة بالبطولة", c.title, `الجولة #${nextRound}`);
+            dbOps.broadcast(cid, `⚔️ بدأت الجولة #${nextRound} في (${c.title})! صوّت الآن.`, c.theme || "maroon");
+            showToast(`⚔️ انطلقت الجولة #${nextRound}!`, 3500, "gold");
+        });
     }
 
     // ==================== عرض مركز المسابقات (Hub) ====================
@@ -1053,9 +1428,9 @@
         body.dataset.phase = "hub";
 
         const isAnyAdmin = h.isAdmin();
-        const all = Object.keys(st.index || {})
+        const all = h.getAllContestIds()
             .map(id => h.getContest(id))
-            .filter(c => c && ("archived" !== c.status || isAnyAdmin) && (!1 !== c.cfg.enabled || h.isAdmin(c.id) || h.isVip()))
+            .filter(c => c && ("archived" !== c.status || isAnyAdmin) && (!1 !== c.cfg.enabled || h.isAdmin(c.id) || h.isVip(c.id)))
             .sort((a, b) => (Number(b.pinTop) - Number(a.pinTop)) || ((b.createdAt || 0) - (a.createdAt || 0)));
 
         const liveCount = all.filter(c => "active" === c.status).length;
@@ -1098,7 +1473,7 @@
         body.querySelectorAll("[data-open-cid]").forEach(card => card.onclick = () => window.LaylContests.open(card.dataset.openCid));
     }
 
-    // ==================== عرض المسابقة النشطة (جميع الـ 5 قوالب) ====================
+    // ==================== عرض المسابقة النشطة (محرك جميع الـ 10 أنظمة) ====================
     function renderMainBody() {
         const modal = document.getElementById("lce-modal");
         if (!modal || !modal.classList.contains("open")) return;
@@ -1114,7 +1489,7 @@
 
         document.getElementById("lce-hdr-title").textContent = c.title || "المسابقة";
         document.getElementById("lce-hdr-ico").className = `fas ${c.icon || tmpl.icon}`;
-        const activeCount = Object.values(st.index || {}).filter(x => x && "active" === x.status).length;
+        const activeCount = h.getAllContestIds().filter(id => "active" === h.getContest(id)?.status).length;
         document.getElementById("lce-btn-back").style.display = activeCount > 1 ? "inline-flex" : "none";
         document.getElementById("lce-btn-prizes").style.display = "inline-flex";
         document.getElementById("lce-btn-adm-quick").style.display = isAdm ? "inline-flex" : "none";
@@ -1150,11 +1525,11 @@
         const myKey = h.myKey();
         const isBlind = Boolean(c.cfg.blindVoting);
         const isDual = "dual" === c.mode;
-        const isPhoto = "photo" === c.template;
-        const isTalent = "talent" === c.template;
-        const isPredict = "prediction" === c.template;
+        const T = c.template;
+        const isPhoto = "photo" === T, isTalent = "talent" === T, isDuo = "duo" === T, isMedia = "media" === T;
+        const isRaffle = "raffle" === T, isQuiz = "quiz" === T, isBracket = "bracket" === T, isPredict = "prediction" === T;
 
-        // 1. حالة متوقفة / مؤرشفة
+        // 1. متوقفة / مؤرشفة
         if ("idle" === info.phase || "archived" === info.phase) {
             body.dataset.phase = info.phase;
             body.innerHTML = `
@@ -1174,16 +1549,30 @@
             return;
         }
 
-        // 2. مرحلة التقديم / الترشيح / رفع الصور / التوقعات
+        // 2. مرحلة التقديم / التسجيل / التحدي السريع
         if ("submission" === info.phase) {
             const mine = myKey ? entries[myKey] : null;
             const approved = getApprovedEntries(entries);
             const maxE = Number(c.cfg.maxEntries) || 0;
             const isFull = maxE > 0 && Object.keys(entries).length >= maxE && !isAdm;
-            const hideSubGallery = (isPhoto && isBlind) || isPredict;
-            const nKey = `${cid}_${Boolean(mine)}_${mine?.status || ""}_${Boolean(info.paused)}_${isFull}_${c.season || 1}_${c.template}_${c.mode}`;
+            const hideSubGallery = ((isPhoto || isMedia) && isBlind) || isPredict || isQuiz;
+            const nKey = `${cid}_${Boolean(mine)}_${mine?.status || ""}_${Boolean(mine?.isWinner)}_${Boolean(info.paused)}_${isFull}_${c.season || 1}_${T}_${c.mode}`;
 
             const renderSubCards = () => {
+                if (isQuiz) {
+                    const winnersSoFar = approved.filter(e => e.isWinner).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+                    const maxW = Math.max(1, Number(c.maxWinners) || 3);
+                    if (!winnersSoFar.length) {
+                        return `<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:24px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.12);border-radius:14px;">⚡ بانتظار أول من يصل للإجابة الصحيحة! (${Object.keys(entries).length} محاولة حتى الآن • المقاعد الفائزة: ${maxW})</div>`;
+                    }
+                    return winnersSoFar.map((e, i) => `
+                        <div class="lce-card winner-mark">
+                            <span class="lce-rank-num">#${i + 1}</span>
+                            ${renderAvatar(e.avatar, "fa-bolt")}
+                            <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
+                            <span class="lce-spot-bdg">⚡ إجابة صحيحة — ${h.fmtDate(e.joinedAt)}</span>
+                        </div>`).join("");
+                }
                 if (hideSubGallery && !isAdm) {
                     return `<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:24px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.12);border-radius:14px;">🔒 المشاركات سريّة حتى انتهاء هذه المرحلة لضمان النزاهة (${Object.keys(entries).length} مشاركة مسجلة حتى الآن).</div>`;
                 }
@@ -1194,10 +1583,27 @@
                         return `<div class="lce-card lce-photo-card ${cm.cls}-card">
                             ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
                             <img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">
-                            <div class="lce-photo-inner">
-                                <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
-                                ${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}
-                            </div>
+                            <div class="lce-photo-inner"><div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}</div>
+                        </div>`;
+                    }
+                    if (isMedia && e.ytId) {
+                        return `<div class="lce-card lce-photo-card">
+                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
+                            <div class="lce-photo-inner"><div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>${e.title ? `<div style="font-size:.82rem;color:var(--lce-tx);font-weight:700;">🎵 ${h.esc(e.title)}</div>` : ""}</div>
+                        </div>`;
+                    }
+                    if (isDuo) {
+                        return `<div class="lce-card">
+                            ${renderDuoAvatars(e.avatar, e.partnerAvatar)}
+                            <div class="lce-cname">${h.esc(e.displayName || e.username)} ❤️ ${h.esc(e.partnerName || "شريك")}</div>
+                            <div class="lce-slogan">${e.text ? `«${h.esc(e.text)}»` : "ثنائي رسمي ✨"}</div>
+                        </div>`;
+                    }
+                    if (isRaffle) {
+                        return `<div class="lce-card" style="padding:12px;">
+                            ${renderAvatar(e.avatar, "fa-ticket-alt")}
+                            <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
+                            <span class="lce-spot-bdg">🎟️ ${Math.max(1, Number(e.tickets) || 1) > 1 ? `×${e.tickets} فرص VIP` : "تذكرة سحب مؤكدة"}</span>
                         </div>`;
                     }
                     return `<div class="lce-card ${cm.cls}-card">
@@ -1216,6 +1622,7 @@
             const bindSubCardClicks = () => {
                 body.querySelectorAll(".lce-zoomable").forEach(img => img.onclick = () => openLightbox(img.src));
                 body.querySelectorAll(".lce-read-more").forEach(box => box.onclick = () => openTextPreview(box.dataset.title, box.dataset.txt, box.dataset.author));
+                body.querySelectorAll(".lce-yt-wrap").forEach(w => w.onclick = () => activateYtEmbed(w));
             };
 
             if ("submission" === body.dataset.phase && body.dataset.nkey === nKey && document.getElementById("lce-sub-grid")) {
@@ -1233,15 +1640,19 @@
             if (mine) {
                 const isPend = "pending" === mine.status;
                 const cm = getCatMeta(c, mine.category);
+                let statusMsg = isPend ? "تم استلام مشاركتك — بانتظار اعتماد الإدارة" : `تم تسجيل مشاركتك بنجاح${isDual ? ` (${cm.icon} ${cm.label})` : ""}!`;
+                if (isQuiz) statusMsg = mine.isWinner ? "🎉 إجابتك صحيحة! تم تسجيلك ضمن الفائزين الأوائل 🏆" : (c.correctAnswer ? "❌ إجابتك غير مطابقة — حظاً أوفر في التحدي القادم!" : "✅ تم استلام إجابتك وبانتظار إعلان الإدارة.");
+                if (isRaffle) statusMsg = `🎟️ تم حجز تذكرتك في السحب بنجاح${(mine.tickets || 1) > 1 ? ` (×${mine.tickets} فرص VIP ⭐)` : ""}!`;
                 myFormHtml = `
-                    <div class="lce-form" style="border-color:${isPend ? "#f59e0b" : "#10b981"};text-align:center;">
-                        <div style="font-size:26px;margin-bottom:5px;">${isPend ? "⏳" : "✅"}</div>
-                        <div style="font-weight:900;font-size:1.02rem;color:${isPend ? "#fcd34d" : "#6ee7b7"};">${isPend ? "تم استلام مشاركتك — بانتظار اعتماد الإدارة" : `تم تسجيل مشاركتك بنجاح${isDual ? ` (${cm.icon} ${cm.label})` : ""}!`}</div>
+                    <div class="lce-form" style="border-color:${isPend ? "#f59e0b" : (isQuiz && c.correctAnswer && !mine.isWinner ? "#ef4444" : "#10b981")};text-align:center;">
+                        <div style="font-size:26px;margin-bottom:5px;">${isPend ? "⏳" : (isQuiz && c.correctAnswer && !mine.isWinner ? "❌" : "✅")}</div>
+                        <div style="font-weight:900;font-size:1.02rem;color:${isPend ? "#fcd34d" : "#6ee7b7"};">${statusMsg}</div>
                         ${isPhoto && h.isValidImg(mine.image) ? `<img src="${h.esc(mine.image)}" class="lce-photo-prev lce-zoomable" style="max-height:170px;margin-top:10px;">` : ""}
-                        ${mine.text ? `<div style="color:#cbd5e1;font-size:.86rem;margin:6px 0 10px;white-space:pre-line;">«${h.esc(mine.text)}»</div>` : ""}
+                        ${isDuo ? `<div style="margin-top:6px;color:var(--lce-tx);font-weight:800;">💑 ${h.esc(mine.displayName)} ❤️ ${h.esc(mine.partnerName || "")}</div>` : ""}
+                        ${mine.text && !isQuiz ? `<div style="color:#cbd5e1;font-size:.86rem;margin:6px 0 10px;white-space:pre-line;">«${h.esc(mine.text)}»</div>` : ""}
                         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
-                            ${!isBlind && !isPredict ? `<button type="button" class="lce-btn" id="lce-copy-camp"><i class="fas fa-bullhorn"></i> نسخ رسالة حملتي</button>` : ""}
-                            <button type="button" class="lce-btn lce-btn-red" id="lce-withdraw" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-sign-out-alt"></i> سحب المشاركة</button>
+                            ${!isBlind && !isPredict && !isQuiz && !isRaffle ? `<button type="button" class="lce-btn" id="lce-copy-camp"><i class="fas fa-bullhorn"></i> نسخ رسالة حملتي</button>` : ""}
+                            ${!isQuiz ? `<button type="button" class="lce-btn lce-btn-red" id="lce-withdraw" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-sign-out-alt"></i> سحب المشاركة</button>` : ""}
                         </div>
                     </div>`;
             } else {
@@ -1261,32 +1672,41 @@
                             <div style="font-size:.75rem;color:#94a3b8;margin-top:3px;">يتم ضغط الصورة تلقائياً بجودة ممتازة وسرعة عالية</div>
                         </div>
                         <img id="lce-photo-prev" class="lce-photo-prev" style="display:none;" alt="">
-                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="90" placeholder="وصف قصير للصورة (اختياري)..." style="margin-bottom:10px;">
-                    `;
+                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="90" placeholder="وصف قصير للصورة (اختياري)..." style="margin-bottom:10px;">`;
                 } else if (isTalent) {
                     fieldsHtml = `
                         <input type="text" id="lce-sub-title" class="lce-inp" maxlength="60" placeholder="عنوان المشاركة (مثلاً: قصيدة ليل)..." style="margin-bottom:8px;">
-                        <textarea id="lce-sub-text" class="lce-inp" rows="4" maxlength="550" placeholder="اكتب مشاركتك هنا (شعر، خاطرة، قصة قصيرة، نكتة)..." style="margin-bottom:10px;"></textarea>
-                    `;
-                } else if (isPredict) {
+                        <textarea id="lce-sub-text" class="lce-inp" rows="4" maxlength="550" placeholder="اكتب مشاركتك هنا (شعر، خاطرة، قصة، نكتة)..." style="margin-bottom:10px;"></textarea>`;
+                } else if (isDuo) {
                     fieldsHtml = `
-                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="120" placeholder="اكتب توقعك بدقة هنا (مثلاً: 2-1 لصالح الفريق الأول)..." style="margin-bottom:10px;">
-                    `;
+                        <input type="text" id="lce-sub-partner" class="lce-inp" maxlength="45" placeholder="اسم المستخدم (Username) لشريكك في الثنائي *" style="margin-bottom:8px;">
+                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="90" placeholder="شعار أو وصف الثنائي (اختياري)..." style="margin-bottom:10px;">`;
+                } else if (isMedia) {
+                    fieldsHtml = `
+                        <input type="text" id="lce-sub-yt" class="lce-inp" dir="ltr" placeholder="https://youtu.be/... الصق رابط يوتيوب هنا *" style="margin-bottom:8px;">
+                        <input type="text" id="lce-sub-title" class="lce-inp" maxlength="70" placeholder="اسم الأغنية / الشيلة أو تعليق قصير (اختياري)..." style="margin-bottom:10px;">`;
+                } else if (isRaffle) {
+                    fieldsHtml = `<div style="text-align:center;color:#cbd5e1;font-size:.88rem;margin-bottom:12px;">اضغط الزر بالأسفل لحجز تذكرتك المجانية في السحب العشوائي (${Math.max(1, Number(c.maxWinners) || 1)} فائزين).${h.isVip(cid) ? `<br><b style="color:#fde68a;">⭐ أنت VIP — تحصل على ×${h.getVipWeight(cid)} فرص مضاعفة بالسحب!</b>` : ""}</div>`;
+                } else if (isQuiz) {
+                    fieldsHtml = `
+                        ${c.quizPrompt ? `<div style="background:rgba(0,0,0,.38);border:1px solid var(--lce-bd);border-radius:12px;padding:12px;margin-bottom:10px;font-size:.96rem;font-weight:800;color:#fff;line-height:1.7;white-space:pre-line;">❓ ${h.esc(c.quizPrompt)}</div>` : ""}
+                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="120" placeholder="اكتب الإجابة أو الكود السري هنا بأسرع وقت..." style="margin-bottom:10px;">`;
+                } else if (isPredict) {
+                    fieldsHtml = `<input type="text" id="lce-sub-text" class="lce-inp" maxlength="120" placeholder="اكتب توقعك بدقة هنا (مثلاً: 2-1 لصالح الفريق الأول)..." style="margin-bottom:10px;">`;
                 } else {
                     fieldsHtml = `
                         ${!1 !== c.cfg.allowPhotoWithEntry ? `
                         <div class="lce-pick-row">
                             <div class="lce-pick-thumb" id="lce-sub-av-prev"><i class="fas fa-camera"></i></div>
                             <div style="flex:1;min-width:0;text-align:right;">
-                                <div style="font-size:.83rem;font-weight:800;color:#e2e8f0;">صورة المرشح (اختياري)</div>
+                                <div style="font-size:.83rem;font-weight:800;color:#e2e8f0;">صورة المشارك (اختياري)</div>
                                 <div style="font-size:.73rem;color:#94a3b8;" id="lce-sub-av-lbl">تُستخدم صورة عضويتك تلقائياً أو اختر من الأستوديو</div>
                             </div>
                             <input type="file" id="lce-sub-file" accept="image/*" style="display:none;">
                             <button type="button" class="lce-btn lce-btn-out" id="lce-sub-av-btn" style="padding:7px 12px;font-size:.8rem;"><i class="fas fa-images"></i> الأستوديو</button>
                             <button type="button" class="lce-ibtn sq x" id="lce-sub-av-clr" style="display:none;" title="إزالة"><i class="fas fa-times"></i></button>
                         </div>` : ""}
-                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="90" placeholder="رسالتك الانتخابية / شعارك (اختياري)..." style="margin-bottom:10px;">
-                    `;
+                        <input type="text" id="lce-sub-text" class="lce-inp" maxlength="90" placeholder="رسالتك الانتخابية / شعارك (اختياري)..." style="margin-bottom:10px;">`;
                 }
 
                 myFormHtml = `
@@ -1294,9 +1714,14 @@
                         <div style="font-weight:800;color:var(--lce-ac);margin-bottom:10px;font-size:.96rem;"><i class="fas ${h.esc(c.icon || tmpl.icon)}"></i> ${h.esc(tmpl.submitVerb)} ${maxE ? `<span style="font-size:.78rem;color:#94a3b8;">(${Object.keys(entries).length}/${maxE})</span>` : ""}</div>
                         ${dualPicker}
                         ${fieldsHtml}
-                        <button type="button" id="lce-submit-entry" class="lce-btn" style="width:100%;" ${info.paused || isFull ? "disabled" : ""}><i class="fas fa-check-circle"></i> ${isFull ? "اكتمل العدد المسموح للمشاركات" : "تأكيد إرسال المشاركة"}</button>
+                        <button type="button" id="lce-submit-entry" class="lce-btn" style="width:100%;" ${info.paused || isFull ? "disabled" : ""}><i class="fas fa-check-circle"></i> ${isFull ? "اكتمل العدد المسموح" : (isRaffle ? "دخول السحب الآن 🎟️" : "تأكيد إرسال المشاركة")}</button>
                     </div>`;
             }
+
+            const admQuickAction = isAdm && isBracket && approved.length >= 2
+                ? `<div style="margin-bottom:14px;text-align:center;"><button type="button" id="lce-br-start" class="lce-btn" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;"><i class="fas fa-random"></i> سحب قرعة المواجهات وبدء الجولة #1 (${approved.length} متنافس)</button></div>`
+                : (isAdm && isRaffle && approved.length >= 1
+                    ? `<div style="margin-bottom:14px;text-align:center;"><button type="button" id="lce-rf-draw-now" class="lce-btn"><i class="fas fa-dice"></i> إنهاء التسجيل وإجراء السحب العشوائي الآن</button></div>` : "");
 
             body.innerHTML = `
                 <div class="lce-hero">
@@ -1306,19 +1731,22 @@
                     <div class="lce-timer"><i class="fas fa-clock"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>
                     ${info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ المسابقة متوقفة مؤقتاً</div>' : ""}
                 </div>
+                ${admQuickAction}
                 ${myFormHtml}
-                <div style="margin-bottom:10px;"><b style="color:var(--lce-tx);font-size:.95rem;">📜 المشاركات حتى الآن (<span id="lce-sub-cnt">${hideSubGallery && !isAdm ? Object.keys(entries).length : approved.length}</span>)</b></div>
+                <div style="margin-bottom:10px;"><b style="color:var(--lce-tx);font-size:.95rem;">${isQuiz ? "⚡ الأسرع إجابة حتى الآن" : "📜 المشاركات حتى الآن"} (<span id="lce-sub-cnt">${hideSubGallery && !isAdm ? Object.keys(entries).length : approved.length}</span>)</b></div>
                 <div class="lce-grid" id="lce-sub-grid">${renderSubCards()}</div>`;
 
             bindSubCardClicks();
+            document.getElementById("lce-br-start")?.addEventListener("click", () => startBracketTournament(cid, c));
+            document.getElementById("lce-rf-draw-now")?.addEventListener("click", () => runRaffleDraw(cid, c));
 
             if (mine) {
                 document.getElementById("lce-copy-camp")?.addEventListener("click", () => {
-                    h.copy(`✨ شاركت في (${c.title}) داخل شات ليل!\n👤 ${mine.displayName || mine.username}${mine.text ? `\n💬 «${mine.text}»` : ""}\n🔥 ادعموني بأصواتكم عند بدء التصويت!`, "📋 تم نسخ رسالة حملتك!");
+                    h.copy(`✨ شاركت في (${c.title}) داخل شات ليل!\n👤 ${isDuo ? `${mine.displayName} ❤️ ${mine.partnerName}` : (mine.displayName || mine.username)}${mine.text ? `\n💬 «${mine.text}»` : ""}\n🔥 ادعموني بأصواتكم!`, "📋 تم نسخ رسالة حملتك!");
                 });
-                document.getElementById("lce-withdraw").onclick = () => {
-                    if (confirm("سحب مشاركتك من المسابقة؟")) st.db?.ref(`${ROOT}/data/${cid}/entries/${myKey}`).remove().then(() => showToast("تم سحب مشاركتك."));
-                };
+                document.getElementById("lce-withdraw")?.addEventListener("click", () => {
+                    if (confirm("سحب مشاركتك من المسابقة؟")) dbOps.removeEntry(cid, myKey).then(() => showToast("تم سحب مشاركتك."));
+                });
             } else {
                 let pickedCat = "cat1", pickedMedia = "";
                 const c1b = document.getElementById("lce-pick-c1"), c2b = document.getElementById("lce-pick-c2");
@@ -1326,50 +1754,48 @@
                     c1b.onclick = () => { pickedCat = "cat1"; c1b.className = "lce-role-opt sel-c1"; c2b.className = "lce-role-opt"; };
                     c2b.onclick = () => { pickedCat = "cat2"; c2b.className = "lce-role-opt sel-c2"; c1b.className = "lce-role-opt"; };
                 }
-
                 const fInp = document.getElementById("lce-sub-file");
                 if (isPhoto && fInp) {
                     const zone = document.getElementById("lce-upload-zone"), prev = document.getElementById("lce-photo-prev");
                     zone.onclick = () => fInp.click();
                     prev.onclick = () => fInp.click();
                     fInp.onchange = ev => {
-                        const file = ev.target.files?.[0]; ev.target.value = "";
-                        if (!file) return;
-                        h.compressImg(file, "photo").then(data => {
-                            pickedMedia = data;
-                            prev.src = data;
-                            prev.style.display = "block";
-                            zone.style.display = "none";
-                            showToast("📸 تم تجهيز الصورة بنجاح!", 2500, "gold");
-                        }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+                        const file = ev.target.files?.[0]; ev.target.value = ""; if (!file) return;
+                        h.compressImg(file, "photo").then(data => { pickedMedia = data; prev.src = data; prev.style.display = "block"; zone.style.display = "none"; showToast("📸 تم تجهيز الصورة!", 2500, "gold"); }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
                     };
                 } else if (fInp) {
                     const fPrev = document.getElementById("lce-sub-av-prev"), fLbl = document.getElementById("lce-sub-av-lbl"), fClr = document.getElementById("lce-sub-av-clr");
                     document.getElementById("lce-sub-av-btn").onclick = () => fInp.click();
                     fInp.onchange = ev => {
-                        const file = ev.target.files?.[0]; ev.target.value = "";
-                        if (!file) return;
-                        h.compressImg(file, "avatar").then(data => {
-                            pickedMedia = data;
-                            fPrev.innerHTML = `<img src="${data}" alt="">`;
-                            fLbl.textContent = "تم اختيار الصورة من الأستوديو ✓";
-                            fClr.style.display = "inline-flex";
-                        }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+                        const file = ev.target.files?.[0]; ev.target.value = ""; if (!file) return;
+                        h.compressImg(file, "avatar").then(data => { pickedMedia = data; fPrev.innerHTML = `<img src="${data}" alt="">`; fLbl.textContent = "تم اختيار الصورة ✓"; fClr.style.display = "inline-flex"; }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
                     };
-                    fClr.onclick = () => {
-                        pickedMedia = "";
-                        fPrev.innerHTML = '<i class="fas fa-camera"></i>';
-                        fLbl.textContent = "تُستخدم صورة عضويتك تلقائياً أو اختر من الأستوديو";
-                        fClr.style.display = "none";
-                    };
+                    fClr.onclick = () => { pickedMedia = ""; fPrev.innerHTML = '<i class="fas fa-camera"></i>'; fLbl.textContent = "تُستخدم صورة عضويتك تلقائياً أو اختر من الأستوديو"; fClr.style.display = "none"; };
                 }
-
                 document.getElementById("lce-submit-entry").onclick = () => submitEntry(cid, c, pickedCat, pickedMedia);
             }
             return;
         }
 
-        // 3. مرحلة فرز التوقعات (قالب prediction فقط)
+        // 3. مرحلة السحب العشوائي (raffle)
+        if ("drawing" === info.phase) {
+            body.dataset.phase = "drawing";
+            const list = getApprovedEntries(entries);
+            body.innerHTML = `
+                <div class="lce-hero">
+                    <div style="font-size:44px;">🎰</div>
+                    <h2>أُغلق التسجيل — بانتظار السحب العشوائي!</h2>
+                    <p>عدد التذاكر المسجلة: <b>${list.length}</b> • عدد الفائزين المطلوب: <b>${Math.max(1, Number(c.maxWinners) || 1)}</b></p>
+                    ${isAdm ? `<div style="margin-top:14px;"><button type="button" id="lce-do-draw" class="lce-btn"><i class="fas fa-dice"></i> إجراء السحب العشوائي وإعلان الفائزين 🎉</button></div>` : '<div style="margin-top:10px;color:#fde68a;font-weight:800;">جاري تجهيز القرعة بواسطة الإدارة...</div>'}
+                </div>
+                <div class="lce-grid">
+                    ${list.map(e => `<div class="lce-card" style="padding:11px;">${renderAvatar(e.avatar, "fa-ticket-alt")}<div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div><span class="lce-spot-bdg">🎟️ ${(e.tickets || 1) > 1 ? `×${e.tickets} فرص VIP` : "تذكرة سحب"}</span></div>`).join("")}
+                </div>`;
+            document.getElementById("lce-do-draw")?.addEventListener("click", () => runRaffleDraw(cid, c));
+            return;
+        }
+
+        // 4. مرحلة فرز التوقعات (prediction)
         if ("judging" === info.phase) {
             body.dataset.phase = "judging";
             const list = getApprovedEntries(entries);
@@ -1377,9 +1803,9 @@
                 <div class="lce-hero">
                     <div style="font-size:40px;">⚖️</div>
                     <h2>أُغلق باب التوقعات — جاري الفرز!</h2>
-                    <p>${isAdm ? "بصفتك من الإدارة، اضغط على التوقعات الصحيحة لتعليمها كفائزة ثم اضغط «إعلان النتائج»." : "أُغلق باب استقبال التوقعات وبانتظار إعلان الإدارة عن النتيجة الصحيحة والفائزين."}</p>
+                    <p>${isAdm ? "اضغط على التوقعات الصحيحة لتعليمها كفائزة ثم اضغط «اعتماد وإعلان الفائزين»." : "أُغلق باب استقبال التوقعات وبانتظار إعلان الإدارة عن النتيجة الصحيحة."}</p>
                     ${isAdm ? `<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-                        <input id="lce-pred-ans" class="lce-inp" style="max-width:300px;" placeholder="الإجابة الصحيحة الرسمية (اختياري)..." value="${h.esc(c.correctAnswer || "")}">
+                        <input id="lce-pred-ans" class="lce-inp" style="max-width:300px;" placeholder="الإجابة الصحيحة الرسمية..." value="${h.esc(c.correctAnswer || "")}">
                         <button type="button" id="lce-pred-pub" class="lce-btn"><i class="fas fa-flag-checkered"></i> اعتماد وإعلان الفائزين</button>
                     </div>` : ""}
                 </div>
@@ -1392,15 +1818,14 @@
                             ${isAdm ? `<button type="button" class="lce-btn ${e.isWinner ? "" : "lce-btn-out"} lce-tog-win" data-k="${h.esc(e.key)}" style="width:100%;padding:7px;font-size:.82rem;">${e.isWinner ? "✅ توقع صحيح (فائز)" : "تحديد كفائز 🏆"}</button>` : (e.isWinner ? '<span class="lce-spot-bdg">✅ فائز</span>' : "")}
                         </div>`).join("") : '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:24px;">لا توجد توقعات مسجلة.</div>'}
                 </div>`;
-
             body.querySelectorAll(".lce-tog-win").forEach(b => b.onclick = () => {
                 const cur = Boolean(entries[b.dataset.k]?.isWinner);
-                st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}/isWinner`).set(!cur);
+                dbOps.updateEntry(cid, b.dataset.k, { isWinner: !cur });
             });
             document.getElementById("lce-pred-pub")?.addEventListener("click", () => {
                 const ans = document.getElementById("lce-pred-ans")?.value?.trim() || "";
                 if (!confirm("نشر النتيجة الرسمية وإعلان الفائزين الآن؟")) return;
-                st.db?.ref(`${ROOT}/index/${cid}`).update({ correctAnswer: ans, resultsPublished: !0 }).then(() => {
+                dbOps.patchContest(cid, { correctAnswer: ans, resultsPublished: !0 }).then(() => {
                     contestsAdmin.log("إعلان نتائج توقعات", c.title, ans);
                     showToast("🏆 تم إعلان نتائج التوقعات!", 4000, "gold");
                 });
@@ -1408,10 +1833,74 @@
             return;
         }
 
-        // 4. مرحلة التصويت
+        // 5. مرحلة التصويت لبطولة خروج المغلوب (bracket 1v1)
+        if ("voting" === info.phase && isBracket) {
+            body.dataset.phase = "voting_bracket";
+            const br = c.bracket;
+            if (!br || !Array.isArray(br.matches) || !br.matches.length) {
+                body.innerHTML = `
+                    <div class="lce-hero">
+                        <div style="font-size:42px;">⚔️</div>
+                        <h2>${h.esc(c.title)} — تجهيز قرعة المواجهات</h2>
+                        <p>أُغلق التسجيل (${getApprovedEntries(entries).length} متنافس) وبانتظار سحب قرعة الجولة الأولى.</p>
+                        ${isAdm ? `<button type="button" id="lce-br-init" class="lce-btn" style="margin-top:14px;"><i class="fas fa-random"></i> سحب القرعة وبدء الجولة #1</button>` : ""}
+                    </div>`;
+                document.getElementById("lce-br-init")?.addEventListener("click", () => startBracketTournament(cid, c));
+                return;
+            }
+            const roundLabel = br.matches.length === 1 ? "🔥 المواجهة النهائية" : (br.matches.length === 2 ? "⚔️ نصف النهائي" : `⚔️ الجولة #${br.round}`);
+            body.innerHTML = `
+                <div class="lce-hero">
+                    <div style="color:var(--lce-ac);font-size:.86rem;font-weight:800;">${roundLabel} • خروج المغلوب (1 ضد 1)</div>
+                    <h2>${h.esc(c.title)}</h2>
+                    <p>لك صوت واحد في كل مواجهة مستقلة! اختر من يستحق التأهل للجولة التالية.</p>
+                    ${info.remaining > 0 ? `<div class="lce-timer"><i class="fas fa-hourglass-half"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>` : ""}
+                    ${isAdm ? `<div style="margin-top:12px;"><button type="button" id="lce-br-next" class="lce-btn"><i class="fas fa-forward"></i> ${br.matches.length === 1 ? "تتويج بطل البطولة 🏆" : `إنهاء الجولة وتأهيل الفائزين للجولة #${br.round + 1}`}</button></div>` : ""}
+                </div>
+                ${br.matches.map((m, idx) => {
+                    const ea = entries[m.a], eb = m.b ? entries[m.b] : null;
+                    if (!ea) return "";
+                    if (!eb) {
+                        return `<div class="lce-match-card" style="text-align:center;">
+                            <div style="color:var(--lce-tx);font-weight:800;font-size:.86rem;">مواجهة #${idx + 1} — تأهل تلقائي (Bye)</div>
+                            <div style="margin-top:8px;font-weight:900;font-size:1.05rem;">👑 ${h.esc(ea.displayName || ea.username)}</div>
+                        </div>`;
+                    }
+                    const cnts = computeVoteCounts(entries, votes, m.id);
+                    const va = cnts[m.a] || 0, vb = cnts[m.b] || 0, tot = (va + vb) || 1;
+                    const myVk = getVoteKey(cid, myKey, "cat1", !1, m.id);
+                    const myPick = myKey && votes[myVk] ? votes[myVk].target : null;
+                    const renderSide = (e, k, vCnt) => {
+                        const pct = Math.round((vCnt / tot) * 100), voted = myPick === k;
+                        const canV = !info.paused && !m.winner && (!myPick || c.cfg.allowVoteChange) && !voted;
+                        return `<div class="lce-match-side ${voted ? "voted" : ""}" style="${m.winner === k ? "border-color:#D4AF37;box-shadow:0 0 18px rgba(212,175,55,.28);" : ""}">
+                            ${renderAvatar(e.avatar, "fa-user")}
+                            <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
+                            ${!c.cfg.hideLiveVotes || isAdm ? `<div class="lce-bar-wrap" style="margin-top:6px;"><div class="lce-bar-fill" style="width:${pct}%;"></div></div><div class="lce-vstat">🔥 ${vCnt} صوت (${pct}%)</div>` : '<div class="lce-vstat">🔒 سري</div>'}
+                            ${m.winner === k ? '<span class="lce-spot-bdg">✅ متأهل</span>' : (voted ? '<button type="button" class="lce-btn" style="width:100%;padding:7px;font-size:.8rem;background:#10b981;color:#fff;" disabled>✓ صوتك هنا</button>' : `<button type="button" class="lce-btn lce-br-vote" data-k="${h.esc(k)}" data-mid="${h.esc(m.id)}" style="width:100%;padding:7px;font-size:.8rem;" ${canV ? "" : "disabled"}>صوّت 🗳️</button>`)}
+                            ${isAdm && !m.winner ? `<button type="button" class="lce-btn lce-btn-out lce-br-force" data-k="${h.esc(k)}" data-mi="${idx}" style="width:100%;padding:5px;font-size:.74rem;margin-top:6px;">حسم وتأهيل ⚖️</button>` : ""}
+                        </div>`;
+                    };
+                    return `<div class="lce-match-card">
+                        <div style="text-align:center;color:#94a3b8;font-size:.78rem;font-weight:800;margin-bottom:10px;">مواجهة #${idx + 1}</div>
+                        <div class="lce-match-grid">${renderSide(ea, m.a, va)}<div class="lce-vs-badge">VS</div>${renderSide(eb, m.b, vb)}</div>
+                    </div>`;
+                }).join("")}`;
+
+            document.getElementById("lce-br-next")?.addEventListener("click", () => advanceBracketRound(cid, c));
+            body.querySelectorAll(".lce-br-vote").forEach(b => b.onclick = () => castVote(cid, c, b.dataset.k, "cat1", b.dataset.mid));
+            body.querySelectorAll(".lce-br-force").forEach(b => b.onclick = () => {
+                if (!confirm("حسم هذه المواجهة وتأهيل هذا المتنافس؟")) return;
+                const mi = Number(b.dataset.mi);
+                st.db?.ref(`${ROOT}/index/${cid}/bracket/matches/${mi}/winner`).set(b.dataset.k).then(() => showToast("✅ تم حسم المواجهة"));
+            });
+            return;
+        }
+
+        // 6. مرحلة التصويت القياسية (royal / photo / talent / duo / media / poll)
         if ("voting" === info.phase) {
             const hideVotes = Boolean(c.cfg.hideLiveVotes) && !isAdm;
-            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip()}_${c.template}`;
+            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip(cid)}_${T}`;
 
             const fillVoteGrid = () => {
                 const grid = document.getElementById("lce-vote-grid");
@@ -1420,15 +1909,18 @@
                 let list = getApprovedEntries(entries, st.catFilter);
                 if (st.searchQuery && (!isBlind || isAdm)) {
                     const q = st.searchQuery.toLowerCase();
-                    list = list.filter(e => `${e.displayName || ""} ${e.username || ""} ${e.title || ""} ${e.text || ""}`.toLowerCase().includes(q));
+                    list = list.filter(e => `${e.displayName || ""} ${e.username || ""} ${e.partnerName || ""} ${e.title || ""} ${e.text || ""}`.toLowerCase().includes(q));
                 }
                 if (hideVotes || isBlind) list.sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
                 else list.sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
 
                 const totalVotes = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-                const myVoteSingle = myKey && votes[myKey] ? votes[myKey].target : null;
-                const myVoteC1 = myKey && votes[`${myKey}_cat1`] ? votes[`${myKey}_cat1`].target : null;
-                const myVoteC2 = myKey && votes[`${myKey}_cat2`] ? votes[`${myKey}_cat2`].target : null;
+                const vkS = getVoteKey(cid, myKey, "cat1", !1);
+                const vk1 = getVoteKey(cid, myKey, "cat1", !0);
+                const vk2 = getVoteKey(cid, myKey, "cat2", !0);
+                const myVoteSingle = myKey && votes[vkS] ? votes[vkS].target : null;
+                const myVoteC1 = myKey && votes[vk1] ? votes[vk1].target : null;
+                const myVoteC2 = myKey && votes[vk2] ? votes[vk2].target : null;
 
                 grid.innerHTML = list.length ? list.map((e, idx) => {
                     const cm = getCatMeta(c, e.category);
@@ -1439,10 +1931,11 @@
                     const hasVotedSlot = isDual ? Boolean("cat1" === slotCat ? myVoteC1 : myVoteC2) : Boolean(myVoteSingle);
                     const isFrozen = Boolean(e.frozen);
                     const canVoteBtn = !info.paused && !isFrozen && (!hasVotedSlot || c.cfg.allowVoteChange) && !votedForThis;
-                    const blindLabel = `${isPhoto ? "🖼️ صورة" : isTalent ? "✍️ مشاركة" : "🎭 مشارك"} رقم #${idx + 1}`;
+                    const blindLabel = `${isPhoto ? "🖼️ صورة" : isMedia ? "🎵 مقطع" : isTalent ? "✍️ مشاركة" : "🎭 مشارك"} رقم #${idx + 1}`;
                     const showRealName = !isBlind || isAdm;
+                    const duoDisp = isDuo ? `${h.esc(e.displayName || e.username)} ❤️ ${h.esc(e.partnerName || "")}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username));
                     const nameHtml = showRealName
-                        ? `${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}${isBlind && isAdm ? ' <span style="font-size:.7rem;color:#fbbf24;">(مخفي)</span>' : ""}`
+                        ? `${duoDisp}${isBlind && isAdm ? ' <span style="font-size:.7rem;color:#fbbf24;">(مخفي)</span>' : ""}`
                         : h.esc(blindLabel);
 
                     const voteCtrlHtml = `
@@ -1453,7 +1946,7 @@
                                 : votedForThis
                                 ? `<button type="button" class="lce-btn" style="flex:1;padding:8px;font-size:.82rem;background:#10b981;color:#fff;" disabled>✓ تم تصويتك</button>`
                                 : `<button type="button" class="lce-btn lce-vote-go" data-k="${h.esc(e.key)}" data-cat="${slotCat}" style="flex:1;padding:8px;font-size:.82rem;" ${canVoteBtn ? "" : "disabled"}>${hasVotedSlot && c.cfg.allowVoteChange ? "تغيير صوتي" : "صوّت 🗳️"}</button>`}
-                            ${!isBlind ? `<button type="button" class="lce-ibtn sq lce-share-entry" data-name="${h.esc(e.displayName || e.username)}" title="دعم ومشاركة"><i class="fas fa-share-alt"></i></button>` : ""}
+                            ${!isBlind ? `<button type="button" class="lce-ibtn sq lce-share-entry" data-name="${h.esc(isDuo ? `${e.displayName} و ${e.partnerName}` : (e.displayName || e.username))}" title="دعم ومشاركة"><i class="fas fa-share-alt"></i></button>` : ""}
                         </div>`;
 
                     if (isPhoto) {
@@ -1461,18 +1954,20 @@
                             ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
                             ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
                             <img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" data-cap="${h.esc(isBlind && !isAdm ? blindLabel : (e.displayName || ""))}" alt="" title="اضغط للتكبير">
-                            <div class="lce-photo-inner">
-                                <div class="lce-cname">${nameHtml}</div>
-                                ${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}
-                                ${voteCtrlHtml}
-                            </div>
+                            <div class="lce-photo-inner"><div class="lce-cname">${nameHtml}</div>${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}${voteCtrlHtml}</div>
                         </div>`;
                     }
-
+                    if (isMedia && e.ytId) {
+                        return `<div class="lce-card lce-photo-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
+                            ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
+                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
+                            <div class="lce-photo-inner"><div class="lce-cname">${nameHtml}</div>${e.title ? `<div class="lce-slogan" style="min-height:22px;color:var(--lce-tx);">🎵 ${h.esc(e.title)}</div>` : ""}${voteCtrlHtml}</div>
+                        </div>`;
+                    }
                     return `<div class="lce-card ${cm.cls}-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
                         ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
                         ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
-                        ${!isBlind || isAdm ? renderAvatar(e.avatar, c.icon || tmpl.icon) : `<div class="lce-av"><i class="fas ${h.esc(c.icon || tmpl.icon)}"></i></div>`}
+                        ${isDuo ? renderDuoAvatars(e.avatar, e.partnerAvatar) : (!isBlind || isAdm ? renderAvatar(e.avatar, c.icon || tmpl.icon) : `<div class="lce-av"><i class="fas ${h.esc(c.icon || tmpl.icon)}"></i></div>`)}
                         ${e.badge ? `<span class="lce-spot-bdg">${h.esc(e.badge)}</span>` : ""}
                         <div class="lce-cname">${nameHtml}</div>
                         ${e.title ? `<div style="font-size:.86rem;font-weight:800;color:var(--lce-tx);margin-bottom:4px;">${h.esc(e.title)}</div>` : ""}
@@ -1485,6 +1980,7 @@
 
                 grid.querySelectorAll(".lce-zoomable").forEach(img => img.onclick = () => openLightbox(img.src, img.dataset.cap || ""));
                 grid.querySelectorAll(".lce-read-more").forEach(box => box.onclick = () => openTextPreview(box.dataset.title, box.dataset.txt, box.dataset.author));
+                grid.querySelectorAll(".lce-yt-wrap").forEach(w => w.onclick = () => activateYtEmbed(w));
                 grid.querySelectorAll(".lce-vote-go").forEach(b => b.onclick = () => castVote(cid, c, b.dataset.k, b.dataset.cat));
                 grid.querySelectorAll(".lce-share-entry").forEach(b => b.onclick = () => {
                     h.copy(`🗳️ صوّت الآن لـ (${b.dataset.name}) في ${c.title} داخل شات ليل! 🏆🔥`, "📋 تم نسخ رسالة الدعم!");
@@ -1502,7 +1998,7 @@
                 <div class="lce-hero">
                     <div style="color:var(--lce-ac);font-size:.84rem;font-weight:800;">الموسم #${h.esc(c.season || 1)} • ${isBlind ? "التصويت الأعمى 🎭" : "مرحلة التصويت 🗳️"}</div>
                     <h2>${h.esc(c.title)}</h2>
-                    <p>${isDual ? `لك صوت لـ <b>${h.esc(c.cat1Label || "الفئة 1")}</b> وصوت لـ <b>${h.esc(c.cat2Label || "الفئة 2")}</b>.` : "اختر الأفضل وصوّت له قبل انتهاء العدّاد."} ${isBlind ? "<br><span style='color:#fbbf24;'>🎭 الأسماء مخفية لضمان العدل وتُكشف عند إعلان النتائج!</span>" : ""} ${h.isVip() ? `<br><span style="color:#fde68a;">⭐ أنت عضو VIP — صوتك يُحسب ×${Number(st.global.vipVoteWeight) || 2}!</span>` : ""} ${hideVotes ? "<br><span style='color:#fcd34d;'>🔒 العدادات سرية حتى انتهاء الوقت.</span>" : ""}</p>
+                    <p>${isDual ? `لك صوت لـ <b>${h.esc(c.cat1Label || "الفئة 1")}</b> وصوت لـ <b>${h.esc(c.cat2Label || "الفئة 2")}</b>.` : "اختر الأفضل وصوّت له قبل انتهاء العدّاد."} ${isBlind ? "<br><span style='color:#fbbf24;'>🎭 الأسماء مخفية لضمان العدل وتُكشف عند إعلان النتائج!</span>" : ""} ${h.isVip(cid) ? `<br><span style="color:#fde68a;">⭐ أنت عضو VIP — صوتك يُحسب ×${h.getVipWeight(cid)}!</span>` : ""} ${hideVotes ? "<br><span style='color:#fcd34d;'>🔒 العدادات سرية حتى انتهاء الوقت.</span>" : ""}</p>
                     <div class="lce-timer"><i class="fas fa-hourglass-half"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>
                     ${info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ التصويت متوقف مؤقتاً</div>' : ""}
                 </div>
@@ -1527,7 +2023,7 @@
             return;
         }
 
-        // 5. مرحلة كسر التعادل
+        // 7. كسر التعادل
         if ("tiebreaker" === info.phase) {
             body.dataset.phase = "tiebreaker";
             const counts = computeVoteCounts(entries, votes);
@@ -1536,9 +2032,9 @@
                 <div class="lce-grid">
                     ${arr.map(e => `
                         <div class="lce-card ${isPhoto ? "lce-photo-card" : ""}" style="border-color:#ef4444;">
-                            ${isPhoto && h.isValidImg(e.image) ? `<img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">` : renderAvatar(e.avatar, c.icon || tmpl.icon)}
+                            ${isPhoto && h.isValidImg(e.image) ? `<img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">` : (isDuo ? renderDuoAvatars(e.avatar, e.partnerAvatar) : renderAvatar(e.avatar, c.icon || tmpl.icon))}
                             <div class="${isPhoto ? "lce-photo-inner" : ""}" style="width:100%;">
-                                <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
+                                <div class="lce-cname">${isDuo ? `${h.esc(e.displayName)} ❤️ ${h.esc(e.partnerName)}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username))}</div>
                                 <div class="lce-vstat">متعادل بـ ${counts[e.key] || 0} صوت</div>
                                 ${isAdm ? `<button type="button" class="lce-btn lce-btn-red lce-tb-pick" data-k="${h.esc(e.key)}" data-slot="${slot}" style="width:100%;">منح الصوت الحاسم 🏆</button>` : '<span style="font-size:.82rem;color:#fcd34d;">بانتظار حسم الإدارة...</span>'}
                             </div>
@@ -1556,7 +2052,8 @@
             body.querySelectorAll(".lce-zoomable").forEach(img => img.onclick = () => openLightbox(img.src));
             body.querySelectorAll(".lce-tb-pick").forEach(b => b.onclick = () => {
                 if (!confirm("تأكيد منح الصوت الحاسم وتتويج هذا المشارك؟")) return;
-                st.db?.ref(`${ROOT}/index/${cid}/${b.dataset.slot}`).set(b.dataset.k).then(() => {
+                const up = {}; up[b.dataset.slot] = b.dataset.k;
+                dbOps.patchContest(cid, up).then(() => {
                     contestsAdmin.log("حسم تعادل", c.title, b.dataset.k);
                     showToast("🏆 تم حسم التعادل وإعلان التتويج!", 4000, "gold");
                 });
@@ -1564,17 +2061,20 @@
             return;
         }
 
-        // 6. مرحلة النتائج والتتويج
+        // 8. النتائج والتتويج (جميع الـ 10 أنظمة)
         body.dataset.phase = "results";
         const counts = computeVoteCounts(entries, votes);
         if (c.tieBreaker && void 0 !== counts[c.tieBreaker]) counts[c.tieBreaker]++;
         if (c.tieBreakerCat1 && void 0 !== counts[c.tieBreakerCat1]) counts[c.tieBreakerCat1]++;
         if (c.tieBreakerCat2 && void 0 !== counts[c.tieBreakerCat2]) counts[c.tieBreakerCat2]++;
 
+        const noVotesMode = isPredict || isRaffle || isQuiz || isBracket;
         let allSorted = getApprovedEntries(entries);
         let winners = [];
-        if (isPredict) {
-            winners = allSorted.filter(e => e.isWinner);
+        if (isBracket && c.bracket?.champion && entries[c.bracket.champion]) {
+            winners = [Object.assign({ key: c.bracket.champion }, entries[c.bracket.champion])];
+        } else if (isPredict || isRaffle || isQuiz) {
+            winners = allSorted.filter(e => e.isWinner).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
             allSorted.sort((a, b) => (Number(Boolean(b.isWinner)) - Number(Boolean(a.isWinner))) || ((a.joinedAt || 0) - (b.joinedAt || 0)));
         } else {
             allSorted.sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
@@ -1591,20 +2091,25 @@
         body.innerHTML = `
             <div style="text-align:center;margin-bottom:14px;">
                 <h2 style="margin:0;color:var(--lce-ac);font-size:1.42rem;font-weight:900;">🏆 التتويج وكشف النتائج — الموسم #${h.esc(c.season || 1)} 🏆</h2>
-                ${isPredict && c.correctAnswer ? `<div style="margin-top:8px;display:inline-block;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.45);color:#6ee7b7;padding:5px 16px;border-radius:20px;font-size:.86rem;font-weight:800;">✅ الإجابة الصحيحة: ${h.esc(c.correctAnswer)}</div>` : ""}
+                ${(isPredict || isQuiz) && c.correctAnswer ? `<div style="margin-top:8px;display:inline-block;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.45);color:#6ee7b7;padding:5px 16px;border-radius:20px;font-size:.86rem;font-weight:800;">✅ الإجابة المعتمدة: ${h.esc(c.correctAnswer.split("|")[0])}</div>` : ""}
             </div>
-            ${winners.length ? `<div style="display:grid;grid-template-columns:${winners.length > 1 ? "repeat(auto-fit,minmax(260px,1fr))" : "1fr"};gap:14px;">
-                ${winners.map(w => {
+            ${winners.length ? `<div style="display:grid;grid-template-columns:${winners.length > 1 ? "repeat(auto-fit,minmax(250px,1fr))" : "1fr"};gap:14px;">
+                ${winners.map((w, wi) => {
                     const cm = getCatMeta(c, w.category);
+                    const wNameHtml = isDuo ? `${h.esc(w.displayName || w.username)} ❤️ ${h.esc(w.partnerName || "")}` : (w.html ? h.sanHtml(w.html) : h.esc(w.displayName || w.username));
+                    const wLabel = isDual ? cm.label : (isQuiz ? `⚡ المركز #${wi + 1} (الأسرع)` : (isRaffle ? `🎟️ فائز بالقرعة #${wi + 1}` : (isBracket ? "⚔️ بطل البطولة" : "🏆 المركز الأول")));
+                    const badgeTxt = isQuiz ? `⚡ ${h.fmtDate(w.joinedAt)}` : (isRaffle ? "🎰 فائز بالسحب" : (isPredict ? "✅ توقع صحيح" : (isBracket ? "👑 بطل المواجهات" : `🔥 ${counts[w.key] || 0} صوت`)));
                     return `
                     <div class="lce-podium">
-                        <div style="font-size:36px;margin-bottom:4px;">${h.esc(cm.icon)}</div>
-                        <div style="color:var(--lce-tx);font-size:.92rem;font-weight:800;">${isDual ? h.esc(cm.label) : "🏆 المركز الأول"}</div>
-                        ${isPhoto && h.isValidImg(w.image) ? `<img class="lce-podium-img lce-zoomable" src="${h.esc(w.image)}" alt="">` : renderAvatar(w.avatar, c.icon || tmpl.icon)}
-                        <div class="lce-cname" style="font-size:1.22rem;">${w.html ? h.sanHtml(w.html) : h.esc(w.displayName || w.username)}</div>
+                        <div style="font-size:34px;margin-bottom:4px;">${h.esc(cm.icon)}</div>
+                        <div style="color:var(--lce-tx);font-size:.9rem;font-weight:800;">${h.esc(wLabel)}</div>
+                        ${isPhoto && h.isValidImg(w.image) ? `<img class="lce-podium-img lce-zoomable" src="${h.esc(w.image)}" alt="">`
+                            : (isMedia && w.ytId ? `<div class="lce-yt-wrap" data-yt="${h.esc(w.ytId)}" style="max-width:380px;margin:12px auto;border-radius:12px;"><img src="https://img.youtube.com/vi/${h.esc(w.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>`
+                            : (isDuo ? renderDuoAvatars(w.avatar, w.partnerAvatar) : renderAvatar(w.avatar, c.icon || tmpl.icon)))}
+                        <div class="lce-cname" style="font-size:1.2rem;">${wNameHtml}</div>
                         ${w.title ? `<div style="color:var(--lce-tx);font-weight:800;font-size:.9rem;margin-top:4px;">${h.esc(w.title)}</div>` : ""}
-                        ${w.text ? `<div style="color:#cbd5e1;font-size:.85rem;margin:5px 0 10px;white-space:pre-line;">«${h.esc(w.text)}»</div>` : ""}
-                        ${!isPredict ? `<div style="display:inline-block;background:var(--lce-ac);color:var(--lce-bt);padding:5px 18px;border-radius:20px;font-weight:900;font-size:.9rem;">🔥 ${counts[w.key] || 0} صوت</div>` : '<div style="display:inline-block;background:#10b981;color:#fff;padding:5px 18px;border-radius:20px;font-weight:900;font-size:.86rem;">✅ توقع صحيح</div>'}
+                        ${w.text && !isQuiz ? `<div style="color:#cbd5e1;font-size:.85rem;margin:5px 0 10px;white-space:pre-line;">«${h.esc(w.text)}»</div>` : ""}
+                        <div style="display:inline-block;background:var(--lce-ac);color:var(--lce-bt);padding:5px 18px;border-radius:20px;font-weight:900;font-size:.88rem;margin-top:6px;">${badgeTxt}</div>
                     </div>`;
                 }).join("")}
             </div>` : '<div class="lce-hero"><p>لم تسجل نتائج فائزة في هذا الموسم.</p></div>'}
@@ -1622,22 +2127,24 @@
                         <b style="color:var(--lce-ac);width:28px;text-align:center;">#${i + 1}</b>
                         ${thumb ? `<img src="${h.esc(thumb)}" class="${isPhoto ? "lce-zoomable" : ""}" style="width:42px;height:42px;border-radius:${isPhoto ? "8px" : "50%"};object-fit:cover;border:1px solid var(--lce-ac);${isPhoto ? "cursor:zoom-in;" : ""}">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
                         <div style="flex:1;min-width:0;">
-                            <div class="lce-cname" style="font-size:.9rem;margin:0;text-align:right;">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
-                            <div style="font-size:.74rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${isDual ? `${h.esc(cm.icon)} ${h.esc(cm.label)} • ` : ""}${h.esc(e.title || e.text || "")}</div>
+                            <div class="lce-cname" style="font-size:.9rem;margin:0;text-align:right;">${isDuo ? `${h.esc(e.displayName)} ❤️ ${h.esc(e.partnerName || "")}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username))}</div>
+                            <div style="font-size:.74rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${isDual ? `${h.esc(cm.icon)} ${h.esc(cm.label)} • ` : ""}${h.esc(e.title || (!isQuiz ? e.text : "") || "")}</div>
                         </div>
-                        ${isPredict
+                        ${noVotesMode
                             ? `<span style="background:${e.isWinner ? "rgba(16,185,129,.2)" : "rgba(255,255,255,.06)"};color:${e.isWinner ? "#6ee7b7" : "#94a3b8"};padding:4px 10px;border-radius:12px;font-size:.78rem;font-weight:800;">${e.isWinner ? "✅ فائز" : "مشارك"}</span>`
                             : `<span style="background:var(--lce-soft);color:var(--lce-tx);padding:4px 10px;border-radius:12px;font-size:.8rem;font-weight:800;">${counts[e.key] || 0} صوت</span>`}
                     </div>`;
                 }).join("")}` : ""}`;
 
         body.querySelectorAll(".lce-zoomable").forEach(img => img.onclick = () => openLightbox(img.src));
+        body.querySelectorAll(".lce-yt-wrap").forEach(w => w.onclick = () => activateYtEmbed(w));
         document.getElementById("lce-res-pz").onclick = openPrizesModal;
         document.getElementById("lce-res-copy").onclick = () => {
             if (!winners.length) return;
             const lines = winners.map(w => {
                 const cm = getCatMeta(c, w.category);
-                return `${cm.icon} ${isDual ? cm.label : "الفائز"}: ${w.displayName || w.username}${!isPredict ? ` (${counts[w.key] || 0} صوت)` : ""}`;
+                const nm = isDuo ? `${w.displayName || w.username} ❤️ ${w.partnerName || ""}` : (w.displayName || w.username);
+                return `${cm.icon} ${isDual ? cm.label : "الفائز"}: ${nm}${!noVotesMode ? ` (${counts[w.key] || 0} صوت)` : ""}`;
             }).join("\n");
             h.copy(`🏆✨ ألف مبروك التتويج في (${c.title}) ✨🏆\n\n${lines}\n\n🎁 الجوائز جاهزة للتفعيل! 🎉`, "📋 تم نسخ إعلان التتويج!");
         };
@@ -1656,32 +2163,64 @@
         }
         const key = h.myKey();
         if (!key) return;
+        const T = c.template;
         const text = (document.getElementById("lce-sub-text")?.value || "").trim().slice(0, 550);
-        const title = (document.getElementById("lce-sub-title")?.value || "").trim().slice(0, 60);
+        const title = (document.getElementById("lce-sub-title")?.value || "").trim().slice(0, 70);
 
-        if ("photo" === c.template && !mediaData) return showToast("📸 الرجاء اختيار صورة أولاً!", 3000, "red");
-        if (("talent" === c.template || "prediction" === c.template) && !text) return showToast("✍️ الرجاء كتابة مشاركتك قبل الإرسال!", 3000, "red");
+        let partnerName = "", partnerAvatar = "", ytId = "", isWinner = !1;
+        if ("photo" === T && !mediaData) return showToast("📸 الرجاء اختيار صورة أولاً!", 3000, "red");
+        if (("talent" === T || "prediction" === T || "quiz" === T) && !text) return showToast("✍️ الرجاء كتابة مشاركتك قبل الإرسال!", 3000, "red");
+        if ("duo" === T) {
+            const pRaw = (document.getElementById("lce-sub-partner")?.value || "").trim();
+            if (!pRaw) return showToast("💑 الرجاء كتابة اسم شريكك في الثنائي!", 3000, "red");
+            const pDet = h.detectFromDOM(pRaw) || {};
+            partnerName = pDet.displayName || pRaw;
+            partnerAvatar = pDet.avatar || "";
+        }
+        if ("media" === T) {
+            const url = (document.getElementById("lce-sub-yt")?.value || "").trim();
+            ytId = h.parseYtId(url);
+            if (!ytId) return showToast("🎵 الرجاء لصق رابط يوتيوب صحيح!", 3500, "red");
+        }
+        if ("quiz" === T && c.correctAnswer) {
+            const accepted = String(c.correctAnswer).split("|").map(x => h.normAr(x)).filter(Boolean);
+            const maxW = Math.max(1, Number(c.maxWinners) || 3);
+            const curWins = Object.values(st.data.entries || {}).filter(e => e && e.isWinner).length;
+            if (accepted.includes(h.normAr(text)) && curWins < maxW) isWinner = !0;
+        }
 
         const det = h.detectFromDOM(st.myUser) || {};
-        const needsApp = Boolean(c.cfg.requireApproval) && !h.isAdmin(cid);
-        st.db.ref(`${ROOT}/data/${cid}/entries/${key}`).set({
+        const needsApp = Boolean(c.cfg.requireApproval) && !h.isAdmin(cid) && "raffle" !== T && "quiz" !== T;
+        const tickets = "raffle" === T ? (h.isVip(cid) ? h.getVipWeight(cid) : 1) : 1;
+
+        dbOps.saveEntry(cid, key, {
             uid: det.uid || st.myUid || "",
             username: st.myUser,
             displayName: det.displayName || st.myUser,
             html: det.html || st.myHtml || h.esc(st.myUser),
-            avatar: "photo" === c.template ? (det.avatar || st.myAvatar || "") : (mediaData || det.avatar || st.myAvatar || ""),
-            image: "photo" === c.template ? mediaData : "",
+            avatar: "photo" === T ? (det.avatar || st.myAvatar || "") : (mediaData || det.avatar || st.myAvatar || ""),
+            image: "photo" === T ? mediaData : "",
+            partnerName, partnerAvatar, ytId, tickets,
             category: "dual" === c.mode ? category : "cat1",
-            title, text, badge: "", frozen: !1, isWinner: !1,
+            title, text, badge: "", frozen: !1, isWinner,
             status: needsApp ? "pending" : "approved",
             bonusVotes: 0,
             joinedAt: Date.now()
         }).then(() => {
-            showToast(needsApp ? "⏳ تم إرسال مشاركتك لمراجعة الإدارة!" : "✅ تم اعتماد مشاركتك بنجاح!", 3500, "gold");
+            if ("quiz" === T && isWinner) {
+                const maxW = Math.max(1, Number(c.maxWinners) || 3);
+                const newWins = Object.values(st.data.entries || {}).filter(e => e && e.isWinner).length + 1;
+                if (newWins >= maxW) dbOps.patchContest(cid, { resultsPublished: !0 });
+                showToast("🎉 إجابة صحيحة! تم تسجيلك ضمن الأسرع فوزاً 🏆", 4500, "gold");
+            } else if ("quiz" === T && c.correctAnswer) {
+                showToast("❌ للأسف إجابتك غير مطابقة!", 3500, "red");
+            } else {
+                showToast(needsApp ? "⏳ تم إرسال مشاركتك لمراجعة الإدارة!" : "✅ تم اعتماد مشاركتك بنجاح!", 3500, "gold");
+            }
         }).catch(() => alert("❌ فشل حفظ المشاركة."));
     }
 
-    function castVote(cid, c, targetKey, targetCat) {
+    function castVote(cid, c, targetKey, targetCat, matchKey = null) {
         if (!st.db) return showToast("تعذر الاتصال بالقاعدة", 3000, "red");
         if (!c.cfg.allowGuestsVote && h.isGuest() && !h.isAdmin(cid)) return alert("التصويت متاح للأعضاء المسجلين فقط 🏆");
         if (!ensureIdentity()) return;
@@ -1693,18 +2232,19 @@
         if (!target || target.frozen) return showToast("❄️ التصويت لهذه المشاركة مجمد مؤقتاً.", 3000, "red");
         const myK = h.myKey();
         if (!c.cfg.allowSelfVote && !h.isAdmin(cid) && myK === targetKey) return showToast("🚫 لا يمكنك التصويت لنفسك!", 3500, "red");
-        const isDual = "dual" === c.mode;
-        const voteKey = isDual ? `${myK}_${targetCat}` : myK;
-        if (st.data.votes?.[voteKey] && !c.cfg.allowVoteChange) return showToast("⚠️ لقد استخدمت صوتك مسبقاً.", 3500, "red");
+        const isDual = "dual" === c.mode && !matchKey;
+        const voteKey = getVoteKey(cid, myK, targetCat, isDual, matchKey);
+        if (st.data.votes?.[voteKey] && !c.cfg.allowVoteChange) return showToast("⚠️ لقد استخدمت صوتك مسبقاً.", 3000, "red");
         const label = c.cfg.blindVoting && !h.isAdmin(cid) ? "هذه المشاركة" : `(${target.displayName || targetKey})`;
         if (!confirm(`تأكيد منح صوتك لـ ${label}؟${c.cfg.allowVoteChange ? "" : "\nلا يمكن التراجع بعد التصويت."}`)) return;
 
         let weight = Math.max(1, Number(c.voteMultiplier) || 1);
-        if (h.isVip()) weight = Math.max(weight, Number(st.global.vipVoteWeight) || 2);
+        if (h.isVip(cid)) weight = Math.max(weight, h.getVipWeight(cid));
 
-        st.db.ref(`${ROOT}/data/${cid}/votes/${voteKey}`).set({
+        dbOps.saveVote(cid, voteKey, {
             target: targetKey,
             category: targetCat,
+            matchKey: matchKey || null,
             voterName: st.myUser,
             weight,
             ts: Date.now()
@@ -1734,7 +2274,7 @@
         }, 1000);
     }
     // ====== نهاية الجزء 2 من 3 ======
-// ====== بداية الجزء 3 من 3 ======
+    // ====== بداية الجزء 3 من 3 ======
     const contestsAdmin = {
         injectStyles() {
             if (document.getElementById("lcea-styles")) return;
@@ -1743,7 +2283,7 @@
             s.textContent = `
             .lcea-ov{position:fixed;inset:0;background:rgba(7,9,16,.93);z-index:2147483645;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);direction:rtl;font-family:'Segoe UI',tahoma,sans-serif;opacity:0;transition:opacity .22s}
             .lcea-ov.active{opacity:1}
-            .lcea-box{background:linear-gradient(180deg,rgba(26,29,52,.99),rgba(13,15,28,.99));border:1px solid rgba(212,175,55,.45);border-radius:20px;width:96%;max-width:740px;max-height:90vh;max-height:90dvh;padding:14px 16px 16px;box-shadow:0 25px 60px rgba(0,0,0,.9);display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-sizing:border-box}
+            .lcea-box{background:linear-gradient(180deg,rgba(26,29,52,.99),rgba(13,15,28,.99));border:1px solid rgba(212,175,55,.45);border-radius:20px;width:96%;max-width:760px;max-height:90vh;max-height:90dvh;padding:14px 16px 16px;box-shadow:0 25px 60px rgba(0,0,0,.9);display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-sizing:border-box}
             .lcea-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;gap:8px;flex-wrap:wrap}
             .lcea-title{display:flex;align-items:center;gap:8px;color:#D4AF37;font-weight:900;font-size:15px}
             .lcea-ctx-bar{display:flex;align-items:center;gap:7px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:11px;padding:6px 10px;margin-bottom:9px;flex-shrink:0}
@@ -1794,7 +2334,7 @@
             .lcea-up-box{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px dashed rgba(212,175,55,.35);border-radius:10px;padding:6px 9px}
             .lcea-up-prev{width:34px;height:34px;border-radius:50%;border:1.5px solid #D4AF37;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#D4AF37;font-size:14px;flex-shrink:0;overflow:hidden}
             .lcea-up-prev img{width:100%;height:100%;object-fit:cover;display:block}
-            .lcea-preset-chip{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);color:#fde68a;border-radius:18px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
+            .lcea-preset-chip{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);color:#fde68a;border-radius:18px;padding:4.5px 9px;font-size:10.8px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
             .lcea-preset-chip:hover{background:#D4AF37;color:#111}
             `;
             document.head.appendChild(s);
@@ -1803,9 +2343,9 @@
         isFullAdmin() { return h.isSuperAdmin() || h.isGlobalSubAdmin(); },
 
         getManagedContestIds() {
-            return Object.keys(st.index || {})
+            return h.getAllContestIds()
                 .filter(id => h.isAdmin(id))
-                .sort((a, b) => ((st.index[b]?.createdAt || 0) - (st.index[a]?.createdAt || 0)));
+                .sort((a, b) => ((h.getContest(b)?.createdAt || 0) - (h.getContest(a)?.createdAt || 0)));
         },
 
         ensureSelectedCid(preferred = null) {
@@ -1825,7 +2365,7 @@
 
         sendUserCmd(sanUser, cmd, text = "") {
             if (!st.db || !sanUser) return;
-            st.db.ref(`${ROOT}/cmds/${sanUser}`).set({ cmd, text, ts: Date.now(), by: st.myUser || "الإدارة" }).then(() => {
+            dbOps.sendCmd(sanUser, cmd, text).then(() => {
                 this.log("kick" === cmd ? "إخراج فوري" : "تنبيه خاص", sanUser, text || cmd);
                 showToast("kick" === cmd ? "⚡ تم إخراج العضو من المسابقة" : "📩 تم إرسال التنبيه للعضو");
             });
@@ -1844,16 +2384,16 @@
 
         patchContest(cid, part, msg) {
             if (!st.db || !cid || !h.isAdmin(cid)) return;
-            st.db.ref(`${ROOT}/index/${cid}`).update(part).then(() => {
-                this.log("تحديث مسابقة", st.index[cid]?.title || cid, Object.keys(part).join(", "));
+            dbOps.patchContest(cid, part).then(() => {
+                this.log("تحديث مسابقة", h.getContest(cid)?.title || cid, Object.keys(part).join(", "));
                 if (msg) showToast(msg, 3000, "gold");
             }).catch(() => alert("❌ فشل التحديث."));
         },
 
         patchContestCfg(cid, part, msg) {
             if (!st.db || !cid || !h.isAdmin(cid)) return;
-            st.db.ref(`${ROOT}/index/${cid}/cfg`).update(part).then(() => {
-                this.log("إعدادات مسابقة", st.index[cid]?.title || cid, Object.keys(part).join(", "));
+            dbOps.patchContestCfg(cid, part).then(() => {
+                this.log("إعدادات مسابقة", h.getContest(cid)?.title || cid, Object.keys(part).join(", "));
                 if (msg) showToast(msg, 3000, "gold");
             }).catch(() => alert("❌ فشل حفظ الإعدادات."));
         },
@@ -1862,7 +2402,7 @@
             const c = h.getContest(cid), it = st.data.entries?.[key];
             if (!c || !it || !st.db) return;
             document.getElementById("lce-edit-entry-sub")?.remove();
-            const isPhoto = "photo" === c.template, isDual = "dual" === c.mode;
+            const isPhoto = "photo" === c.template, isDual = "dual" === c.mode, isDuo = "duo" === c.template, isMedia = "media" === c.template;
             let editMedia = isPhoto ? (it.image || "") : (it.avatar || "");
             const ov = document.createElement("div");
             ov.id = "lce-edit-entry-sub";
@@ -1884,8 +2424,10 @@
                         </div>
                     </div>
                     <div style="margin-bottom:9px;"><label class="lcea-lbl">الاسم الظاهر / عنوان الخيار</label><input id="lce-ee-name" class="lcea-inp" maxlength="55" value="${h.esc(it.displayName || it.username)}"></div>
-                    ${"talent" === c.template ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">عنوان الموهبة / القصيدة</label><input id="lce-ee-title" class="lcea-inp" maxlength="60" value="${h.esc(it.title || "")}"></div>` : ""}
-                    <div style="margin-bottom:9px;"><label class="lcea-lbl">النص / الشعار / التوقع</label><textarea id="lce-ee-text" class="lcea-inp" rows="3" maxlength="550">${h.esc(it.text || "")}</textarea></div>
+                    ${isDuo ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">اسم الشريك (الثنائي)</label><input id="lce-ee-partner" class="lcea-inp" maxlength="45" value="${h.esc(it.partnerName || "")}"></div>` : ""}
+                    ${isMedia ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">رابط أو معرف يوتيوب</label><input id="lce-ee-yt" class="lcea-inp" dir="ltr" value="${h.esc(it.ytId || "")}"></div>` : ""}
+                    ${("talent" === c.template || isMedia) ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">عنوان الموهبة / الأغنية</label><input id="lce-ee-title" class="lcea-inp" maxlength="70" value="${h.esc(it.title || "")}"></div>` : ""}
+                    <div style="margin-bottom:9px;"><label class="lcea-lbl">النص / الشعار / الإجابة</label><textarea id="lce-ee-text" class="lcea-inp" rows="3" maxlength="550">${h.esc(it.text || "")}</textarea></div>
                     <div class="lcea-g2" style="margin-bottom:13px;">
                         ${isDual ? `<div><label class="lcea-lbl">الفئة</label><select id="lce-ee-cat" class="lcea-inp"><option value="cat1" ${"cat2" !== it.category ? "selected" : ""}>${h.esc(c.cat1Icon || "👑")} ${h.esc(c.cat1Label || "الفئة 1")}</option><option value="cat2" ${"cat2" === it.category ? "selected" : ""}>${h.esc(c.cat2Icon || "👸")} ${h.esc(c.cat2Label || "الفئة 2")}</option></select></div>` : `<div><label class="lcea-lbl">الحالة</label><select id="lce-ee-st" class="lcea-inp"><option value="approved" ${"pending" !== it.status ? "selected" : ""}>✅ معتمد</option><option value="pending" ${"pending" === it.status ? "selected" : ""}>⏳ معلق</option></select></div>`}
                         <div><label class="lcea-lbl">شارة التمييز (اختياري)</label><input id="lce-ee-badge" class="lcea-inp" maxlength="25" value="${h.esc(it.badge || "")}" placeholder="مثلاً: مرشح مميز"></div>
@@ -1908,8 +2450,7 @@
             };
             document.getElementById("lce-ee-pick").onclick = () => fInp.click();
             fInp.onchange = ev => {
-                const file = ev.target.files?.[0]; ev.target.value = "";
-                if (!file) return;
+                const file = ev.target.files?.[0]; ev.target.value = ""; if (!file) return;
                 h.compressImg(file, isPhoto ? "photo" : "avatar").then(data => { editMedia = data; syncPrev(); showToast("📷 تم تجهيز الصورة"); }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
             };
             rmBtn.onclick = () => { editMedia = ""; syncPrev(); };
@@ -1918,15 +2459,21 @@
                 const newName = document.getElementById("lce-ee-name").value.trim() || it.username;
                 const up = {
                     displayName: newName,
-                    title: document.getElementById("lce-ee-title")?.value?.trim().slice(0, 60) || it.title || "",
+                    title: document.getElementById("lce-ee-title")?.value?.trim().slice(0, 70) || it.title || "",
                     text: document.getElementById("lce-ee-text").value.trim().slice(0, 550),
                     badge: document.getElementById("lce-ee-badge").value.trim().slice(0, 25)
                 };
+                if (isDuo) up.partnerName = document.getElementById("lce-ee-partner")?.value?.trim() || it.partnerName || "";
+                if (isMedia) {
+                    const yv = document.getElementById("lce-ee-yt")?.value?.trim() || "";
+                    const parsed = h.parseYtId(yv);
+                    if (parsed) up.ytId = parsed;
+                }
                 if (isPhoto) up.image = editMedia; else up.avatar = editMedia;
                 if (isDual) up.category = document.getElementById("lce-ee-cat").value;
                 else if (document.getElementById("lce-ee-st")) up.status = document.getElementById("lce-ee-st").value;
                 if (newName !== (it.displayName || it.username)) up.html = h.esc(newName);
-                st.db.ref(`${ROOT}/data/${cid}/entries/${key}`).update(up).then(() => {
+                dbOps.updateEntry(cid, key, up).then(() => {
                     this.log("تعديل مشاركة", c.title, newName);
                     close();
                     showToast("✅ تم حفظ التعديلات", 3000, "gold");
@@ -1948,7 +2495,7 @@
             ov.innerHTML = `
             <div class="lcea-box">
                 <div class="lcea-head">
-                    <div class="lcea-title"><i class="fas fa-crown"></i> استوديو إدارة مسابقات شات ليل</div>
+                    <div class="lcea-title"><i class="fas fa-crown"></i> استوديو إدارة مسابقات شات ليل الشامل</div>
                     <div class="lcea-row" style="gap:6px;">
                         <button type="button" class="lcea-ctrl" id="lcea-open-app" title="فتح المسابقة الحالية"><i class="fas fa-external-link-alt"></i></button>
                         <button type="button" class="lcea-ctrl" id="lcea-ref" title="تحديث"><i class="fas fa-sync-alt"></i></button>
@@ -1976,31 +2523,36 @@
                     <button type="button" class="lcea-tab" data-atab="analytics"><i class="fas fa-chart-bar"></i> التحليلات والسجل</button>
                 </div>
                 <div class="lcea-body">
-                    <!-- 1. إدارة وإنشاء المسابقات -->
+                    <!-- 1. إدارة وإنشاء المسابقات (10 أنظمة + 13 قالب جاهز) -->
                     <div id="lcea-v-contests" class="lcea-view">
                         ${this.isFullAdmin() ? `
                         <div class="lcea-card" style="border-color:rgba(212,175,55,.45);">
-                            <div class="lcea-ct"><span><i class="fas fa-magic"></i> إنشاء مسابقة جديدة (بضغطة زر أو مخصصة)</span></div>
-                            <div class="lcea-row" style="margin-bottom:8px;">
+                            <div class="lcea-ct"><span><i class="fas fa-magic"></i> إنشاء مسابقة جديدة (13 قالب جاهز أو تخصيص كامل)</span></div>
+                            <div class="lcea-row" style="margin-bottom:9px;gap:5px;">
                                 ${PRESETS.map(p => `<button type="button" class="lcea-preset-chip" data-preset="${p.key}">${p.label}</button>`).join("")}
                             </div>
                             <div class="lcea-g2" style="margin-bottom:6px;">
                                 <div><label class="lcea-lbl">اسم المسابقة *</label><input id="lcea-cr-title" class="lcea-inp" value="مسابقة ملك وملكة شات ليل"></div>
-                                <div><label class="lcea-lbl">القالب (النوع)</label><select id="lcea-cr-tmpl" class="lcea-inp">${Object.values(TEMPLATES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
+                                <div><label class="lcea-lbl">نظام المسابقة (10 أنظمة)</label><select id="lcea-cr-tmpl" class="lcea-inp">${Object.values(TEMPLATES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
                             </div>
                             <div style="margin-bottom:6px;"><label class="lcea-lbl">وصف مختصر للمسابقة</label><input id="lcea-cr-sub" class="lcea-inp" placeholder="اشرح فكرة المسابقة بسطر جذاب..."></div>
                             <div class="lcea-g3" style="margin-bottom:6px;">
                                 <div><label class="lcea-lbl">ثيم الألوان</label><select id="lcea-cr-theme" class="lcea-inp">${Object.values(THEMES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
                                 <div><label class="lcea-lbl">الأيقونة (FontAwesome)</label><input id="lcea-cr-ico" class="lcea-inp" dir="ltr" value="fa-crown"></div>
-                                <div><label class="lcea-lbl">نظام الفئات</label><select id="lcea-cr-mode" class="lcea-inp"><option value="single">فئة واحدة (فائز واحد)</option><option value="dual">فئتان (مثلاً ملك + ملكة)</option></select></div>
+                                <div><label class="lcea-lbl">نظام الفئات</label><select id="lcea-cr-mode" class="lcea-inp"><option value="single">فئة واحدة</option><option value="dual">فئتان (مثلاً ملك + ملكة)</option></select></div>
                             </div>
                             <div id="lcea-cr-cats" class="lcea-g2" style="margin-bottom:6px;display:none;">
                                 <div><label class="lcea-lbl">مسمى الفئة الأولى</label><input id="lcea-cr-c1" class="lcea-inp" value="ملك الشات"></div>
                                 <div><label class="lcea-lbl">مسمى الفئة الثانية</label><input id="lcea-cr-c2" class="lcea-inp" value="ملكة الشات"></div>
                             </div>
-                            <div class="lcea-g2" style="margin-bottom:7px;">
-                                <div><label class="lcea-lbl">مدة التقديم/الترشيح (ساعة — 0 للاستفتاء المباشر)</label><input type="number" id="lcea-cr-nomh" class="lcea-inp" value="48" min="0" max="720"></div>
+                            <div id="lcea-cr-quiz-box" style="display:none;margin-bottom:6px;">
+                                <div style="margin-bottom:6px;"><label class="lcea-lbl">السؤال / اللغز / وصف الكود السري</label><textarea id="lcea-cr-qprompt" class="lcea-inp" rows="2" placeholder="اكتب السؤال أو اللغز هنا..."></textarea></div>
+                                <div><label class="lcea-lbl">الإجابة الصحيحة (يمكن وضع أكثر من صيغة مفصولة بـ |)</label><input id="lcea-cr-qans" class="lcea-inp" placeholder="مثلاً: ليل|شات ليل|layl"></div>
+                            </div>
+                            <div class="lcea-g3" style="margin-bottom:7px;">
+                                <div><label class="lcea-lbl">مدة التقديم/التسجيل (ساعة)</label><input type="number" id="lcea-cr-nomh" class="lcea-inp" value="48" min="0" max="720"></div>
                                 <div><label class="lcea-lbl">مدة التصويت (ساعة)</label><input type="number" id="lcea-cr-voth" class="lcea-inp" value="72" min="0" max="720"></div>
+                                <div><label class="lcea-lbl">عدد الفائزين (للسحب/اللغز)</label><input type="number" id="lcea-cr-maxw" class="lcea-inp" value="1" min="1" max="20"></div>
                             </div>
                             <div class="lcea-g2" style="margin-bottom:8px;">
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11.5px;font-weight:bold;">🎭 تصويت أعمى (إخفاء الأسماء)</span><label class="lcea-sw"><input type="checkbox" id="lcea-cr-blind"><span class="lcea-sl"></span></label></div>
@@ -2018,6 +2570,7 @@
 
                     <!-- 2. التحكم والمراحل -->
                     <div id="lcea-v-control" class="lcea-view">
+                        <div id="lcea-special-act" style="margin-bottom:8px;display:none;"></div>
                         <div class="lcea-card">
                             <div class="lcea-ct"><span><i class="fas fa-clock"></i> التحكم الدقيق بالوقت والمراحل</span><span id="lcea-cur-cd" class="lcea-tag lcea-t-gold" dir="ltr">--:--:--</span></div>
                             <div class="lcea-g4" style="margin-bottom:7px;">
@@ -2030,7 +2583,7 @@
                                 <button type="button" id="lcea-pause-btn" class="lcea-btn lcea-b-warn"><i class="fas fa-pause"></i> إيقاف مؤقت / استئناف</button>
                                 <button type="button" id="lcea-tog-mode" class="lcea-btn lcea-b-dark"><i class="fas fa-exchange-alt"></i> تبديل (فئة / فئتين)</button>
                                 <button type="button" id="lcea-go-sub" class="lcea-btn lcea-b-dark"><i class="fas fa-undo"></i> إعادة لمرحلة التقديم (+24س)</button>
-                                <button type="button" id="lcea-skip-sub" class="lcea-btn lcea-b-ok"><i class="fas fa-forward"></i> بدء التصويت الآن</button>
+                                <button type="button" id="lcea-skip-sub" class="lcea-btn lcea-b-ok"><i class="fas fa-forward"></i> بدء التصويت / الفرز الآن</button>
                                 <button type="button" id="lcea-skip-vote" class="lcea-btn lcea-b-ok"><i class="fas fa-flag-checkered"></i> إعلان النتائج الآن</button>
                                 <button type="button" id="lcea-save-hof" class="lcea-btn lcea-b-gold"><i class="fas fa-trophy"></i> تخليد الفائز بقاعة الشرف</button>
                             </div>
@@ -2053,7 +2606,7 @@
                             <div class="lcea-ct" style="color:#fca5a5;"><span><i class="fas fa-bullhorn"></i> بث توست فوري لجميع المتواجدين بالشات</span></div>
                             <div class="lcea-row">
                                 <input id="lcea-bc-inp" class="lcea-inp" style="flex:1;" placeholder="مثلاً: 🔥 بدأت ساعة التصويت المضاعف ×2 الآن!">
-                                <select id="lcea-bc-th" class="lcea-inp" style="width:86px;"><option value="gold">ذهبي</option><option value="red">عاجل</option><option value="maroon">عنابي</option><option value="purple">ملكي</option></select>
+                                <select id="lcea-bc-th" class="lcea-inp" style="width:86px;"><option value="gold">ذهبي</option><option value="red">عاجل</option><option value="maroon">عنابي</option><option value="purple">ملكي</option><option value="emerald">زمردي</option></select>
                                 <button type="button" id="lcea-bc-send" class="lcea-btn lcea-b-red lcea-mini" style="padding:8px 13px;"><i class="fas fa-paper-plane"></i> بث</button>
                             </div>
                         </div>
@@ -2078,6 +2631,9 @@
                             <div class="lcea-g2" style="margin-bottom:6px;">
                                 <input id="lcea-me-u" class="lcea-inp" placeholder="اسم المستخدم أو عنوان الخيار *">
                                 <select id="lcea-me-cat" class="lcea-inp"><option value="cat1">الفئة الأولى</option><option value="cat2">الفئة الثانية</option></select>
+                            </div>
+                            <div id="lcea-me-extra" style="display:none;margin-bottom:6px;">
+                                <input id="lcea-me-extra-inp" class="lcea-inp" placeholder="">
                             </div>
                             <input id="lcea-me-t" class="lcea-inp" style="margin-bottom:7px;" maxlength="550" placeholder="الشعار / الوصف / النص (اختياري)">
                             <div class="lcea-up-box" style="margin-bottom:8px;">
@@ -2175,6 +2731,13 @@
                                 <div><label class="lcea-lbl">عنوان المسابقة</label><input id="lcea-cs-title" class="lcea-inp"></div>
                                 <div><label class="lcea-lbl">الثيم اللوني</label><select id="lcea-cs-theme" class="lcea-inp">${Object.values(THEMES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
                             </div>
+                            <div id="lcea-cs-quiz-wrap" style="display:none;margin-bottom:7px;">
+                                <div style="margin-bottom:6px;"><label class="lcea-lbl">نص السؤال / اللغز</label><input id="lcea-cs-qprompt" class="lcea-inp"></div>
+                                <div class="lcea-g2">
+                                    <div><label class="lcea-lbl">الإجابة المعتمدة (افصل بـ |)</label><input id="lcea-cs-qans" class="lcea-inp"></div>
+                                    <div><label class="lcea-lbl">عدد الفائزين المطلوب</label><input type="number" id="lcea-cs-maxw" class="lcea-inp" min="1" max="20"></div>
+                                </div>
+                            </div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تفعيل هذه المسابقة للأعضاء</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-en"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">إظهار زر مستقل لها في قائمة الإضافات</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-menu"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تثبيت الزر بتوهج بأعلى القائمة</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-pin"><span class="lcea-sl"></span></label></div>
@@ -2205,14 +2768,14 @@
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">إظهار التوست الإعلاني عند تغيّر المراحل</div><label class="lcea-sw"><input type="checkbox" id="lcea-gs-ad"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-g3" style="margin-bottom:8px;">
                                 <div><label class="lcea-lbl">اسم مركز المسابقات</label><input id="lcea-gs-htitle" class="lcea-inp"></div>
-                                <div><label class="lcea-lbl">قوة صوت VIP</label><select id="lcea-gs-vipw" class="lcea-inp"><option value="1">×1</option><option value="2">×2 مضاعف</option><option value="3">×3 ثلاثي</option></select></div>
+                                <div><label class="lcea-lbl">قوة صوت / فرص VIP</label><select id="lcea-gs-vipw" class="lcea-inp"><option value="1">×1</option><option value="2">×2 مضاعف</option><option value="3">×3 ثلاثي</option></select></div>
                                 <div><label class="lcea-lbl">رسالة الصيانة</label><input id="lcea-gs-msg" class="lcea-inp"></div>
                             </div>
                             <button type="button" id="lcea-gs-save" class="lcea-btn lcea-b-gold"><i class="fas fa-save"></i> حفظ الإعدادات العامة</button>
                         </div>
 
                         <div class="lcea-card">
-                            <div class="lcea-ct"><span><i class="fas fa-star"></i> مصوّتو VIP (صوت مضاعف + تجاوز الصيانة)</span></div>
+                            <div class="lcea-ct"><span><i class="fas fa-star"></i> مصوّتو VIP (صوت مضاعف + فرص سحب + تجاوز الصيانة)</span></div>
                             <div class="lcea-row" style="margin-bottom:7px;">
                                 <input id="lcea-vip-inp" class="lcea-inp" style="flex:1;" placeholder="اسم المستخدم...">
                                 <button type="button" id="lcea-vip-add" class="lcea-btn lcea-b-gold lcea-mini" style="padding:8px 13px;">إضافة VIP</button>
@@ -2294,10 +2857,8 @@
         },
 
         close() {
-            if (st.logsRef) { st.logsRef.off(); st.logsRef = null; }
-            if (st.bansRef) { st.bansRef.off(); st.bansRef = null; }
-            if (st.hofRef) { st.hofRef.off(); st.hofRef = null; }
-            if (st.adminPresenceRef) { st.adminPresenceRef.off(); st.adminPresenceRef = null; }
+            [st.logsRef, st.bansRef, st.legacyBansRef, st.hofRef, st.legacyHofRef, st.adminPresenceRef].forEach(r => { try { r?.off(); } catch (e) {} });
+            st.logsRef = st.bansRef = st.legacyBansRef = st.hofRef = st.legacyHofRef = st.adminPresenceRef = null;
             document.getElementById("lce-edit-entry-sub")?.remove();
             document.getElementById("lce-admin-modal")?.remove();
             syncHeavyStreams();
@@ -2315,9 +2876,15 @@
             st.bansRef?.off();
             st.bansRef = st.db.ref(`${ROOT}/banned`);
             st.bansRef.on("value", sn => { st.banned = sn.val() || {}; this.refresh(); });
+            st.legacyBansRef?.off();
+            st.legacyBansRef = st.db.ref(`${LEGACY_ROOT}/banned`);
+            st.legacyBansRef.on("value", sn => { st.legacy.banned = sn.val() || {}; this.refresh(); });
             st.hofRef?.off();
             st.hofRef = st.db.ref(`${ROOT}/hall_of_fame`);
             st.hofRef.on("value", sn => { st.hof = sn.val() || {}; this.refresh(); });
+            st.legacyHofRef?.off();
+            st.legacyHofRef = st.db.ref(`${LEGACY_ROOT}/hall_of_fame`);
+            st.legacyHofRef.on("value", sn => { st.legacy.hof = sn.val() || {}; this.refresh(); });
             this.rebindPresenceStream();
         },
 
@@ -2326,7 +2893,8 @@
             st.adminPresenceRef = null;
             st.data.presence = {};
             if (!st.db || !st.adminCid || !document.getElementById("lce-admin-modal")) return;
-            st.adminPresenceRef = st.db.ref(`${ROOT}/data/${st.adminCid}/presence`);
+            const path = isLegacy(st.adminCid) ? `${LEGACY_ROOT}/presence` : `${ROOT}/data/${st.adminCid}/presence`;
+            st.adminPresenceRef = st.db.ref(path);
             st.adminPresenceRef.on("value", sn => { st.data.presence = sn.val() || {}; this.refresh(); });
         },
 
@@ -2351,6 +2919,20 @@
                 sv("lcea-ban-th", c.cfg.bannerTheme || "gold");
                 sv("lcea-rules-ta", c.cfg.rulesText || DEFAULT_RULES);
                 sv("lcea-welc-ta", c.cfg.welcomeText || "");
+                const qw = document.getElementById("lcea-cs-quiz-wrap");
+                if (qw) {
+                    const showQ = ["quiz", "raffle", "prediction"].includes(c.template);
+                    qw.style.display = showQ ? "block" : "none";
+                    sv("lcea-cs-qprompt", c.quizPrompt || "");
+                    sv("lcea-cs-qans", c.correctAnswer || "");
+                    sv("lcea-cs-maxw", Number(c.maxWinners) || 1);
+                }
+                const exWrap = document.getElementById("lcea-me-extra"), exInp = document.getElementById("lcea-me-extra-inp");
+                if (exWrap && exInp) {
+                    if ("duo" === c.template) { exWrap.style.display = "block"; exInp.placeholder = "اسم شريك الثنائي *"; exInp.dir = "rtl"; }
+                    else if ("media" === c.template) { exWrap.style.display = "block"; exInp.placeholder = "رابط يوتيوب *"; exInp.dir = "ltr"; }
+                    else exWrap.style.display = "none";
+                }
             }
             const g = st.global;
             sc("lcea-gs-en", !1 !== g.enabled);
@@ -2385,36 +2967,45 @@
             const modeSel = document.getElementById("lcea-cr-mode");
             const catsWrap = document.getElementById("lcea-cr-cats");
             const tmplSel = document.getElementById("lcea-cr-tmpl");
-            if (modeSel && catsWrap) {
-                modeSel.onchange = () => { catsWrap.style.display = "dual" === modeSel.value ? "grid" : "none"; };
-            }
+            const quizBox = document.getElementById("lcea-cr-quiz-box");
+
+            const syncCreateFields = () => {
+                if (!tmplSel) return;
+                const T = tmplSel.value;
+                if (catsWrap) catsWrap.style.display = "dual" === modeSel?.value ? "grid" : "none";
+                if (quizBox) quizBox.style.display = ("quiz" === T || "prediction" === T) ? "block" : "none";
+            };
+            if (modeSel) modeSel.onchange = syncCreateFields;
             if (tmplSel) {
                 tmplSel.onchange = () => {
-                    const t = TEMPLATES[tmplSel.value];
+                    const T = tmplSel.value, t = TEMPLATES[T];
                     if (t) document.getElementById("lcea-cr-ico").value = t.icon;
-                    if ("poll" === tmplSel.value) document.getElementById("lcea-cr-nomh").value = 0;
-                    if ("prediction" === tmplSel.value) document.getElementById("lcea-cr-voth").value = 0;
+                    if ("poll" === T) document.getElementById("lcea-cr-nomh").value = 0;
+                    if (["prediction", "raffle", "quiz"].includes(T)) document.getElementById("lcea-cr-voth").value = 0;
+                    syncCreateFields();
                 };
             }
             ov.querySelectorAll("[data-preset]").forEach(btn => btn.onclick = () => {
-                const p = PRESETS.find(x => x.key === btn.dataset.preset);
-                if (!p) return;
+                const p = PRESETS.find(x => x.key === btn.dataset.preset); if (!p) return;
                 const d = p.data;
                 document.getElementById("lcea-cr-title").value = d.title;
                 document.getElementById("lcea-cr-sub").value = d.subtitle;
                 document.getElementById("lcea-cr-tmpl").value = d.template;
                 document.getElementById("lcea-cr-theme").value = d.theme;
                 document.getElementById("lcea-cr-ico").value = d.icon;
-                document.getElementById("lcea-cr-mode").value = d.mode;
-                catsWrap.style.display = "dual" === d.mode ? "grid" : "none";
+                document.getElementById("lcea-cr-mode").value = d.mode || "single";
                 document.getElementById("lcea-cr-c1").value = d.cat1Label || "الفئة الأولى";
                 document.getElementById("lcea-cr-c2").value = d.cat2Label || "الفئة الثانية";
                 document.getElementById("lcea-cr-nomh").value = d.nomHours;
                 document.getElementById("lcea-cr-voth").value = d.voteHours;
+                document.getElementById("lcea-cr-maxw").value = d.maxWinners || 1;
+                document.getElementById("lcea-cr-qprompt").value = d.quizPrompt || "";
+                document.getElementById("lcea-cr-qans").value = d.correctAnswer || "";
                 document.getElementById("lcea-cr-blind").checked = Boolean(d.blindVoting);
                 document.getElementById("lcea-cr-hide").checked = Boolean(d.hideLiveVotes);
                 document.getElementById("lcea-cr-menu").checked = Boolean(d.showInMenu);
                 document.getElementById("lcea-cr-pin").checked = Boolean(d.pinTop);
+                syncCreateFields();
                 showToast(`✨ تم تعبئة قالب: ${p.label}`, 2200, "gold");
             });
 
@@ -2431,9 +3022,14 @@
                 const cat2Label = document.getElementById("lcea-cr-c2").value.trim() || "الفئة الثانية";
                 const nomH = Math.max(0, parseFloat(document.getElementById("lcea-cr-nomh").value) || 0);
                 const votH = Math.max(0, parseFloat(document.getElementById("lcea-cr-voth").value) || 0);
+                const maxWinners = Math.max(1, parseInt(document.getElementById("lcea-cr-maxw").value, 10) || 1);
+                const quizPrompt = document.getElementById("lcea-cr-qprompt").value.trim();
+                const correctAnswer = document.getElementById("lcea-cr-qans").value.trim();
                 const now = Date.now();
-                const nomEnd = "poll" === template ? now - 1000 : now + nomH * 36e5;
-                const voteEnd = "prediction" === template ? nomEnd : nomEnd + Math.max(1, votH) * 36e5;
+                const noSub = "poll" === template;
+                const noVote = ["prediction", "raffle", "quiz"].includes(template);
+                const nomEnd = noSub ? now - 1000 : now + Math.max(0.25, nomH) * 36e5;
+                const voteEnd = noVote ? nomEnd : nomEnd + Math.max(1, votH) * 36e5;
                 const cid = h.genId("cnt");
                 const cfg = Object.assign({}, DEFAULT_CONTEST_CFG, {
                     blindVoting: document.getElementById("lcea-cr-blind").checked,
@@ -2447,7 +3043,7 @@
                     cat1Label, cat1Icon: "royal" === template ? "👑" : "⭐",
                     cat2Label, cat2Icon: "royal" === template ? "👸" : "✨",
                     status: "active", season: 1, nomEnd, voteEnd, paused: !1, voteMultiplier: 1,
-                    showInMenu, pinTop, resultsPublished: !1, correctAnswer: "",
+                    showInMenu, pinTop, resultsPublished: !1, maxWinners, quizPrompt, correctAnswer,
                     createdBy: st.myUser || "الإدارة", createdAt: now, cfg
                 };
                 const updates = {};
@@ -2501,49 +3097,39 @@
 
             document.getElementById("lcea-go-sub").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid); if (!c || !confirm("إعادة فتح مرحلة التقديم لمدة 24 ساعة؟")) return;
-                const now = Date.now(), vDur = Math.max(24 * 36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
-                this.patchContest(cid, { status: "active", nomEnd: now + 24 * 36e5, voteEnd: "prediction" === c.template ? now + 24 * 36e5 : now + 24 * 36e5 + vDur, paused: !1, resultsPublished: !1 }, "🔄 تم فتح مرحلة التقديم");
+                const now = Date.now(), noVote = ["prediction", "raffle", "quiz"].includes(c.template);
+                const vDur = Math.max(24 * 36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
+                this.patchContest(cid, { status: "active", nomEnd: now + 24 * 36e5, voteEnd: noVote ? now + 24 * 36e5 : now + 24 * 36e5 + vDur, paused: !1, resultsPublished: !1 }, "🔄 تم فتح مرحلة التقديم");
             };
 
             document.getElementById("lcea-skip-sub").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c || !confirm("بدء مرحلة التصويت/الفرز فوراً؟")) return;
-                const now = Date.now(), dur = Math.max(36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
-                this.patchContest(cid, { status: "active", nomEnd: now - 1000, voteEnd: "prediction" === c.template ? now - 1000 : now + dur, paused: !1 }, "🗳️ تم الانتقال للمرحلة التالية!");
-                st.db?.ref(`${ROOT}/broadcast`).set({ text: `🗳️ بدأ التصويت الآن في (${c.title})!`, theme: c.theme || "gold", cid, ts: now, by: st.myUser || "الإدارة" });
+                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                if ("bracket" === c.template) return startBracketTournament(cid, c);
+                if (!confirm("إنهاء التقديم وبدء المرحلة التالية فوراً؟")) return;
+                const now = Date.now(), noVote = ["prediction", "raffle", "quiz"].includes(c.template);
+                const dur = Math.max(36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
+                this.patchContest(cid, { status: "active", nomEnd: now - 1000, voteEnd: noVote ? now - 1000 : now + dur, paused: !1 }, "🗳️ تم الانتقال للمرحلة التالية!");
+                if (!noVote) dbOps.broadcast(cid, `🗳️ بدأ التصويت الآن في (${c.title})!`, c.theme || "gold");
             };
 
             document.getElementById("lcea-skip-vote").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c || !confirm("إنهاء التصويت وإعلان النتائج فوراً؟")) return;
+                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                if ("raffle" === c.template) return runRaffleDraw(cid, c);
+                if (!confirm("إنهاء التصويت وإعلان النتائج فوراً؟")) return;
                 const now = Date.now();
                 this.patchContest(cid, { status: "active", nomEnd: now - 2000, voteEnd: now - 1000, paused: !1, resultsPublished: !0 }, "🏆 تم إعلان النتائج!");
-                st.db?.ref(`${ROOT}/broadcast`).set({ text: `🏆 أُعلنت نتائج (${c.title})! ادخل للتهنئة.`, theme: c.theme || "gold", cid, ts: now, by: st.myUser || "الإدارة" });
+                dbOps.broadcast(cid, `🏆 أُعلنت نتائج (${c.title})! ادخل للتهنئة.`, c.theme || "gold");
             };
 
             document.getElementById("lcea-new-season").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
                 if (!c || !confirm(`إطلاق موسم جديد (#${(c.season || 1) + 1}) لمسابقة (${c.title}) وتصفير مشاركات وأصوات الموسم السابق؟`)) return;
-                const nomH = "poll" === c.template ? 0 : 48, votH = "prediction" === c.template ? 0 : 72;
-                const now = Date.now(), nomEnd = "poll" === c.template ? now - 1000 : now + nomH * 36e5, voteEnd = "prediction" === c.template ? nomEnd : nomEnd + votH * 36e5;
-                const up = {};
-                up[`index/${cid}/status`] = "active";
-                up[`index/${cid}/season`] = (Number(c.season) || 1) + 1;
-                up[`index/${cid}/nomEnd`] = nomEnd;
-                up[`index/${cid}/voteEnd`] = voteEnd;
-                up[`index/${cid}/paused`] = !1;
-                up[`index/${cid}/voteMultiplier`] = 1;
-                up[`index/${cid}/tieBreaker`] = null;
-                up[`index/${cid}/tieBreakerCat1`] = null;
-                up[`index/${cid}/tieBreakerCat2`] = null;
-                up[`index/${cid}/resultsPublished`] = !1;
-                up[`index/${cid}/correctAnswer`] = "";
-                up[`data/${cid}/entries`] = null;
-                up[`data/${cid}/votes`] = null;
-                st.db?.ref(ROOT).update(up).then(() => { this.log("موسم جديد", c.title, `#${(c.season || 1) + 1}`); showToast("🚀 انطلق الموسم الجديد!", 3500, "gold"); });
+                dbOps.startNewSeason(cid, c).then(() => { this.log("موسم جديد", c.title, `#${(c.season || 1) + 1}`); showToast("🚀 انطلق الموسم الجديد!", 3500, "gold"); });
             };
 
             document.getElementById("lcea-archive-c").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
-                if (!c || !confirm(`أرشفة (${c.title}) وإخفاء زرها من قائمة الأعضاء؟ (تبقى محفوظة ويمكنك إعادة تشغيلها لاحقاً)`)) return;
+                if (!c || !confirm(`أرشفة (${c.title}) وإخفاء زرها من قائمة الأعضاء؟`)) return;
                 this.patchContest(cid, { status: "archived", showInMenu: !1 }, "📦 تمت الأرشفة وإخفاء الزر");
             };
 
@@ -2551,7 +3137,7 @@
                 const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
                 const m = Number(b.dataset.m);
                 this.patchContest(cid, { voteMultiplier: m }, `⚡ مضاعف الأصوات الآن: ×${m}`);
-                if (m > 1) st.db?.ref(`${ROOT}/broadcast`).set({ text: `⚡ ساعة المضاعفة الذهبية في (${c.title})! كل صوت يُحسب ×${m}!`, theme: "purple", cid, ts: Date.now(), by: st.myUser || "الإدارة" });
+                if (m > 1) dbOps.broadcast(cid, `⚡ ساعة المضاعفة الذهبية في (${c.title})! كل صوت يُحسب ×${m}!`, "purple");
             });
 
             document.getElementById("lcea-save-hof").onclick = () => {
@@ -2562,20 +3148,24 @@
                 if (c.tieBreakerCat1 && void 0 !== counts[c.tieBreakerCat1]) counts[c.tieBreakerCat1]++;
                 if (c.tieBreakerCat2 && void 0 !== counts[c.tieBreakerCat2]) counts[c.tieBreakerCat2]++;
                 let list = [];
-                if ("prediction" === c.template) list = getApprovedEntries(entries).filter(e => e.isWinner);
-                else {
+                if ("bracket" === c.template && c.bracket?.champion && entries[c.bracket.champion]) {
+                    list = [Object.assign({ key: c.bracket.champion }, entries[c.bracket.champion])];
+                } else if (["prediction", "raffle", "quiz"].includes(c.template)) {
+                    list = getApprovedEntries(entries).filter(e => e.isWinner);
+                } else {
                     const all = getApprovedEntries(entries).sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
                     list = "dual" === c.mode ? [all.find(x => "cat2" !== x.category), all.find(x => "cat2" === x.category)].filter(Boolean) : all.slice(0, 1);
                 }
                 if (!list.length) return showToast("لا يوجد فائز لحفظه", 3000, "red");
                 list.forEach(w => {
                     const cm = getCatMeta(c, w.category);
-                    st.db.ref(`${ROOT}/hall_of_fame`).push({
+                    const wName = "duo" === c.template ? `${w.displayName || w.username} ❤️ ${w.partnerName || ""}` : (w.displayName || w.username);
+                    dbOps.pushHof(cid, {
                         contestId: cid, contestTitle: c.title, season: c.season || 1,
-                        name: w.displayName || w.username,
+                        name: wName, catKey: w.category,
                         categoryLabel: "dual" === c.mode ? `${cm.icon} ${cm.label}` : `${cm.icon} بطل المسابقة`,
                         avatar: ("photo" === c.template ? w.image : w.avatar) || "",
-                        votes: "prediction" === c.template ? 0 : (counts[w.key] || 0),
+                        votes: ["prediction", "raffle", "quiz", "bracket"].includes(c.template) ? 0 : (counts[w.key] || 0),
                         date: Date.now()
                     });
                 });
@@ -2586,7 +3176,7 @@
             document.getElementById("lcea-bc-send").onclick = () => {
                 const inp = document.getElementById("lcea-bc-inp"), txt = inp.value.trim(), theme = document.getElementById("lcea-bc-th").value;
                 if (!txt || !st.db) return alert("اكتب نص البث.");
-                st.db.ref(`${ROOT}/broadcast`).set({ text: txt, theme, cid: st.adminCid || null, ts: Date.now(), by: st.myUser || "الإدارة" }).then(() => { this.log("بث فوري", "الجميع", txt); inp.value = ""; showToast("📢 تم البث للجميع"); });
+                dbOps.broadcast(st.adminCid, txt, theme).then(() => { this.log("بث فوري", "الجميع", txt); inp.value = ""; showToast("📢 تم البث للجميع"); });
             };
 
             document.getElementById("lcea-ban-save").onclick = () => {
@@ -2602,23 +3192,20 @@
             document.getElementById("lcea-me-pick").onclick = () => meFile.click();
             meClr.onclick = resetMeMedia;
             meFile.onchange = ev => {
-                const file = ev.target.files?.[0]; ev.target.value = "";
-                if (!file) return;
+                const file = ev.target.files?.[0]; ev.target.value = ""; if (!file) return;
                 const c = h.getContest(st.adminCid);
                 h.compressImg(file, "photo" === c?.template ? "photo" : "avatar").then(data => {
-                    manualMedia = data;
-                    mePrev.innerHTML = `<img src="${data}" alt="">`;
-                    meLbl.textContent = "تم اختيار الصورة ✓";
-                    meClr.style.display = "inline-flex";
+                    manualMedia = data; mePrev.innerHTML = `<img src="${data}" alt="">`; meLbl.textContent = "تم اختيار الصورة ✓"; meClr.style.display = "inline-flex";
                 }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
             };
 
             document.getElementById("lcea-app-all").onclick = () => {
                 const cid = st.adminCid; if (!cid) return;
-                const up = {}; let cnt = 0;
-                Object.entries(st.data.entries || {}).forEach(([k, e]) => { if (e && "pending" === e.status) { up[`${k}/status`] = "approved"; cnt++; } });
-                if (!cnt) return showToast("لا توجد مشاركات معلّقة");
-                st.db?.ref(`${ROOT}/data/${cid}/entries`).update(up).then(() => { this.log("اعتماد جماعي", st.index[cid]?.title, `${cnt}`); showToast(`✅ تم اعتماد ${cnt}`); });
+                dbOps.approveAllPending(cid, st.data.entries).then(cnt => {
+                    if (!cnt) return showToast("لا توجد مشاركات معلّقة");
+                    this.log("اعتماد جماعي", h.getContest(cid)?.title, `${cnt}`);
+                    showToast(`✅ تم اعتماد ${cnt}`);
+                });
             };
 
             document.getElementById("lcea-me-add").onclick = () => {
@@ -2627,18 +3214,29 @@
                 if (!u || !cid || !st.db) return alert("أدخل اسم المستخدم أو الخيار.");
                 const cat = document.getElementById("lcea-me-cat").value;
                 const text = document.getElementById("lcea-me-t").value.trim().slice(0, 550);
-                const det = h.detectFromDOM(u) || {};
-                const isPhoto = "photo" === c.template;
-                st.db.ref(`${ROOT}/data/${cid}/entries/${key}`).set({
+                const extraVal = (document.getElementById("lcea-me-extra-inp")?.value || "").trim();
+                let partnerName = "", partnerAvatar = "", ytId = "";
+                if ("duo" === c.template) {
+                    const pDet = h.detectFromDOM(extraVal) || {};
+                    partnerName = pDet.displayName || extraVal;
+                    partnerAvatar = pDet.avatar || "";
+                } else if ("media" === c.template) {
+                    ytId = h.parseYtId(extraVal);
+                    if (!ytId) return alert("أدخل رابط يوتيوب صحيح.");
+                }
+                const det = h.detectFromDOM(u) || {}, isPhoto = "photo" === c.template;
+                dbOps.saveEntry(cid, key, {
                     uid: det.uid || "", username: u, displayName: det.displayName || u, html: det.html || h.esc(u),
                     avatar: isPhoto ? (det.avatar || "") : (manualMedia || det.avatar || ""),
                     image: isPhoto ? manualMedia : "",
+                    partnerName, partnerAvatar, ytId, tickets: 1,
                     category: "dual" === c.mode ? cat : "cat1",
                     title: "", text, badge: "", frozen: !1, isWinner: !1, status: "approved", bonusVotes: 0, joinedAt: Date.now()
                 }).then(() => {
                     this.log("إضافة مشاركة", c.title, u);
                     document.getElementById("lcea-me-u").value = "";
                     document.getElementById("lcea-me-t").value = "";
+                    if (document.getElementById("lcea-me-extra-inp")) document.getElementById("lcea-me-extra-inp").value = "";
                     resetMeMedia();
                     showToast(`✅ تمت إضافة (${u})`);
                 });
@@ -2651,7 +3249,7 @@
                 const cut = Date.now() - 10 * 6e4, up = {}; let cnt = 0;
                 Object.entries(st.data.votes || {}).forEach(([k, v]) => { if (v && (v.ts || 0) >= cut) { up[k] = null; cnt++; } });
                 if (!cnt) return showToast("لا توجد أصوات خلال آخر 10 دقائق");
-                if (confirm(`سحب (${cnt}) صوت خلال آخر 10 دقائق؟`)) st.db?.ref(`${ROOT}/data/${cid}/votes`).update(up).then(() => { this.log("سحب أصوات 10د", st.index[cid]?.title, `${cnt}`); showToast(`🧹 تم سحب ${cnt} صوت`); });
+                if (confirm(`سحب (${cnt}) صوت خلال آخر 10 دقائق؟`)) dbOps.updateVotes(cid, up).then(() => { this.log("سحب أصوات 10د", h.getContest(cid)?.title, `${cnt}`); showToast(`🧹 تم سحب ${cnt} صوت`); });
             };
             document.getElementById("lcea-rev-entry").onclick = () => {
                 const cid = st.adminCid; if (!cid) return;
@@ -2660,15 +3258,15 @@
                 const key = h.san(target), up = {}; let cnt = 0;
                 Object.entries(st.data.votes || {}).forEach(([k, v]) => { if (v && v.target === key) { up[k] = null; cnt++; } });
                 if (!cnt) return showToast("لا توجد أصوات لهذا المشارك");
-                if (confirm(`تصفير (${cnt}) صوت؟`)) st.db?.ref(`${ROOT}/data/${cid}/votes`).update(up).then(() => { this.log("تصفير أصوات مشارك", target, `${cnt}`); showToast(`🗑️ تم حذف ${cnt} صوت`); });
+                if (confirm(`تصفير (${cnt}) صوت؟`)) dbOps.updateVotes(cid, up).then(() => { this.log("تصفير أصوات مشارك", target, `${cnt}`); showToast(`🗑️ تم حذف ${cnt} صوت`); });
             };
             document.getElementById("lcea-wipe-votes").onclick = () => {
                 const cid = st.adminCid; if (!cid || !confirm("⚠️ تصفير جميع الأصوات في هذه المسابقة؟")) return;
-                st.db?.ref(`${ROOT}/data/${cid}/votes`).remove().then(() => { this.log("تصفير كل الأصوات", st.index[cid]?.title); showToast("🗑️ تم التصفير"); });
+                dbOps.wipeVotes(cid).then(() => { this.log("تصفير كل الأصوات", h.getContest(cid)?.title); showToast("🗑️ تم التصفير"); });
             };
 
             // 5. الرادار والحظر
-            document.getElementById("lcea-clr-pres").onclick = () => { if (st.adminCid) st.db?.ref(`${ROOT}/data/${st.adminCid}/presence`).remove().then(() => showToast("🧹 تم تنظيف الرادار")); };
+            document.getElementById("lcea-clr-pres").onclick = () => dbOps.clearPresence(st.adminCid).then(() => showToast("🧹 تم تنظيف الرادار"));
             document.getElementById("lcea-bgo").onclick = () => {
                 const u = document.getElementById("lcea-bu").value.trim(), key = h.san(u);
                 if (!key || !st.db) return alert("أدخل اسم المستخدم.");
@@ -2677,29 +3275,33 @@
                 const dur = document.getElementById("lcea-bd").value, reason = document.getElementById("lcea-br").value.trim();
                 const dMap = { "1h": 36e5, "6h": 216e5, "24h": 864e5, "3d": 2592e5, "7d": 6048e5 };
                 const expiresAt = dMap[dur] ? Date.now() + dMap[dur] : null;
-                st.db.ref(`${ROOT}/banned/${key}`).set({ name: u, scope, contestId, reason, expiresAt, by: st.myUser || "الإدارة", ts: Date.now() }).then(() => {
+                dbOps.banUser(key, { name: u, scope, contestId, reason, expiresAt, by: st.myUser || "الإدارة", ts: Date.now() }).then(() => {
                     this.log("حظر عضو", u, `${scope} | ${dur}`);
                     document.getElementById("lcea-bu").value = ""; document.getElementById("lcea-br").value = "";
                     showToast(`🚫 تم حظر (${u})`);
                 });
             };
             document.getElementById("lcea-cln-bans").onclick = () => {
-                const up = {}; let cnt = 0;
-                Object.entries(st.banned || {}).forEach(([k, b]) => { if (b && b.expiresAt && Date.now() >= b.expiresAt) { up[k] = null; cnt++; } });
+                const up1 = {}, up2 = {}; let cnt = 0;
+                Object.entries(st.banned || {}).forEach(([k, b]) => { if (b && b.expiresAt && Date.now() >= b.expiresAt) { up1[k] = null; cnt++; } });
+                Object.entries(st.legacy.banned || {}).forEach(([k, b]) => { if (b && b.expiresAt && Date.now() >= b.expiresAt) { up2[k] = null; cnt++; } });
                 if (!cnt) return showToast("لا يوجد حظر منتهي");
-                st.db?.ref(`${ROOT}/banned`).update(up).then(() => showToast(`🧹 تم تنظيف ${cnt}`));
+                Promise.all([
+                    Object.keys(up1).length ? st.db?.ref(`${ROOT}/banned`).update(up1) : null,
+                    Object.keys(up2).length ? st.db?.ref(`${LEGACY_ROOT}/banned`).update(up2) : null
+                ]).then(() => showToast(`🧹 تم تنظيف ${cnt}`));
             };
 
             // 6. الجوائز والقوانين
             document.getElementById("lcea-pz-reset").onclick = () => {
-                if (st.adminCid && confirm("استعادة الجوائز الافتراضية؟")) st.db?.ref(`${ROOT}/data/${st.adminCid}/prizes`).set(DEFAULT_PRIZES).then(() => showToast("✅ تمت الاستعادة"));
+                if (st.adminCid && confirm("استعادة الجوائز الافتراضية؟")) dbOps.setPrizes(st.adminCid, isLegacy(st.adminCid) ? ROYAL_DEFAULT_PRIZES : DEFAULT_PRIZES).then(() => showToast("✅ تمت الاستعادة"));
             };
             document.getElementById("lcea-np-add").onclick = () => {
                 const cid = st.adminCid, title = document.getElementById("lcea-np-t").value.trim(), dur = document.getElementById("lcea-np-d").value.trim(), icon = document.getElementById("lcea-np-i").value.trim() || "fa-crown";
                 if (!cid || !title) return alert("أدخل عنوان الجائزة.");
                 const next = (Array.isArray(st.data.prizes) ? st.data.prizes : DEFAULT_PRIZES).slice();
                 next.push({ title, dur, icon });
-                st.db?.ref(`${ROOT}/data/${cid}/prizes`).set(next).then(() => { document.getElementById("lcea-np-t").value = ""; document.getElementById("lcea-np-d").value = ""; showToast("🎁 تمت إضافة الجائزة"); });
+                dbOps.setPrizes(cid, next).then(() => { document.getElementById("lcea-np-t").value = ""; document.getElementById("lcea-np-d").value = ""; showToast("🎁 تمت إضافة الجائزة"); });
             };
             document.getElementById("lcea-rules-save").onclick = () => { if (st.adminCid) this.patchContestCfg(st.adminCid, { rulesText: document.getElementById("lcea-rules-ta").value.trim() }, "✅ تم حفظ القوانين"); };
             document.getElementById("lcea-welc-save").onclick = () => {
@@ -2715,12 +3317,18 @@
 
             // 7. الصلاحيات والإعدادات
             document.getElementById("lcea-cs-save").onclick = () => {
-                const cid = st.adminCid; if (!cid) return;
-                const title = document.getElementById("lcea-cs-title").value.trim() || st.index[cid]?.title;
+                const cid = st.adminCid, c = h.getContest(cid); if (!cid || !c) return;
+                const title = document.getElementById("lcea-cs-title").value.trim() || c.title;
                 const theme = document.getElementById("lcea-cs-theme").value;
                 const showInMenu = document.getElementById("lcea-cs-menu").checked;
                 const pinTop = document.getElementById("lcea-cs-pin").checked;
-                this.patchContest(cid, { title, theme, showInMenu, pinTop });
+                const metaUp = { title, theme, showInMenu, pinTop };
+                if (["quiz", "raffle", "prediction"].includes(c.template)) {
+                    metaUp.quizPrompt = document.getElementById("lcea-cs-qprompt")?.value?.trim() || "";
+                    metaUp.correctAnswer = document.getElementById("lcea-cs-qans")?.value?.trim() || "";
+                    metaUp.maxWinners = Math.max(1, parseInt(document.getElementById("lcea-cs-maxw")?.value, 10) || 1);
+                }
+                this.patchContest(cid, metaUp);
                 this.patchContestCfg(cid, {
                     enabled: document.getElementById("lcea-cs-en").checked,
                     blindVoting: document.getElementById("lcea-cs-blind").checked,
@@ -2754,7 +3362,8 @@
             document.getElementById("lcea-vip-add")?.addEventListener("click", () => {
                 const inp = document.getElementById("lcea-vip-inp"), u = inp.value.trim(); if (!u) return;
                 inp.value = "";
-                this.patchGlobal({ vipUsers: Array.from(new Set([...(st.global.vipUsers || []), u])) }, `⭐ أضيف (${u}) لـ VIP`);
+                const next = Array.from(new Set([...(st.global.vipUsers || []), u]));
+                this.patchGlobal({ vipUsers: next }, `⭐ أضيف (${u}) لـ VIP`);
             });
             document.getElementById("lcea-sa-add")?.addEventListener("click", () => {
                 if (!h.isSuperAdmin()) return alert("إضافة المشرفين العامين للمالك فقط.");
@@ -2765,7 +3374,7 @@
 
             document.getElementById("lcea-exp")?.addEventListener("click", () => {
                 const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
-                const blob = new Blob([JSON.stringify({ contestId: cid, meta: c, data: st.data, hall_of_fame: st.hof }, null, 2)], { type: "application/json" });
+                const blob = new Blob([JSON.stringify({ contestId: cid, meta: c, data: st.data, hall_of_fame: getMergedHofList() }, null, 2)], { type: "application/json" });
                 const url = URL.createObjectURL(blob), a = document.createElement("a");
                 a.href = url; a.download = `layl-contest-${cid}-${new Date().toISOString().split("T")[0]}.json`;
                 document.body.appendChild(a); a.click(); a.remove();
@@ -2779,9 +3388,9 @@
                     try {
                         const p = JSON.parse(rd.result);
                         if (!p || !p.contestId || !p.meta || !confirm("استعادة هذه المسابقة في قاعدة البيانات؟")) return;
-                        const up = {};
-                        up[`index/${p.contestId}`] = p.meta;
-                        if (p.data) up[`data/${p.contestId}`] = p.data;
+                        const targetId = isLegacy(p.contestId) ? h.genId("imp") : p.contestId;
+                        const up = {}; up[`index/${targetId}`] = p.meta;
+                        if (p.data) up[`data/${targetId}`] = p.data;
                         st.db.ref(ROOT).update(up).then(() => showToast("✅ تمت الاستعادة بنجاح", 3000, "gold"));
                     } catch (e) { alert("❌ ملف JSON غير صالح."); }
                 };
@@ -2804,7 +3413,7 @@
                 const counts = computeVoteCounts(st.data.entries, st.data.votes);
                 const top = getApprovedEntries(st.data.entries).sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0)).slice(0, 5);
                 if (!top.length) return showToast("لا توجد مشاركات بعد");
-                const txt = `🏆 الترتيب المباشر — ${c.title} 🏆\n\n` + top.map((e, i) => `${i + 1}. ${e.displayName || e.username} — (${counts[e.key] || 0} صوت)`).join("\n") + "\n\n🗳️ صوّت الآن لمرشحك المفضل!";
+                const txt = `🏆 الترتيب المباشر — ${c.title} 🏆\n\n` + top.map((e, i) => `${i + 1}. ${"duo" === c.template ? `${e.displayName} ❤️ ${e.partnerName}` : (e.displayName || e.username)} — (${counts[e.key] || 0} صوت)`).join("\n") + "\n\n🗳️ صوّت الآن لمرشحك المفضل!";
                 h.copy(txt, "📋 تم نسخ الترتيب للشات!");
             };
             document.getElementById("lcea-copy-promo").onclick = () => {
@@ -2817,7 +3426,7 @@
                 const c = h.getContest(st.adminCid);
                 const name = document.getElementById("lcea-hf-n").value.trim(), label = document.getElementById("lcea-hf-l").value.trim() || "🏆 الفائز", votes = parseInt(document.getElementById("lcea-hf-v").value, 10) || 0;
                 if (!name || !st.db) return alert("أدخل اسم الفائز.");
-                st.db.ref(`${ROOT}/hall_of_fame`).push({ contestId: st.adminCid || "", contestTitle: c?.title || "مسابقة شات ليل", season: c?.season || 1, name, categoryLabel: label, avatar: hofAv, votes, date: Date.now() }).then(() => {
+                dbOps.pushHof(st.adminCid || "", { contestId: st.adminCid || "", contestTitle: c?.title || "مسابقة شات ليل", season: c?.season || 1, name, categoryLabel: label, avatar: hofAv, votes, date: Date.now() }).then(() => {
                     document.getElementById("lcea-hf-n").value = ""; document.getElementById("lcea-hf-l").value = ""; document.getElementById("lcea-hf-v").value = "";
                     resetHfAv();
                     this.log("إضافة لقاعة الشرف", name); showToast("🏆 تمت الإضافة");
@@ -2834,18 +3443,33 @@
             const ids = this.getManagedContestIds();
             if (sel) {
                 sel.innerHTML = ids.length ? ids.map(id => {
-                    const x = st.index[id];
+                    const x = h.getContest(id);
                     const tName = TEMPLATES[x?.template]?.name || "";
-                    return `<option value="${h.esc(id)}" ${id === st.adminCid ? "selected" : ""}>${"archived" === x?.status ? "📦 " : "🟢 "}${h.esc(x?.title || id)} (${tName})</option>`;
+                    const tag = x?.isLegacy ? "👑 مباشر • " : ("archived" === x?.status ? "📦 " : "🟢 ");
+                    return `<option value="${h.esc(id)}" ${id === st.adminCid ? "selected" : ""}>${tag}${h.esc(x?.title || id)} (${tName})</option>`;
                 }).join("") : '<option value="">لا توجد مسابقات — أنشئ مسابقة من تبويب المسابقات</option>';
             }
 
             const c = h.getContest(st.adminCid);
             const info = c ? getPhaseInfo(c, st.data.entries, st.data.votes) : { phase: "idle", remaining: 0 };
-            const phMap = { idle: "متوقفة", archived: "مؤرشفة", submission: "التقديم", voting: "التصويت", judging: "الفرز", tiebreaker: "تعادل", results: "النتائج" };
+            const phMap = { idle: "متوقفة", archived: "مؤرشفة", submission: "التقديم", voting: "التصويت", drawing: "السحب", judging: "الفرز", tiebreaker: "تعادل", results: "النتائج" };
             document.getElementById("lcea-st-ph").textContent = (info.paused ? "⏸️ " : "") + (phMap[info.phase] || info.phase);
             const cdEl = document.getElementById("lcea-cur-cd"); if (cdEl) cdEl.textContent = info.remaining ? h.fmtTime(info.remaining) : "--:--:--";
             const mtEl = document.getElementById("lcea-mult-tag"); if (mtEl) { const m = Math.max(1, Number(c?.voteMultiplier) || 1); mtEl.textContent = m > 1 ? `⚡ ×${m} نشط` : "×1 عادي"; }
+
+            const spBox = document.getElementById("lcea-special-act");
+            if (spBox) {
+                if (c && "raffle" === c.template && !c.resultsPublished) {
+                    spBox.style.display = "block";
+                    spBox.innerHTML = `<button type="button" id="lcea-sp-draw" class="lcea-btn lcea-b-gold"><i class="fas fa-dice"></i> إجراء السحب العشوائي الآن (${Math.max(1, Number(c.maxWinners) || 1)} فائزين)</button>`;
+                    document.getElementById("lcea-sp-draw").onclick = () => runRaffleDraw(c.id, c);
+                } else if (c && "bracket" === c.template && !c.resultsPublished) {
+                    spBox.style.display = "block";
+                    const hasBr = Boolean(c.bracket?.matches?.length);
+                    spBox.innerHTML = `<button type="button" id="lcea-sp-br" class="lcea-btn lcea-b-red"><i class="fas fa-random"></i> ${hasBr ? `تأهيل الفائزين للجولة #${c.bracket.round + 1}` : "سحب قرعة الجولة #1 وبدء المواجهات"}</button>`;
+                    document.getElementById("lcea-sp-br").onclick = () => hasBr ? advanceBracketRound(c.id, c) : startBracketTournament(c.id, c);
+                } else spBox.style.display = "none";
+            }
 
             const entriesArr = Object.values(st.data.entries || {});
             const pendCnt = entriesArr.filter(e => e && "pending" === e.status).length;
@@ -2875,7 +3499,8 @@
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
                         <b style="font-size:13px;"><i class="fas ${h.esc(c.icon || tmpl.icon)}" style="color:#D4AF37;margin-left:5px;"></i>${h.esc(c.title)} <span style="font-size:10.5px;color:#94a3b8;">(${tmpl.name} • #${c.season || 1})</span></b>
                         <div class="lcea-row" style="gap:4px;">
-                            ${c.showInMenu ? '<span class="lcea-tag lcea-t-gold">📌 بالقائمة</span>' : ""}
+                            ${c.isLegacy ? '<span class="lcea-tag lcea-t-green">🔗 جسر مباشر</span>' : ""}
+                            ${c.showInMenu && "active" === c.status ? '<span class="lcea-tag lcea-t-gold">📌 بالقائمة</span>' : ""}
                             ${phaseBadgeHtml(info.phase, info.paused)}
                         </div>
                     </div>
@@ -2883,7 +3508,7 @@
                         <button type="button" class="lcea-btn lcea-b-info lcea-mini lcea-sel-c" data-id="${h.esc(id)}"><i class="fas fa-sliders-h"></i> تحكم</button>
                         <button type="button" class="lcea-btn lcea-b-ok lcea-mini lcea-view-c" data-id="${h.esc(id)}"><i class="fas fa-eye"></i> فتح</button>
                         <button type="button" class="lcea-btn lcea-b-dark lcea-mini lcea-tog-menu" data-id="${h.esc(id)}">${c.showInMenu ? "إخفاء الزر" : "إظهار الزر"}</button>
-                        ${this.isFullAdmin() ? `<button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-del-c" data-id="${h.esc(id)}" style="margin-right:auto;"><i class="fas fa-trash"></i></button>` : ""}
+                        ${this.isFullAdmin() ? `<button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-del-c" data-id="${h.esc(id)}" style="margin-right:auto;" title="${c.isLegacy ? "إغلاق وتصفير" : "حذف نهائي"}"><i class="fas fa-trash"></i></button>` : ""}
                     </div>
                 </div>`;
             }).join("");
@@ -2898,8 +3523,15 @@
                 this.patchContest(b.dataset.id, { showInMenu: !c.showInMenu }, !c.showInMenu ? "📌 ظهر الزر في القائمة" : "تم إخفاء الزر من القائمة");
             });
             box.querySelectorAll(".lcea-del-c").forEach(b => b.onclick = () => {
-                const id = b.dataset.id, c = h.getContest(id);
-                if (!c || !confirm(`⚠️ حذف مسابقة (${c.title}) وجميع مشاركاتها وأصواتها نهائياً؟`)) return;
+                const id = b.dataset.id, c = h.getContest(id); if (!c) return;
+                if (c.isLegacy) {
+                    if (!confirm("⚠️ إغلاق وتصفير مسابقة «ملك وملكة الشات» الحالية وإخفاء زرها؟ (تبقى قاعة الشرف محفوظة)")) return;
+                    st.db?.ref(LEGACY_ROOT).update({ state: { status: "cleared", season: c.season || 1, showInMenu: !1 }, candidates: null, votes: null }).then(() => {
+                        this.log("إغلاق وتصفير", c.title); showToast("🗑️ تم الإغلاق والتصفير");
+                    });
+                    return;
+                }
+                if (!confirm(`⚠️ حذف مسابقة (${c.title}) وجميع مشاركاتها وأصواتها نهائياً؟`)) return;
                 const up = {}; up[`index/${id}`] = null; up[`data/${id}`] = null;
                 st.db?.ref(ROOT).update(up).then(() => {
                     this.log("حذف مسابقة", c.title);
@@ -2915,7 +3547,7 @@
             const counts = computeVoteCounts(st.data.entries, st.data.votes);
             const list = Object.entries(st.data.entries || {}).sort((a, b) => ("pending" === a[1].status ? -1 : 1) - ("pending" === b[1].status ? -1 : 1) || (counts[b[0]] || 0) - (counts[a[0]] || 0));
             if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد مشاركات حالياً.</div>'; return; }
-            const isPhoto = "photo" === c.template, isPred = "prediction" === c.template;
+            const isPhoto = "photo" === c.template, isDuo = "duo" === c.template, noVotes = ["prediction", "raffle", "quiz"].includes(c.template);
             box.innerHTML = list.map(([k, it]) => {
                 const pend = "pending" === it.status, frz = Boolean(it.frozen);
                 const thumb = isPhoto ? it.image : it.avatar;
@@ -2924,20 +3556,20 @@
                     : `<div style="width:36px;height:36px;border-radius:50%;background:#1e293b;border:1.5px solid #D4AF37;color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;"><i class="fas ${h.esc(c.icon || "fa-crown")}"></i></div>`;
                 return `<div class="lcea-card" style="${pend ? "border-color:#f59e0b;" : it.isWinner ? "border-color:#10b981;" : frz ? "border-color:#38bdf8;" : ""}">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-                        <div style="display:flex;align-items:center;gap:8px;min-width:0;">${avHtml}<b style="font-size:12.5px;">${h.esc(it.displayName || it.username)}</b></div>
+                        <div style="display:flex;align-items:center;gap:8px;min-width:0;">${avHtml}<b style="font-size:12.5px;">${isDuo ? `${h.esc(it.displayName)} ❤️ ${h.esc(it.partnerName || "")}` : h.esc(it.displayName || it.username)}</b></div>
                         <div class="lcea-row" style="gap:4px;">
                             ${frz ? '<span class="lcea-tag lcea-t-blue">❄️ مجمد</span>' : ""}
                             ${it.isWinner ? '<span class="lcea-tag lcea-t-green">🏆 فائز</span>' : ""}
                             <span class="lcea-tag ${pend ? "lcea-t-red" : "lcea-t-green"}">${pend ? "⏳ معلق" : "✅ معتمد"}</span>
-                            ${!isPred ? `<span class="lcea-tag lcea-t-gold">${counts[k] || 0} صوت</span>` : ""}
+                            ${!noVotes ? `<span class="lcea-tag lcea-t-gold">${counts[k] || 0} صوت</span>` : ""}
                         </div>
                     </div>
                     ${it.text ? `<div style="font-size:11.5px;color:#94a3b8;margin-bottom:7px;white-space:pre-line;">«${h.esc(it.text)}»</div>` : ""}
                     <div class="lcea-row" style="gap:4px;">
                         ${pend ? `<button type="button" class="lcea-btn lcea-b-ok lcea-mini lcea-e-app" data-k="${h.esc(k)}">اعتماد ✓</button>` : ""}
-                        ${isPred ? `<button type="button" class="lcea-btn ${it.isWinner ? "lcea-b-ok" : "lcea-b-warn"} lcea-mini lcea-e-win" data-k="${h.esc(k)}">${it.isWinner ? "إلغاء الفوز" : "تحديد كفائز 🏆"}</button>` : ""}
+                        ${noVotes ? `<button type="button" class="lcea-btn ${it.isWinner ? "lcea-b-ok" : "lcea-b-warn"} lcea-mini lcea-e-win" data-k="${h.esc(k)}">${it.isWinner ? "إلغاء الفوز" : "تحديد كفائز 🏆"}</button>` : ""}
                         <button type="button" class="lcea-btn lcea-b-info lcea-mini lcea-e-edit" data-k="${h.esc(k)}"><i class="fas fa-edit"></i> تعديل</button>
-                        ${!isPred ? `<button type="button" class="lcea-btn lcea-b-warn lcea-mini lcea-e-adj" data-k="${h.esc(k)}">+/-</button>` : ""}
+                        ${!noVotes ? `<button type="button" class="lcea-btn lcea-b-warn lcea-mini lcea-e-adj" data-k="${h.esc(k)}">+/-</button>` : ""}
                         <button type="button" class="lcea-btn ${frz ? "lcea-b-ok" : "lcea-b-dark"} lcea-mini lcea-e-frz" data-k="${h.esc(k)}">${frz ? "فك التجميد" : "تجميد ❄️"}</button>
                         <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-e-del" data-k="${h.esc(k)}" style="margin-right:auto;"><i class="fas fa-trash"></i></button>
                     </div>
@@ -2946,12 +3578,12 @@
 
             const cid = st.adminCid;
             box.querySelectorAll(".lcea-ezoom").forEach(img => img.onclick = () => openLightbox(img.src));
-            box.querySelectorAll(".lcea-e-app").forEach(b => b.onclick = () => st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}/status`).set("approved").then(() => showToast("✅ تم الاعتماد")));
-            box.querySelectorAll(".lcea-e-win").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.isWinner); st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}/isWinner`).set(!cur); });
+            box.querySelectorAll(".lcea-e-app").forEach(b => b.onclick = () => dbOps.updateEntry(cid, b.dataset.k, { status: "approved" }).then(() => showToast("✅ تم الاعتماد")));
+            box.querySelectorAll(".lcea-e-win").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.isWinner); dbOps.updateEntry(cid, b.dataset.k, { isWinner: !cur }); });
             box.querySelectorAll(".lcea-e-edit").forEach(b => b.onclick = () => this.openEditEntry(cid, b.dataset.k));
-            box.querySelectorAll(".lcea-e-frz").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.frozen); st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}/frozen`).set(!cur); });
-            box.querySelectorAll(".lcea-e-adj").forEach(b => b.onclick = () => { const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10); if (!isNaN(val)) st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}/bonusVotes`).set(val).then(() => showToast("✅ تم التعديل")); });
-            box.querySelectorAll(".lcea-e-del").forEach(b => b.onclick = () => { if (confirm("حذف هذه المشاركة نهائياً؟")) st.db?.ref(`${ROOT}/data/${cid}/entries/${b.dataset.k}`).remove().then(() => { this.log("حذف مشاركة", c.title, b.dataset.k); showToast("🗑️ تم الحذف"); }); });
+            box.querySelectorAll(".lcea-e-frz").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.frozen); dbOps.updateEntry(cid, b.dataset.k, { frozen: !cur }); });
+            box.querySelectorAll(".lcea-e-adj").forEach(b => b.onclick = () => { const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10); if (!isNaN(val)) dbOps.updateEntry(cid, b.dataset.k, { bonusVotes: val }).then(() => showToast("✅ تم التعديل")); });
+            box.querySelectorAll(".lcea-e-del").forEach(b => b.onclick = () => { if (confirm("حذف هذه المشاركة نهائياً؟")) dbOps.removeEntry(cid, b.dataset.k).then(() => { this.log("حذف مشاركة", c.title, b.dataset.k); showToast("🗑️ تم الحذف"); }); });
         },
 
         renderVotes() {
@@ -2967,7 +3599,7 @@
                     <div style="flex:1;min-width:0;"><b>${h.esc(v.voterName || v.k)}</b> ➔ <b style="color:#D4AF37;">${h.esc(v.targetName)}</b> ${v.weight > 1 ? `<span class="lcea-tag lcea-t-gold">×${v.weight}</span>` : ""} <span style="color:#64748b;font-size:10px;">(${h.fmtDate(v.ts)})</span></div>
                     <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-vdel" data-k="${h.esc(v.k)}" style="padding:3px 7px;">سحب</button>
                 </div>`).join("");
-            box.querySelectorAll(".lcea-vdel").forEach(b => b.onclick = () => { if (st.adminCid && confirm("سحب هذا الصوت؟")) st.db?.ref(`${ROOT}/data/${st.adminCid}/votes/${b.dataset.k}`).remove().then(() => showToast("🗑️ تم السحب")); });
+            box.querySelectorAll(".lcea-vdel").forEach(b => b.onclick = () => { if (st.adminCid && confirm("سحب هذا الصوت؟")) dbOps.removeVote(st.adminCid, b.dataset.k).then(() => showToast("🗑️ تم السحب")); });
         },
 
         renderPresence() {
@@ -2990,22 +3622,24 @@
 
         renderBans() {
             const box = document.getElementById("lcea-bans-list"); if (!box) return;
-            const list = Object.entries(st.banned || {}), sMap = { all: "كامل", nom: "مشاركة فقط", vote: "تصويت فقط" };
+            const merged = Object.assign({}, st.legacy.banned || {}, st.banned || {});
+            const list = Object.entries(merged), sMap = { all: "كامل", nom: "مشاركة فقط", vote: "تصويت فقط" };
             if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:12px;font-size:12px;">لا يوجد محظورون.</div>'; return; }
             box.innerHTML = list.map(([k, b]) => {
                 const exp = b.expiresAt && Date.now() >= b.expiresAt;
-                const scopeTitle = b.contestId && "all" !== b.contestId ? (st.index[b.contestId]?.title || "مسابقة محددة") : "كل المسابقات";
+                const scopeTitle = b.contestId && "all" !== b.contestId ? (h.getContest(b.contestId)?.title || "مسابقة محددة") : "كل المسابقات";
                 return `<div class="lcea-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
                     <div><b style="font-size:12.5px;">${h.esc(b.name || k)}</b> <span class="lcea-tag lcea-t-red">${sMap[b.scope] || "كامل"}</span> <span class="lcea-tag lcea-t-gold">${h.esc(scopeTitle)}</span> <span class="lcea-tag lcea-t-blue">${exp ? "منتهي" : h.fmtRem(b.expiresAt)}</span><div style="font-size:10.5px;color:#94a3b8;">${h.esc(b.reason || "بدون سبب")}</div></div>
                     <button type="button" class="lcea-btn lcea-b-ok lcea-mini lcea-unb" data-k="${h.esc(k)}">فك الحظر</button>
                 </div>`;
             }).join("");
-            box.querySelectorAll(".lcea-unb").forEach(b => b.onclick = () => st.db?.ref(`${ROOT}/banned/${b.dataset.k}`).remove().then(() => { this.log("فك حظر", b.dataset.k); showToast("✅ تم فك الحظر"); }));
+            box.querySelectorAll(".lcea-unb").forEach(b => b.onclick = () => dbOps.unbanUser(b.dataset.k).then(() => { this.log("فك حظر", b.dataset.k); showToast("✅ تم فك الحظر"); }));
         },
 
         renderPrizesAdmin() {
             const box = document.getElementById("lcea-pz-list"); if (!box || !st.adminCid) return;
-            const list = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : DEFAULT_PRIZES;
+            const fallbackP = isLegacy(st.adminCid) ? ROYAL_DEFAULT_PRIZES : DEFAULT_PRIZES;
+            const list = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : fallbackP;
             box.innerHTML = list.map((p, i) => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:rgba(0,0,0,.24);border-radius:8px;margin-bottom:4px;font-size:11.5px;gap:6px;">
                     <div style="flex:1;min-width:0;"><i class="fas ${h.esc(p.icon || "fa-crown")}" style="color:#D4AF37;margin-left:5px;"></i><b>${h.esc(p.title)}</b> <span style="color:#94a3b8;">(${h.esc(p.dur || "-")})</span></div>
@@ -3014,8 +3648,8 @@
                         <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-pz-del" data-i="${i}" style="padding:3px 6px;"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`).join("");
-            box.querySelectorAll(".lcea-pz-up").forEach(b => b.onclick = () => { const a = list.slice(), i = Number(b.dataset.i); [a[i - 1], a[i]] = [a[i], a[i - 1]]; st.db?.ref(`${ROOT}/data/${st.adminCid}/prizes`).set(a); });
-            box.querySelectorAll(".lcea-pz-del").forEach(b => b.onclick = () => { const a = list.slice(); a.splice(Number(b.dataset.i), 1); st.db?.ref(`${ROOT}/data/${st.adminCid}/prizes`).set(a); });
+            box.querySelectorAll(".lcea-pz-up").forEach(b => b.onclick = () => { const a = list.slice(), i = Number(b.dataset.i); [a[i - 1], a[i]] = [a[i], a[i - 1]]; dbOps.setPrizes(st.adminCid, a); });
+            box.querySelectorAll(".lcea-pz-del").forEach(b => b.onclick = () => { const a = list.slice(); a.splice(Number(b.dataset.i), 1); dbOps.setPrizes(st.adminCid, a); });
         },
 
         renderMgrList() {
@@ -3055,14 +3689,14 @@
 
         renderHof() {
             const box = document.getElementById("lcea-hof-list"); if (!box) return;
-            const list = Object.entries(st.hof || {}).sort((a, b) => (b[1].date || 0) - (a[1].date || 0));
+            const list = getMergedHofList();
             if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:10px;font-size:12px;">قاعة الشرف فارغة.</div>'; return; }
-            box.innerHTML = list.map(([k, w]) => `
+            box.innerHTML = list.map(w => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:rgba(0,0,0,.22);border-radius:8px;margin-bottom:4px;font-size:11.5px;gap:6px;">
                     <span><b>${h.esc(w.name)}</b> <span style="color:#94a3b8;">(${h.esc(w.contestTitle || "")} • ${h.esc(w.categoryLabel || "")})</span></span>
-                    <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-hdel" data-k="${h.esc(k)}" style="padding:3px 7px;"><i class="fas fa-trash"></i></button>
+                    <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-hdel" data-src="${h.esc(w._src)}" data-k="${h.esc(w._key)}" style="padding:3px 7px;"><i class="fas fa-trash"></i></button>
                 </div>`).join("");
-            box.querySelectorAll(".lcea-hdel").forEach(b => b.onclick = () => { if (confirm("حذف من قاعة الشرف؟")) st.db?.ref(`${ROOT}/hall_of_fame/${b.dataset.k}`).remove(); });
+            box.querySelectorAll(".lcea-hdel").forEach(b => b.onclick = () => { if (confirm("حذف من قاعة الشرف؟")) dbOps.removeHof(b.dataset.src, b.dataset.k); });
         },
 
         renderLogs() {
@@ -3078,7 +3712,7 @@
         }
     };
 
-    // ==================== تحميل البيانات الثقيلة عند الطلب فقط (أداء فائق) ====================
+    // ==================== تحميل البيانات الثقيلة عند الطلب فقط (مع الجسر المباشر) ====================
     function syncHeavyStreams() {
         if (!st.db) return;
         const userOpen = Boolean(document.getElementById("lce-modal")?.classList.contains("open"));
@@ -3092,16 +3726,53 @@
             st.heavyRefs = [];
             st.heavyCid = targetCid;
             st.heavyLoaded = !1;
-            st.data = { entries: {}, votes: {}, prizes: DEFAULT_PRIZES.slice(), presence: st.data.presence || {} };
+            const defP = isLegacy(targetCid) ? ROYAL_DEFAULT_PRIZES.slice() : DEFAULT_PRIZES.slice();
+            st.data = { entries: {}, votes: {}, prizes: defP, presence: st.data.presence || {} };
 
-            const bind = (sub, fn) => {
-                const ref = st.db.ref(`${ROOT}/data/${targetCid}/${sub}`);
+            const bind = (fullPath, fn) => {
+                const ref = st.db.ref(fullPath);
                 ref.on("value", fn);
                 st.heavyRefs.push(ref);
             };
-            bind("entries", sn => { st.data.entries = sn.val() || {}; st.heavyLoaded = !0; renderMainBody(); contestsAdmin.refresh(); });
-            bind("votes", sn => { st.data.votes = sn.val() || {}; if (st.heavyLoaded) renderMainBody(); contestsAdmin.refresh(); });
-            bind("prizes", sn => { const v = sn.val(); st.data.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice(); contestsAdmin.refresh(); });
+
+            if (isLegacy(targetCid)) {
+                bind(`${LEGACY_ROOT}/candidates`, sn => {
+                    const raw = sn.val() || {}, norm = {};
+                    Object.entries(raw).forEach(([k, c]) => {
+                        if (!c) return;
+                        norm[k] = {
+                            uid: c.uid || "", username: c.username || k, displayName: c.displayName || c.username || k,
+                            html: c.html || h.esc(c.displayName || c.username || k), avatar: c.avatar || "", image: "",
+                            partnerName: "", partnerAvatar: "", ytId: "", tickets: 1,
+                            category: "queen" === c.role ? "cat2" : "cat1", title: "", text: c.slogan || "",
+                            badge: c.badge || "", frozen: Boolean(c.frozen), isWinner: !1,
+                            status: c.status || "approved", bonusVotes: Number(c.bonusVotes) || 0, joinedAt: c.joinedAt || 0
+                        };
+                    });
+                    st.data.entries = norm; st.heavyLoaded = !0; renderMainBody(); contestsAdmin.refresh();
+                });
+                bind(`${LEGACY_ROOT}/votes`, sn => {
+                    const raw = sn.val() || {}, norm = {};
+                    Object.entries(raw).forEach(([k, v]) => {
+                        if (!v || !v.target) return;
+                        norm[k] = {
+                            target: v.target, category: "queen" === v.role ? "cat2" : "cat1",
+                            matchKey: null, voterName: v.voterName || k,
+                            weight: Math.max(1, Number(v.weight) || 1), ts: v.ts || 0
+                        };
+                    });
+                    st.data.votes = norm; if (st.heavyLoaded) renderMainBody(); contestsAdmin.refresh();
+                });
+                bind(`${LEGACY_ROOT}/prizes`, sn => {
+                    const v = sn.val();
+                    st.data.prizes = Array.isArray(v) && v.length ? v : ROYAL_DEFAULT_PRIZES.slice();
+                    contestsAdmin.refresh();
+                });
+            } else {
+                bind(`${ROOT}/data/${targetCid}/entries`, sn => { st.data.entries = sn.val() || {}; st.heavyLoaded = !0; renderMainBody(); contestsAdmin.refresh(); });
+                bind(`${ROOT}/data/${targetCid}/votes`, sn => { st.data.votes = sn.val() || {}; if (st.heavyLoaded) renderMainBody(); contestsAdmin.refresh(); });
+                bind(`${ROOT}/data/${targetCid}/prizes`, sn => { const v = sn.val(); st.data.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice(); contestsAdmin.refresh(); });
+            }
         } else if (st.heavyCid) {
             st.heavyDetachTimer = setTimeout(() => {
                 const uo = Boolean(document.getElementById("lce-modal")?.classList.contains("open"));
@@ -3115,13 +3786,13 @@
         }
     }
 
-    // ==================== الواجهة البرمجية العامة ====================
+    // ==================== الواجهة البرمجية العامة (+ توافق خلفي مع ملك وملكة الشات) ====================
     window.LaylContests = {
         openHub() {
             if (!h.isAdmin() && !h.isVip() && !1 === st.global.enabled) return alert(st.global.disabledMsg || DEFAULT_GLOBAL.disabledMsg);
             const ban = h.getMyBan(null);
             if (!h.isAdmin() && ban && "all" === ban.scope && (!ban.contestId || "all" === ban.contestId)) {
-                return alert(`تم منعك من مركز المسابقات 🚫${ban.reason ? "\nالسبب: " + ban.reason : ""}`);
+                return alert(`تم منعك من المسابقات 🚫${ban.reason ? "\nالسبب: " + ban.reason : ""}`);
             }
             ensureUserModal();
             st.viewMode = "hub";
@@ -3139,7 +3810,7 @@
             if (!cid) return this.openHub();
             const c = h.getContest(cid);
             if (!c) return this.openHub();
-            if (!h.isAdmin(cid) && !h.isVip() && (!1 === st.global.enabled || !1 === c.cfg.enabled)) {
+            if (!h.isAdmin(cid) && !h.isVip(cid) && (!1 === st.global.enabled || !1 === c.cfg.enabled)) {
                 return alert(st.global.disabledMsg || DEFAULT_GLOBAL.disabledMsg);
             }
             const ban = h.getMyBan(cid);
@@ -3183,7 +3854,15 @@
         openAdmin: (cid = null) => contestsAdmin.open(cid)
     };
 
-    // ==================== ربط الأزرار تلقائياً في LaylMenu (بنفس تثبيت وتوهج ملك وملكة الشات) ====================
+    window.LaylRoyalContest = {
+        open: () => window.LaylContests.open(LEGACY_CID),
+        close: () => window.LaylContests.close(),
+        minimize: () => window.LaylContests.minimize(),
+        restore: () => window.LaylContests.restore(),
+        openAdmin: () => contestsAdmin.open(LEGACY_CID)
+    };
+
+    // ==================== ربط الأزرار تلقائياً في LaylMenu ====================
     const menuItemStore = {};
 
     function registerOrUpdateMenu(item) {
@@ -3199,38 +3878,28 @@
     function applyMenuDecorations() {
         let css = "";
         let pinnedSlotUsed = !1;
-        Object.keys(st.index || {})
-            .sort((a, b) => (st.index[b]?.createdAt || 0) - (st.index[a]?.createdAt || 0))
+        h.getAllContestIds()
+            .sort((a, b) => (h.getContest(b)?.createdAt || 0) - (h.getContest(a)?.createdAt || 0))
             .forEach(cid => {
                 const c = h.getContest(cid);
                 if (!c || "active" !== c.status || !1 === c.showInMenu || !c.pinTop) return;
-                const sel = `#btn-lce-c-${cid}`;
+                const th = h.getTheme(c.theme), sel = `#btn-lce-c-${cid}`;
                 if (!pinnedSlotUsed) {
                     pinnedSlotUsed = !0;
-                    css += `
-                    ${sel}{
-                        grid-row:1!important;
-                        grid-column:-2 / -1!important;
-                    }`;
+                    css += `${sel}{grid-row:1!important;grid-column:-2 / -1!important;}`;
                 }
                 css += `
                 ${sel} .modern-classic-icon-wrapper{
-                    position:relative!important;
-                    overflow:visible!important;
-                    border:1.5px solid rgba(212,175,55,.85)!important;
-                    box-shadow:0 0 14px rgba(212,175,55,.55),0 0 24px rgba(251,191,36,.28)!important;
+                    position:relative!important;overflow:visible!important;
+                    border:1.5px solid ${th.accent}!important;
+                    box-shadow:0 0 14px ${th.border},0 0 24px ${th.soft}!important;
                 }
                 ${sel} .modern-classic-icon-wrapper::before{
-                    content:"";
-                    position:absolute;
-                    inset:-3px;
-                    border-radius:inherit;
-                    border:2px solid rgba(251,191,36,.92);
-                    box-shadow:0 0 16px rgba(212,175,55,.75),inset 0 0 8px rgba(251,191,36,.3);
-                    opacity:.3;
-                    pointer-events:none;
-                    animation:lceGoldPulse 2.4s ease-in-out infinite;
-                    will-change:opacity;
+                    content:"";position:absolute;inset:-3px;border-radius:inherit;
+                    border:2px solid ${th.accent};
+                    box-shadow:0 0 16px ${th.border},inset 0 0 8px ${th.soft};
+                    opacity:.3;pointer-events:none;
+                    animation:lceGoldPulse 2.4s ease-in-out infinite;will-change:opacity;
                 }`;
             });
 
@@ -3256,7 +3925,7 @@
             onClick: () => window.LaylContests.openHub()
         });
 
-        Object.keys(st.index || {}).forEach(cid => {
+        h.getAllContestIds().forEach(cid => {
             const c = h.getContest(cid);
             if (!c) return;
             const th = h.getTheme(c.theme), tmpl = TEMPLATES[c.template] || TEMPLATES.royal;
@@ -3271,7 +3940,7 @@
                 bold: !0,
                 condition: () => {
                     const cur = h.getContest(cid);
-                    return Boolean(cur && "active" === cur.status && !1 !== cur.showInMenu && (!1 !== cur.cfg.enabled || h.isAdmin(cid) || h.isVip()) && (!1 !== st.global.enabled || h.isAdmin(cid) || h.isVip()));
+                    return Boolean(cur && "active" === cur.status && !1 !== cur.showInMenu && (!1 !== cur.cfg.enabled || h.isAdmin(cid) || h.isVip(cid)) && (!1 !== st.global.enabled || h.isAdmin(cid) || h.isVip(cid)));
                 },
                 onClick: () => window.LaylContests.open(cid)
             });
@@ -3292,33 +3961,49 @@
         setTimeout(pinTopMenuBtns, 120);
     }
 
-    // ==================== ربط Firebase والهوية ====================
+    // ==================== ربط Firebase والهوية والجسر المباشر ====================
+    function handleIncomingCmd(sn) {
+        const v = sn.val(); if (!v || !v.cmd) return;
+        sn.ref.remove().catch(() => {});
+        if (v.ts && Date.now() - v.ts > 6e4) return;
+        if ("kick" === v.cmd && !h.isAdmin()) { window.LaylContests.close(); alert(v.text || "تم إخراجك من المسابقة."); }
+        else if ("alert" === v.cmd && v.text) showToast(`📩 تنبيه الإدارة: ${v.text}`, 8000, "gold");
+    }
+
+    function checkActiveBanKick(v, legacySource) {
+        if (v && "all" === v.scope && (!v.expiresAt || Date.now() < v.expiresAt) && !h.isAdmin(st.activeCid)) {
+            const applies = legacySource
+                ? isLegacy(st.activeCid)
+                : (!v.contestId || "all" === v.contestId || v.contestId === st.activeCid);
+            if (applies && document.getElementById("lce-modal")?.classList.contains("open")) {
+                window.LaylContests.close();
+                alert(`تم حظرك من المسابقة 🚫${v.reason ? "\nالسبب: " + v.reason : ""}`);
+            }
+        }
+    }
+
     function bindCmdListener() {
         if (!st.db) return;
         const k = h.myKey();
         if (!k || st.cmdUser === k) return;
-        st.cmdRef?.off();
-        st.myBanRef?.off();
+        [st.cmdRef, st.legacyCmdRef, st.myBanRef, st.myLegacyBanRef].forEach(r => { try { r?.off(); } catch (e) {} });
         st.cmdUser = k;
         st.cmdRef = st.db.ref(`${ROOT}/cmds/${k}`);
-        st.cmdRef.on("value", sn => {
-            const v = sn.val(); if (!v || !v.cmd) return;
-            sn.ref.remove().catch(() => {});
-            if (v.ts && Date.now() - v.ts > 6e4) return;
-            if ("kick" === v.cmd && !h.isAdmin()) { window.LaylContests.close(); alert(v.text || "تم إخراجك من المسابقة."); }
-            else if ("alert" === v.cmd && v.text) showToast(`📩 تنبيه الإدارة: ${v.text}`, 8000, "gold");
-        });
+        st.cmdRef.on("value", handleIncomingCmd);
+        st.legacyCmdRef = st.db.ref(`${LEGACY_ROOT}/cmds/${k}`);
+        st.legacyCmdRef.on("value", handleIncomingCmd);
+
         st.myBanRef = st.db.ref(`${ROOT}/banned/${k}`);
         st.myBanRef.on("value", sn => {
             const v = sn.val();
             if (v) st.banned[k] = v; else delete st.banned[k];
-            if (v && "all" === v.scope && (!v.expiresAt || Date.now() < v.expiresAt) && !h.isAdmin(st.activeCid)) {
-                const applies = !v.contestId || "all" === v.contestId || v.contestId === st.activeCid;
-                if (applies && document.getElementById("lce-modal")?.classList.contains("open")) {
-                    window.LaylContests.close();
-                    alert(`تم حظرك من المسابقة 🚫${v.reason ? "\nالسبب: " + v.reason : ""}`);
-                }
-            }
+            checkActiveBanKick(v, !1);
+        });
+        st.myLegacyBanRef = st.db.ref(`${LEGACY_ROOT}/banned/${k}`);
+        st.myLegacyBanRef.on("value", sn => {
+            const v = sn.val();
+            if (v) st.legacy.banned[k] = v; else delete st.legacy.banned[k];
+            checkActiveBanKick(v, !0);
         });
     }
 
@@ -3352,6 +4037,30 @@
                     showBannerToastAd(v.text, v.theme || "gold", v.cid || null);
                 }
             });
+
+            // الجسر المباشر الخفيف لمسابقة «ملك وملكة الشات» السارية
+            st.db.ref(`${LEGACY_ROOT}/state`).on("value", sn => {
+                st.legacy.state = sn.val() || null;
+                const lm = buildLegacyMeta();
+                if (lm) announceContestPhase(LEGACY_CID, lm);
+                syncMenuItems();
+                renderMainBody();
+                contestsAdmin.refresh();
+            });
+            st.db.ref(`${LEGACY_ROOT}/settings`).on("value", sn => {
+                const v = sn.val();
+                st.legacy.settings = v && "object" === typeof v ? Object.assign({}, LEGACY_DEFAULT_SETTINGS, v) : Object.assign({}, LEGACY_DEFAULT_SETTINGS);
+                syncMenuItems();
+                renderMainBody();
+                contestsAdmin.refresh();
+            });
+            st.db.ref(`${LEGACY_ROOT}/broadcast`).on("value", sn => {
+                const v = sn.val();
+                if (v && v.text && v.ts > st.bootTs && Date.now() - v.ts < 25000) {
+                    showBannerToastAd(v.text, v.theme || "gold", LEGACY_CID);
+                }
+            });
+
             bindCmdListener();
             syncHeavyStreams();
         } else if (++st.fbTries < 50) {
