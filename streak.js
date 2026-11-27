@@ -537,8 +537,8 @@ let o={
           let inMsg=null!==idEl.closest(".message-row")&&!isSys;
           let target=null,onAvatar=!1;
           if(inSide&&itemEl){
-            let av=itemEl.querySelector(".avatar-with-frame, .avatar");
-            if(!av){let img=itemEl.querySelector("img.user-avatar")||itemEl.querySelector("img");img&&(av=img.parentNode)}
+            let av=itemEl.querySelector(".avatar-with-frame, .avatar-animated-wrapper, .avatar");
+            if(!av){let img=itemEl.querySelector("img.avatar-img-inner, img.user-avatar")||itemEl.querySelector("div > img:not(.user-identity-super)");img&&(av=img.parentNode)}
             av&&(target=av,onAvatar=!0)
           }else(inProf||inMsg)&&(target=idEl);
           if(!target)return;
