@@ -1020,7 +1020,7 @@
         st.adTimer = setTimeout(() => ad.classList.remove("show"), 11000);
     }
 
-    function announceContestPhase(cid, c) {
+   function announceContestPhase(cid, c) {
         if (!c || "active" !== c.status || !1 === c.cfg?.enabled) return;
         const ph = getPhaseInfo(c).phase;
         if ("idle" === ph || "archived" === ph) return;
@@ -1030,17 +1030,85 @@
         st.announcedMap[cid] = key;
         if (isFirstLoad && Object.keys(st.announcedMap).length > 1) return;
 
+        const buildPhaseToast = (curC, phase) => {
+            const tName = curC.title || "المسابقة";
+            const T = curC.template || "royal";
+            const th = curC.theme || "gold";
+            const copyMap = {
+                royal: {
+                    submission: `👑 فُتح باب الترشيح في (${tName})! رشّح نفسك الآن وتنافس على اللقب.`,
+                    voting: `🗳️ بدأ التصويت في (${tName})! ادخل وصوّت لمن يستحق التاج الآن.`,
+                    results: `👑 تُوّج الفائز في (${tName})! ادخل الآن لتهنئته على اللقب.`
+                },
+                teams: {
+                    voting: `⚔️ اشتعلت المنافسة في (${tName})! ادخل وادعم فريقك بصوتك وهتافك الآن 🔥`,
+                    results: `🏆 حُسمت معركة (${tName})! ادخل لتعرف أي فريق انتصر.`
+                },
+                photo: {
+                    submission: `📸 بدأ استقبال الصور في (${tName})! شارك بأجمل لقطة بعدستك.`,
+                    voting: `🖼️ بدأ التصويت في (${tName})! استعرض الصور وصوّت لأجمل لقطة.`,
+                    results: `🏆 ظهرت نتائج (${tName})! ادخل لمشاهدة الصورة الفائزة وتهنئة صاحبها.`
+                },
+                talent: {
+                    submission: `✍️ فُتح باب المشاركات في (${tName})! أبدعنا بحرفك وموهبتك الآن.`,
+                    voting: `🗳️ حان وقت التصويت في (${tName})! اقرأ المشاركات وصوّت لأجمل إبداع.`,
+                    results: `🏆 أُعلنت نتائج (${tName})! ادخل لتهنئة صاحب المركز الأول.`
+                },
+                duo: {
+                    submission: `💑 بدأ تسجيل الثنائيات في (${tName})! سجّل نفسك مع شريكك الآن.`,
+                    voting: `🗳️ بدأ التصويت في (${tName})! ادخل وصوّت لأفضل ثنائي في الشات.`,
+                    results: `🏆 تُوّج الثنائي الذهبي في (${tName})! ادخل لتهنئتهما الآن.`
+                },
+                media: {
+                    submission: `🎵 فُتح باب المشاركة في (${tName})! شاركنا ذوقك بأجمل مقطع الآن.`,
+                    voting: `🎧 بدأ التصويت في (${tName})! استمع للمقاطع وصوّت لأفضل ذوق.`,
+                    results: `🏆 أُعلنت نتائج (${tName})! ادخل لتعرف صاحب أفضل ذوق.`
+                },
+                raffle: {
+                    submission: `🎟️ باب التسجيل مفتوح في (${tName})! احجز تذكرتك المجانية بضغطة زر.`,
+                    drawing: `🎰 أُغلق التسجيل في (${tName}) — جاري السحب العشوائي الآن!`,
+                    results: `🎉 ظهرت نتائج القرعة في (${tName})! ادخل لتعرف من حالفه الحظ.`
+                },
+                quiz: {
+                    submission: `⚡ انطلق تحدي (${tName})! أسرع إجابة صحيحة تفوز فوراً.`,
+                    results: `🏆 انتهى تحدي (${tName})! ادخل لتعرف الأسرع إجابةً والفائزين.`
+                },
+                bracket: {
+                    submission: `⚔️ التسجيل مفتوح في (${tName})! احجز مقعدك في مواجهات خروج المغلوب.`,
+                    voting: `🔥 بدأت مواجهات 1 ضد 1 في (${tName})! ادخل وصوّت لتأهيل الأفضل.`,
+                    results: `🏆 تُوّج بطل (${tName})! ادخل الآن لتهنئة البطل.`
+                },
+                poll: {
+                    voting: `🗳️ استفتاء جديد مفتوح في (${tName})! ادخل وشاركنا رأيك الآن.`,
+                    results: `📊 ظهرت نتائج استفتاء (${tName})! ادخل لمشاهدة الخيار الفائز.`
+                },
+                prediction: {
+                    submission: `🎯 باب التوقعات مفتوح في (${tName})! سجّل توقعك قبل إغلاق الوقت.`,
+                    judging: `⚖️ أُغلق باب التوقعات في (${tName}) وبانتظار إعلان النتيجة الرسمية.`,
+                    results: `🏆 ظهرت نتائج التوقعات في (${tName})! ادخل لتعرف من أصاب التوقع.`
+                }
+            };
+            const fallback = {
+                submission: `🔥 بدأت (${tName})! شارك الآن قبل انتهاء الوقت.`,
+                voting: `🗳️ بدأ التصويت في (${tName})! ادخل وصوّت للأفضل الآن.`,
+                drawing: `🎰 أُغلق التسجيل في (${tName}) — جاري السحب الآن!`,
+                judging: `⚖️ أُغلق باب التوقعات في (${tName}) وبانتظار النتيجة.`,
+                results: `🏆 ظهرت نتائج (${tName})! ادخل لتهنئة الفائزين.`
+            };
+            const msg = copyMap[T]?.[phase] || fallback[phase] || "";
+            const color = "drawing" === phase ? "emerald" : ("judging" === phase ? "purple" : th);
+            return msg ? { msg, color } : null;
+        };
+
         const fire = () => {
             if (!1 === st.global.showToastAd) return;
-            if (!h.isAdmin(cid) && !h.isVip(cid) && (!1 === st.global.enabled || !1 === c.cfg?.enabled)) return;
+            const curC = h.getContest(cid);
+            if (!curC) return;
+            if (!h.isAdmin(cid) && !h.isVip(cid) && (!1 === st.global.enabled || !1 === curC.cfg?.enabled)) return;
             if (document.getElementById("lce-modal")?.classList.contains("open")) return;
-            const cur = getPhaseInfo(h.getContest(cid)).phase;
-            const tName = c.title || "المسابقة";
-            if ("submission" === cur) showBannerToastAd(`🔥 بدأت (${tName})! شارك الآن قبل انتهاء الوقت.`, c.theme || "gold", cid);
-            else if ("voting" === cur) showBannerToastAd(`🗳️ ${"teams" === c.template ? "اشتعلت المنافسة في" : "بدأ التصويت في"} (${tName})! ادخل وادعم فريقك الآن.`, c.theme || "gold", cid);
-            else if ("drawing" === cur) showBannerToastAd(`🎰 أُغلق التسجيل في (${tName}) — جاري السحب الآن!`, "emerald", cid);
-            else if ("judging" === cur) showBannerToastAd(`⚖️ أُغلق باب التوقعات في (${tName}) وبانتظار النتيجة.`, "purple", cid);
-            else if ("results" === cur) showBannerToastAd(`🏆 ظهرت نتائج (${tName})! ادخل لتهنئة الفائزين.`, c.theme || "gold", cid);
+            const cur = getPhaseInfo(curC).phase;
+            const info = buildPhaseToast(curC, cur);
+            if (info) showBannerToastAd(info.msg, info.color, cid);
         };
 
         const isChatReady = () => {
@@ -1055,7 +1123,6 @@
             else if (++tries >= 100) clearInterval(iv);
         }, 900);
     }
-
     function ensureBaseStyles() {
         if (document.getElementById("lce-styles")) return;
         const s = document.createElement("style");
