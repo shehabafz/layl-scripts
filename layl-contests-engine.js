@@ -22,6 +22,11 @@
             desc: "يرشّح العضو نفسه مع شعار انتخابي وصورة اختيارية (فئة واحدة أو فئتين)",
             submitTitle: "مرحلة الترشيح", submitVerb: "رشّح نفسك الآن"
         },
+        teams: {
+            id: "teams", name: "معركة فريقين (فريق ضد فريق)", icon: "fa-fire-alt",
+            desc: "مواجهة جماهيرية بين فريقين (مثل شباب ⚔️ بنات) بشريط شدّ الحبل المباشر وهتافات الداعمين",
+            submitTitle: "تجهيز الفريقين", submitVerb: "صوّت لفريقك الآن ⚔️"
+        },
         photo: {
             id: "photo", name: "تصوير وصور", icon: "fa-camera",
             desc: "رفع صورة مضغوطة عالية الوضوح مع تصويت أعمى وتكبير Lightbox",
@@ -109,6 +114,7 @@
 
     const PRESETS = [
         { key: "royal_kq", label: "👑 ملك وملكة الشات", data: { title: "مسابقة ملك وملكة شات ليل", subtitle: "رشّح نفسك وتنافس على التاج والجوائز الملكية الفاخرة", template: "royal", theme: "gold", icon: "fa-crown", mode: "dual", cat1Label: "ملك الشات", cat2Label: "ملكة الشات", nomHours: 48, voteHours: 72, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
+        { key: "teams_battle", label: "⚔️ شباب × بنات", data: { title: "معركة ليل الكبرى (شباب ⚔️ بنات)", subtitle: "انحَز لفريقك وصوّت له مع هتاف تشجيعي — الفوز للفريق الأكثر دعماً!", template: "teams", theme: "maroon", icon: "fa-fire-alt", mode: "single", cat1Label: "فريق الشباب", cat2Label: "فريق البنات", nomHours: 0, voteHours: 48, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
         { key: "best_photo", label: "📸 أفضل تصوير", data: { title: "مسابقة أفضل تصوير", subtitle: "ارفع أجمل لقطة بعدستك؛ التصويت مجهول الهوية لضمان العدل", template: "photo", theme: "maroon", icon: "fa-camera", mode: "single", nomHours: 48, voteHours: 72, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
         { key: "best_design", label: "🎨 أجمل تصميم", data: { title: "مسابقة أجمل تصميم وبروفايل", subtitle: "شارك بأجمل تصميم أو لقطة بروفايل وتنافس على اللقب", template: "photo", theme: "purple", icon: "fa-palette", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
         { key: "best_poet", label: "✍️ شاعر / خاطرة", data: { title: "مسابقة أمير الحرف والقافية", subtitle: "شارك بأجمل بيت شعر أو خاطرة من إبداعك", template: "talent", theme: "silver", icon: "fa-feather-alt", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
@@ -169,6 +175,7 @@
         allowSelfVote: !1,
         allowVoteChange: !1,
         allowEditEntry: !0,
+        allowVoteTransfer: !0,
         requireApproval: !1,
         blindVoting: !1,
         hideLiveVotes: !1,
@@ -187,7 +194,7 @@
         enabled: !0,
         disabledMsg: "مسابقة ملك وملكة الشات متوقفة مؤقتاً للصيانة 👑",
         allowGuestsVote: !1, allowSelfVote: !1, allowVoteChange: !1, allowEditEntry: !0,
-        requireApproval: !1, hideLiveVotes: !1, showToastAd: !0,
+        allowVoteTransfer: !0, requireApproval: !1, hideLiveVotes: !1, showToastAd: !0,
         maxCandidates: 0, vipVoteWeight: 2, bannerText: "", bannerTheme: "gold",
         welcomeText: "", welcomeVersion: 0, rulesText: DEFAULT_RULES,
         vipUsers: [], subAdmins: [], managerPerms: Object.assign({}, DEFAULT_MANAGER_PERMS)
@@ -206,7 +213,7 @@
         activeCid: null,
         adminCid: null,
         viewMode: "hub",
-        data: { entries: {}, votes: {}, prizes: DEFAULT_PRIZES.slice(), presence: {} },
+        data: { entries: {}, votes: {}, transfers: {}, prizes: DEFAULT_PRIZES.slice(), presence: {} },
         heavyCid: null,
         heavyRefs: [],
         heavyLoaded: !1,
@@ -300,6 +307,7 @@
                 allowSelfVote: Boolean(oSet.allowSelfVote),
                 allowVoteChange: Boolean(oSet.allowVoteChange),
                 allowEditEntry: !1 !== oSet.allowEditEntry,
+                allowVoteTransfer: !1 !== oSet.allowVoteTransfer,
                 requireApproval: Boolean(oSet.requireApproval),
                 blindVoting: !1,
                 hideLiveVotes: Boolean(oSet.hideLiveVotes),
@@ -358,7 +366,22 @@
             if (buildLegacyMeta() && !ids.includes(LEGACY_CID)) ids.unshift(LEGACY_CID);
             return ids;
         },
-        // ضغط ذكي محسّن لتقليل استهلاك الرام والإنترنت على الجوال بنسبة ~45%
+        makeTeamEntries(cat1Label, cat2Label, now = Date.now()) {
+            const n1 = (cat1Label || "فريق الشباب").trim();
+            const n2 = (cat2Label || "فريق البنات").trim();
+            return {
+                team1: {
+                    uid: "", username: "team1", displayName: n1, html: h.esc(n1), avatar: "", image: "",
+                    partnerName: "", partnerAvatar: "", ytId: "", tickets: 1, category: "cat1",
+                    title: "", text: "", badge: "", frozen: !1, isWinner: !1, status: "approved", bonusVotes: 0, joinedAt: now
+                },
+                team2: {
+                    uid: "", username: "team2", displayName: n2, html: h.esc(n2), avatar: "", image: "",
+                    partnerName: "", partnerAvatar: "", ytId: "", tickets: 1, category: "cat2",
+                    title: "", text: "", badge: "", frozen: !1, isWinner: !1, status: "approved", bonusVotes: 0, joinedAt: now + 1
+                }
+            };
+        },
         compressImg(file, mode = "avatar") {
             return new Promise((resolve, reject) => {
                 if (!file || (file.type && !file.type.startsWith("image/"))) return reject("الرجاء اختيار ملف صورة صالح");
@@ -440,7 +463,6 @@
             if (cid) return h.isContestManager(cid);
             return h.getAllContestIds().some(id => h.isContestManager(id));
         },
-        // نظام الصلاحيات التفصيلي لمديري المسابقات
         canPerm(cid, perm) {
             if (h.isSuperAdmin() || h.isGlobalSubAdmin()) return !0;
             if (!cid || !h.isContestManager(cid)) return !1;
@@ -609,6 +631,57 @@
             if (!st.db) return Promise.reject();
             return st.db.ref(isLegacy(cid) ? `${LEGACY_ROOT}/votes` : `${ROOT}/data/${cid}/votes`).remove();
         },
+        requestTransfer(cid, fromKey, payload) {
+            if (!st.db) return Promise.reject();
+            const path = isLegacy(cid) ? `${LEGACY_ROOT}/transfers/${fromKey}` : `${ROOT}/data/${cid}/transfers/${fromKey}`;
+            return st.db.ref(path).set(payload);
+        },
+        cancelTransfer(cid, fromKey) {
+            if (!st.db) return Promise.reject();
+            const path = isLegacy(cid) ? `${LEGACY_ROOT}/transfers/${fromKey}` : `${ROOT}/data/${cid}/transfers/${fromKey}`;
+            return st.db.ref(path).remove();
+        },
+        approveTransfer(cid, req) {
+            if (!st.db || !req || !req.fromKey || !req.toKey) return Promise.reject("بيانات الطلب غير مكتملة.");
+            const entries = st.data.entries || {}, votes = st.data.votes || {}, transfers = st.data.transfers || {};
+            const fromE = entries[req.fromKey], toE = entries[req.toKey];
+            if (!fromE || !toE) return Promise.reject("أحد المشاركين لم يعد موجوداً في المسابقة.");
+
+            const leg = isLegacy(cid);
+            const eNode = leg ? "candidates" : "entries";
+            const up = {};
+            const fromBonus = Number(fromE.bonusVotes) || 0;
+            let movedWeight = fromBonus;
+
+            Object.entries(votes).forEach(([vk, v]) => {
+                if (v && v.target === req.fromKey) {
+                    movedWeight += Math.max(1, Number(v.weight) || 1);
+                    up[`votes/${vk}/target`] = req.toKey;
+                    if (leg) up[`votes/${vk}/role`] = "cat2" === toE.category ? "queen" : "king";
+                    else up[`votes/${vk}/category`] = toE.category || "cat1";
+                }
+            });
+
+            if (fromBonus !== 0) {
+                up[`${eNode}/${req.toKey}/bonusVotes`] = (Number(toE.bonusVotes) || 0) + fromBonus;
+            }
+            up[`${eNode}/${req.fromKey}`] = null;
+            up[`transfers/${req.fromKey}`] = null;
+
+            Object.entries(transfers).forEach(([tk, tr]) => {
+                if (tr && tr.toKey === req.fromKey) up[`transfers/${tk}`] = null;
+            });
+
+            const baseRef = st.db.ref(leg ? LEGACY_ROOT : `${ROOT}/data/${cid}`);
+            return baseRef.update(up).then(() => ({
+                movedWeight,
+                fromName: fromE.displayName || fromE.username || req.fromName,
+                toName: toE.displayName || toE.username || req.toName
+            }));
+        },
+        rejectTransfer(cid, fromKey) {
+            return this.cancelTransfer(cid, fromKey);
+        },
         patchContest(cid, part) {
             if (!st.db) return Promise.reject();
             if (isLegacy(cid)) {
@@ -652,15 +725,18 @@
             const src = h.getContest(cid);
             if (!src) return Promise.reject();
             const now = Date.now(), newCid = h.genId("cnt");
-            const noSub = "poll" === src.template, noVote = ["prediction", "raffle", "quiz"].includes(src.template);
+            const noSub = "poll" === src.template || "teams" === src.template;
+            const noVote = ["prediction", "raffle", "quiz"].includes(src.template);
             const nomEnd = noSub ? now - 1000 : now + 48 * 36e5;
             const voteEnd = noVote ? nomEnd : nomEnd + 72 * 36e5;
             const copyMeta = {
                 title: `${src.title} (نسخة)`,
                 subtitle: src.subtitle || "",
-                template: src.template, theme: src.theme, icon: src.icon, mode: src.mode,
-                cat1Label: src.cat1Label || "الفئة الأولى", cat1Icon: src.cat1Icon || "👑",
-                cat2Label: src.cat2Label || "الفئة الثانية", cat2Icon: src.cat2Icon || "👸",
+                template: src.template, theme: src.theme, icon: src.icon, mode: "teams" === src.template ? "single" : src.mode,
+                cat1Label: src.cat1Label || ("teams" === src.template ? "فريق الشباب" : "الفئة الأولى"),
+                cat1Icon: src.cat1Icon || ("teams" === src.template ? "⚡" : "👑"),
+                cat2Label: src.cat2Label || ("teams" === src.template ? "فريق البنات" : "الفئة الثانية"),
+                cat2Icon: src.cat2Icon || ("teams" === src.template ? "🌸" : "👸"),
                 status: "active", season: 1, nomEnd, voteEnd, paused: !1, voteMultiplier: 1,
                 showInMenu: !1, pinTop: !1, resultsPublished: !1,
                 maxWinners: Number(src.maxWinners) || 1,
@@ -671,11 +747,13 @@
             const up = {};
             up[`index/${newCid}`] = copyMeta;
             up[`data/${newCid}/prizes`] = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : DEFAULT_PRIZES;
+            if ("teams" === src.template) up[`data/${newCid}/entries`] = h.makeTeamEntries(copyMeta.cat1Label, copyMeta.cat2Label, now);
             return st.db.ref(ROOT).update(up).then(() => newCid);
         },
         startNewSeason(cid, c) {
             if (!st.db) return Promise.reject();
-            const noSub = "poll" === c.template, noVote = ["prediction", "raffle", "quiz"].includes(c.template);
+            const noSub = "poll" === c.template || "teams" === c.template;
+            const noVote = ["prediction", "raffle", "quiz"].includes(c.template);
             const nomH = noSub ? 0 : ("quiz" === c.template ? 12 : 48);
             const votH = noVote ? 0 : 72;
             const now = Date.now(), nextSeason = (Number(c.season) || 0) + 1;
@@ -689,7 +767,7 @@
                         tieBreaker: null, tieBreakerKing: null, tieBreakerQueen: null,
                         showInMenu: !0, pinTop: !0, startedBy: st.myUser || "الإدارة"
                     },
-                    candidates: null, votes: null,
+                    candidates: null, votes: null, transfers: null,
                     broadcast: { text: `👑 انطلق الموسم #${nextSeason} — رشّح نفسك الآن!`, theme: "gold", ts: now, by: st.myUser || "الإدارة" }
                 });
             }
@@ -706,8 +784,9 @@
             up[`index/${cid}/resultsPublished`] = !1;
             up[`index/${cid}/raffleWinners`] = null;
             up[`index/${cid}/bracket`] = null;
-            up[`data/${cid}/entries`] = null;
+            up[`data/${cid}/entries`] = "teams" === c.template ? h.makeTeamEntries(c.cat1Label, c.cat2Label, now) : null;
             up[`data/${cid}/votes`] = null;
+            up[`data/${cid}/transfers`] = null;
             return st.db.ref(ROOT).update(up);
         },
         banUser(key, data) {
@@ -870,7 +949,7 @@
             if (now < (c.nomEnd || 0)) return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
             return { phase: "voting", remaining: Math.max(0, (c.voteEnd || 0) - now), paused: !1 };
         }
-        if ("poll" !== c.template && now < (c.nomEnd || 0)) {
+        if ("poll" !== c.template && "teams" !== c.template && now < (c.nomEnd || 0)) {
             return { phase: "submission", remaining: c.nomEnd - now, paused: !1 };
         }
         if (now < (c.voteEnd || 0)) {
@@ -878,7 +957,7 @@
         }
         if (entriesObj && votesObj) {
             const counts = computeVoteCounts(entriesObj, votesObj);
-            if ("dual" === c.mode) {
+            if ("dual" === c.mode && "teams" !== c.template) {
                 const c1Ties = getTiedLeaders(entriesObj, counts, "cat1");
                 const c2Ties = getTiedLeaders(entriesObj, counts, "cat2");
                 const n1 = c1Ties.length > 1 && !c.tieBreakerCat1;
@@ -958,7 +1037,7 @@
             const cur = getPhaseInfo(h.getContest(cid)).phase;
             const tName = c.title || "المسابقة";
             if ("submission" === cur) showBannerToastAd(`🔥 بدأت (${tName})! شارك الآن قبل انتهاء الوقت.`, c.theme || "gold", cid);
-            else if ("voting" === cur) showBannerToastAd(`🗳️ بدأ التصويت في (${tName})! ادخل وصوّت للأفضل.`, c.theme || "gold", cid);
+            else if ("voting" === cur) showBannerToastAd(`🗳️ ${"teams" === c.template ? "اشتعلت المنافسة في" : "بدأ التصويت في"} (${tName})! ادخل وادعم فريقك الآن.`, c.theme || "gold", cid);
             else if ("drawing" === cur) showBannerToastAd(`🎰 أُغلق التسجيل في (${tName}) — جاري السحب الآن!`, "emerald", cid);
             else if ("judging" === cur) showBannerToastAd(`⚖️ أُغلق باب التوقعات في (${tName}) وبانتظار النتيجة.`, "purple", cid);
             else if ("results" === cur) showBannerToastAd(`🏆 ظهرت نتائج (${tName})! ادخل لتهنئة الفائزين.`, c.theme || "gold", cid);
@@ -1053,6 +1132,21 @@
         .lce-vs-badge{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-weight:900;font-size:.85rem;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)}
         .lce-match-side{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center}
         .lce-match-side.voted{border-color:#10b981;background:rgba(16,185,129,.1)}
+        .lce-tug-box{background:rgba(0,0,0,.38);border:1px solid var(--lce-bd);border-radius:16px;padding:13px 15px;margin-bottom:14px}
+        .lce-tug-hdr{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.84rem;font-weight:900;margin-bottom:8px}
+        .lce-tug-bar{display:flex;height:16px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+        .lce-tug-t1{background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width .35s ease}
+        .lce-tug-t2{background:linear-gradient(90deg,#ec4899,#be185d);transition:width .35s ease}
+        .lce-team-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .lce-team-card{background:linear-gradient(180deg,#1e2136,#101220);border:1.5px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;contain:layout style}
+        .lce-team-card.t1{border-top:4px solid #38bdf8;background:linear-gradient(180deg,rgba(14,116,144,.18),#101220)}
+        .lce-team-card.t2{border-top:4px solid #ec4899;background:linear-gradient(180deg,rgba(190,24,93,.18),#101220)}
+        .lce-team-card.voted{border-color:#10b981;box-shadow:0 0 18px rgba(16,185,129,.22)}
+        .lce-team-ico{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:8px}
+        .lce-team-card.t1 .lce-team-ico{background:rgba(56,189,248,.16);border:2px solid #38bdf8}
+        .lce-team-card.t2 .lce-team-ico{background:rgba(236,72,153,.16);border:2px solid #ec4899}
+        .lce-cheer-list{width:100%;max-height:220px;overflow-y:auto;margin-top:12px;text-align:right;display:flex;flex-direction:column;gap:5px;padding-left:2px}
+        .lce-cheer-item{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px 10px;font-size:.79rem;line-height:1.45}
         .lce-photo-inner{padding:12px 13px 14px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;flex:1}
         .lce-role-tag{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:800;z-index:2}
         .lce-role-tag.cat1{background:rgba(15,23,42,.92);color:#7dd3fc;border:1px solid rgba(56,189,248,.45)}
@@ -1102,7 +1196,7 @@
             .lce-ov{padding:0}.lce-shell{max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;box-shadow:none}
             .lce-hdr{padding:11px 13px}.lce-brand{font-size:.96rem}.lce-ibtn span{display:none}.lce-body{padding:13px}
             .lce-grid{grid-template-columns:1fr 1fr;gap:10px}.lce-card{padding:11px}.lce-photo-card{padding:0}.lce-av{width:62px;height:62px}.lce-photo-media{height:140px}.lce-yt-wrap{height:132px}
-            .lce-match-grid{grid-template-columns:1fr;gap:8px}.lce-vs-badge{margin:0 auto}
+            .lce-match-grid{grid-template-columns:1fr;gap:8px}.lce-vs-badge{margin:0 auto}.lce-team-grid{grid-template-columns:1fr;gap:12px}
             #lce-live-ad{padding:9px 12px;gap:8px}#lce-ad-msg{font-size:12px}
         }
         @media(max-width:390px){.lce-grid{grid-template-columns:1fr}}
@@ -1110,7 +1204,8 @@
         document.head.appendChild(s);
     }
     // ====== نهاية الجزء 1 من 3 ======
-// ====== بداية الجزء 2 من 3 ======
+
+    // ====== بداية الجزء 2 من 3 ======
     function applyModalTheme(themeKey) {
         const modal = document.getElementById("lce-modal");
         const shell = modal?.querySelector(".lce-shell");
@@ -1330,7 +1425,6 @@
         } else renderHofBody();
     }
 
-    // ميزة جديدة: السماح للعضو بتعديل مشاركته قبل إغلاق باب التقديم
     function openEditMyEntryModal(cid, c, mine) {
         if (!mine || !st.db) return;
         document.getElementById("lce-myedit-sub")?.remove();
@@ -1412,6 +1506,79 @@
         };
     }
 
+    // نافذة طلب الانسحاب وتحويل الأصوات لمتسابق آخر (تُعتمد من الإدارة)
+    function openTransferModal(cid, c, myEntry) {
+        if (!myEntry || !st.db) return;
+        if (!ensureIdentity()) return;
+        const myK = h.myKey();
+        const others = getApprovedEntries(st.data.entries).filter(e => e.key !== myK && !e.frozen);
+        if (!others.length) return showToast("لا يوجد متسابق آخر متاح لتحويل أصواتك إليه حالياً.", 3500, "red");
+
+        const counts = computeVoteCounts(st.data.entries, st.data.votes);
+        const myVotes = counts[myK] || 0;
+        const isDual = "dual" === c.mode;
+
+        document.getElementById("lce-tr-sub")?.remove();
+        const ov = document.createElement("div");
+        ov.id = "lce-tr-sub";
+        ov.className = "lce-subov";
+        ov.innerHTML = `
+            <div class="lce-subbox" style="max-width:460px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:12px;">
+                    <b style="color:#D4AF37;font-size:1rem;"><i class="fas fa-exchange-alt"></i> طلب انسحاب وتحويل الأصوات</b>
+                    <button type="button" class="lce-ibtn sq x" id="lce-tr-x"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:10px 12px;font-size:.82rem;color:#fde68a;line-height:1.65;margin-bottom:12px;">
+                    ⚠️ سيتم إرسال طلبك للإدارة للمراجعة. عند الموافقة سيتم <b>سحب مشاركتك نهائياً</b> ونقل كامل أصواتك الحالية (<b>${myVotes} صوت</b>) للمتسابق الذي تختاره.
+                </div>
+                <label style="display:block;font-size:.82rem;color:#cbd5e1;font-weight:700;margin-bottom:5px;">اختر المتسابق المستفيد من أصواتك *</label>
+                <select id="lce-tr-to" class="lce-inp" style="margin-bottom:10px;">
+                    <option value="">-- اختر متسابقاً --</option>
+                    ${others.map(e => {
+                        const cm = getCatMeta(c, e.category);
+                        const nm = "duo" === c.template ? `${e.displayName || e.username} ❤️ ${e.partnerName || ""}` : (e.displayName || e.username);
+                        return `<option value="${h.esc(e.key)}">${isDual ? `${cm.icon} ` : ""}${h.esc(nm)}</option>`;
+                    }).join("")}
+                </select>
+                <label style="display:block;font-size:.82rem;color:#cbd5e1;font-weight:700;margin-bottom:5px;">سبب الانسحاب أو كلمة دعم (اختياري)</label>
+                <input id="lce-tr-reason" class="lce-inp" maxlength="120" style="margin-bottom:14px;" placeholder="مثلاً: أتنازل بأصواتي دعماً له بالتوفيق...">
+                <div style="display:flex;gap:8px;">
+                    <button type="button" id="lce-tr-send" class="lce-btn" style="flex:1;"><i class="fas fa-paper-plane"></i> إرسال الطلب للإدارة</button>
+                    <button type="button" id="lce-tr-cancel" class="lce-btn lce-btn-out">إلغاء</button>
+                </div>
+            </div>`;
+        document.body.appendChild(ov);
+        const close = () => ov.remove();
+        ov.onclick = e => { if (e.target === ov) close(); };
+        document.getElementById("lce-tr-x").onclick = close;
+        document.getElementById("lce-tr-cancel").onclick = close;
+
+        document.getElementById("lce-tr-send").onclick = () => {
+            const toKey = document.getElementById("lce-tr-to").value;
+            if (!toKey) return showToast("اختر المتسابق أولاً!", 2800, "red");
+            const target = st.data.entries?.[toKey];
+            if (!target) return showToast("المتسابق غير متاح.", 2800, "red");
+            const toName = "duo" === c.template ? `${target.displayName || target.username} ❤️ ${target.partnerName || ""}` : (target.displayName || target.username);
+            const fromName = "duo" === c.template ? `${myEntry.displayName || myEntry.username} ❤️ ${myEntry.partnerName || ""}` : (myEntry.displayName || myEntry.username);
+            const reason = (document.getElementById("lce-tr-reason").value || "").trim().slice(0, 120);
+            if (!confirm(`تأكيد إرسال طلب انسحابك وتحويل أصواتك إلى (${toName}) لموافقة الإدارة؟`)) return;
+
+            dbOps.requestTransfer(cid, myK, {
+                fromKey: myK,
+                fromName,
+                toKey,
+                toName,
+                reason,
+                votesSnapshot: myVotes,
+                status: "pending",
+                ts: Date.now()
+            }).then(() => {
+                close();
+                showToast("📩 تم إرسال طلب الانسحاب وتحويل الأصوات للإدارة!", 4000, "gold");
+            }).catch(() => alert("❌ تعذر إرسال الطلب."));
+        };
+    }
+
     function ensureIdentity() {
         if (st.myUser) {
             const det = h.detectFromDOM(st.myUser);
@@ -1442,6 +1609,10 @@
     }
 
     function getCatMeta(c, catKey) {
+        if ("teams" === c.template) {
+            if ("cat2" === catKey) return { label: c.cat2Label || "فريق البنات", icon: c.cat2Icon || "🌸", cls: "cat2" };
+            return { label: c.cat1Label || "فريق الشباب", icon: c.cat1Icon || "⚡", cls: "cat1" };
+        }
         if ("dual" !== c.mode) return { label: c.cat1Label || "مشارك", icon: c.cat1Icon || "👑", cls: "cat1" };
         if ("cat2" === catKey) return { label: c.cat2Label || "الفئة الثانية", icon: c.cat2Icon || "👸", cls: "cat2" };
         return { label: c.cat1Label || "الفئة الأولى", icon: c.cat1Icon || "👑", cls: "cat1" };
@@ -1631,7 +1802,6 @@
         body.querySelectorAll("[data-open-cid]").forEach(card => card.onclick = () => window.LaylContests.open(card.dataset.openCid));
     }
 
-    // ==================== جدولة التحديث الخفيف (Debounce لمنع تجمّد الجوال) ====================
     function scheduleRenderMain(delayMs = 0) {
         if (!document.getElementById("lce-modal")?.classList.contains("open")) return;
         clearTimeout(st.renderTimer);
@@ -1690,8 +1860,9 @@
 
         const myKey = h.myKey();
         const isBlind = Boolean(c.cfg.blindVoting);
-        const isDual = "dual" === c.mode;
         const T = c.template;
+        const isTeams = "teams" === T;
+        const isDual = "dual" === c.mode && !isTeams;
         const isPhoto = "photo" === T, isTalent = "talent" === T, isDuo = "duo" === T, isMedia = "media" === T;
         const isRaffle = "raffle" === T, isQuiz = "quiz" === T, isBracket = "bracket" === T, isPredict = "prediction" === T;
 
@@ -2074,10 +2245,123 @@
             return;
         }
 
-        // 6. مرحلة التصويت القياسية مع تحديث ذكي للـ DOM (يمنع إعادة فك ضغط الصور وقطع اليوتيوب!)
+        // 5.5 مرحلة التصويت لمعركة الفريقين (شباب ⚔️ بنات أو أي فريقين)
+        if ("voting" === info.phase && isTeams) {
+            const hideVotes = Boolean(c.cfg.hideLiveVotes) && !isAdm;
+            const tKey = `${cid}_${Boolean(info.paused)}_${hideVotes}_${c.season || 1}_${h.isVip(cid)}_${Boolean(c.cfg.allowVoteChange)}`;
+
+            const fillTeamsStage = () => {
+                const stage = document.getElementById("lce-teams-stage");
+                if (!stage) return;
+                const tEntries = getApprovedEntries(entries).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+                const t1 = entries.team1 ? Object.assign({ key: "team1" }, entries.team1) : (tEntries[0] || { key: "team1", displayName: c.cat1Label || "فريق الشباب", category: "cat1" });
+                const t2 = entries.team2 ? Object.assign({ key: "team2" }, entries.team2) : (tEntries[1] || { key: "team2", displayName: c.cat2Label || "فريق البنات", category: "cat2" });
+                const counts = computeVoteCounts(entries, votes);
+                const v1 = counts[t1.key] || 0, v2 = counts[t2.key] || 0;
+                const sum = v1 + v2;
+                const p1 = sum > 0 ? Math.round((v1 / sum) * 100) : 50;
+                const p2 = sum > 0 ? (100 - p1) : 50;
+                const diff = Math.abs(v1 - v2);
+                const vkS = getVoteKey(cid, myKey, "cat1", !1);
+                const myPick = myKey && votes[vkS] ? votes[vkS].target : null;
+
+                const votesArr = Object.values(votes || {}).filter(Boolean).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+                const sup1 = votesArr.filter(v => v.target === t1.key);
+                const sup2 = votesArr.filter(v => v.target === t2.key);
+
+                const renderTeamCard = (tObj, cls, ico, vCnt, pct, supList) => {
+                    const voted = myPick === tObj.key;
+                    const isFrozen = Boolean(tObj.frozen);
+                    const canV = !info.paused && !isFrozen && (!myPick || c.cfg.allowVoteChange) && !voted;
+                    return `
+                    <div class="lce-team-card ${cls} ${voted ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
+                        ${h.isValidImg(tObj.avatar)
+                            ? `<img loading="lazy" decoding="async" src="${h.esc(tObj.avatar)}" class="lce-av" style="margin-top:2px;" alt="">`
+                            : `<div class="lce-team-ico">${h.esc(ico)}</div>`}
+                        <div class="lce-cname" style="font-size:1.12rem;">${h.esc(tObj.displayName || tObj.username)}</div>
+                        ${tObj.text ? `<div class="lce-slogan" style="min-height:auto;margin-bottom:8px;">«${h.esc(tObj.text)}»</div>` : ""}
+                        ${!hideVotes
+                            ? `<div style="font-size:1.15rem;font-weight:900;color:${"t1" === cls ? "#7dd3fc" : "#f9a8d4"};margin:4px 0 8px;">🔥 ${vCnt} نقطة <span style="font-size:.82rem;color:#cbd5e1;">(${pct}%)</span></div>`
+                            : '<div class="lce-vstat" style="color:#94a3b8;margin:6px 0 10px;">🔒 النتيجة سرية حتى الإعلان</div>'}
+                        ${isFrozen
+                            ? `<button type="button" class="lce-btn" style="width:100%;background:#334155;color:#cbd5e1;" disabled>❄️ مجمد مؤقتاً</button>`
+                            : (voted
+                                ? `<button type="button" class="lce-btn" style="width:100%;background:#10b981;color:#fff;" disabled>✓ صوّتت لهذا الفريق</button>`
+                                : `<button type="button" class="lce-btn lce-team-vote" data-k="${h.esc(tObj.key)}" data-cat="${"t1" === cls ? "cat1" : "cat2"}" style="width:100%;${"t1" === cls ? "background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;" : "background:linear-gradient(135deg,#db2777,#ec4899);color:#fff;"}" ${canV ? "" : "disabled"}>${myPick && c.cfg.allowVoteChange ? "التحويل لهذا الفريق 🔄" : "صوّت لهذا الفريق 🗳️"}</button>`)}
+                        <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);font-size:.78rem;color:#94a3b8;font-weight:800;">
+                            <span>👥 الداعمون (${supList.length})</span>
+                            <span>أحدث الهتافات 💬</span>
+                        </div>
+                        <div class="lce-cheer-list">
+                            ${supList.length ? supList.slice(0, 60).map(v => `
+                                <div class="lce-cheer-item">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+                                        <b style="color:#fff;">${h.esc(v.voterName || "عضو")}</b>
+                                        ${v.weight > 1 ? `<span style="background:rgba(212,175,55,.2);color:#fde68a;padding:1px 6px;border-radius:10px;font-size:.68rem;font-weight:800;">×${v.weight}</span>` : ""}
+                                    </div>
+                                    ${v.cheer ? `<div style="color:${"t1" === cls ? "#bae6fd" : "#fbcfe8"};margin-top:2px;">«${h.esc(v.cheer)}»</div>` : ""}
+                                </div>`).join("") : '<div style="text-align:center;color:#64748b;font-size:.78rem;padding:14px 6px;">كن أول من يفتتح الدعم لهذا الفريق 🔥</div>'}
+                        </div>
+                    </div>`;
+                };
+
+                stage.innerHTML = `
+                    <div class="lce-tug-box">
+                        ${!hideVotes ? `
+                        <div class="lce-tug-hdr">
+                            <span style="color:#7dd3fc;">${h.esc(c.cat1Icon || "⚡")} ${h.esc(t1.displayName)} (${p1}%)</span>
+                            <span style="color:#fde68a;font-size:.76rem;">${diff === 0 ? "⚖️ تعادل مشتعل!" : `الفارق: ${diff} نقطة`}</span>
+                            <span style="color:#f9a8d4;">(${p2}%) ${h.esc(t2.displayName)} ${h.esc(c.cat2Icon || "🌸")}</span>
+                        </div>
+                        <div class="lce-tug-bar">
+                            <div class="lce-tug-t1" style="width:${p1}%;"></div>
+                            <div class="lce-tug-t2" style="width:${p2}%;"></div>
+                        </div>` : `<div style="text-align:center;color:#fcd34d;font-weight:800;font-size:.86rem;">🔒 شريط النتيجة مخفي — ستُكشف المفاجأة عند انتهاء الوقت! (إجمالي المصوّتين: ${votesArr.length})</div>`}
+                    </div>
+                    <div class="lce-team-grid">
+                        ${renderTeamCard(t1, "t1", c.cat1Icon || "⚡", v1, p1, sup1)}
+                        ${renderTeamCard(t2, "t2", c.cat2Icon || "🌸", v2, p2, sup2)}
+                    </div>`;
+
+                stage.querySelectorAll(".lce-team-vote").forEach(b => b.onclick = () => {
+                    const cheerInp = document.getElementById("lce-team-cheer");
+                    const cheerTxt = cheerInp ? cheerInp.value.trim().slice(0, 75) : "";
+                    castVote(cid, c, b.dataset.k, b.dataset.cat, null, cheerTxt);
+                });
+            };
+
+            if ("voting_teams" === body.dataset.phase && body.dataset.tkey === tKey && document.getElementById("lce-teams-stage")) {
+                fillTeamsStage();
+                return;
+            }
+
+            body.dataset.phase = "voting_teams";
+            body.dataset.tkey = tKey;
+            body.innerHTML = `
+                <div class="lce-hero">
+                    <div style="color:var(--lce-ac);font-size:.84rem;font-weight:800;">الموسم #${h.esc(c.season || 1)} • معركة الفريقين ⚔️</div>
+                    <h2>${h.esc(c.title)}</h2>
+                    <p>${h.esc(c.subtitle || "اختر فريقك وادعمه بصوتك وهتافك — الفوز للفريق الأكثر نقاطاً!")} ${h.isVip(cid) ? `<br><span style="color:#fde68a;">⭐ أنت عضو VIP — صوتك لفريقك يُحسب ×${h.getVipWeight(cid)}!</span>` : ""}</p>
+                    <div class="lce-timer"><i class="fas fa-hourglass-half"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>
+                    ${info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ التصويت متوقف مؤقتاً</div>' : ""}
+                </div>
+                <div class="lce-form" style="padding:11px 14px;margin-bottom:14px;">
+                    <label style="display:block;font-size:.8rem;color:var(--lce-tx);font-weight:800;margin-bottom:6px;"><i class="fas fa-bullhorn"></i> أضف هتافاً أو كلمة تشجيعية لفريقك قبل التصويت (اختياري):</label>
+                    <input type="text" id="lce-team-cheer" class="lce-inp" maxlength="75" placeholder="مثلاً: بالتوفيق لفريقنا 🔥🏆 (أو اتركه فارغاً للتصويت السريع)">
+                </div>
+                <div id="lce-teams-stage"></div>`;
+
+            fillTeamsStage();
+            return;
+        }
+
+        // 6. مرحلة التصويت القياسية مع تحديث ذكي للـ DOM (+ شريط طلب الانسحاب وتحويل الأصوات)
         if ("voting" === info.phase) {
             const hideVotes = Boolean(c.cfg.hideLiveVotes) && !isAdm;
-            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip(cid)}_${T}_${Boolean(c.cfg.allowVoteChange)}`;
+            const myEntry = myKey ? entries[myKey] : null;
+            const canTransfer = Boolean(myEntry && "pending" !== myEntry.status && !isBlind && "poll" !== T && !isTeams && !1 !== c.cfg.allowVoteTransfer);
+            const myTrReq = myKey ? (st.data.transfers || {})[myKey] : null;
+            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip(cid)}_${T}_${Boolean(c.cfg.allowVoteChange)}_${canTransfer}_${myTrReq?.toKey || ""}`;
 
             const fillVoteGrid = (forceRebuild = !1) => {
                 const grid = document.getElementById("lce-vote-grid");
@@ -2099,10 +2383,8 @@
                 const myVoteC1 = myKey && votes[vk1] ? votes[vk1].target : null;
                 const myVoteC2 = myKey && votes[vk2] ? votes[vk2].target : null;
 
-                // بصمة هيكلية للعناصر (بدون عدد الأصوات) للتحقق مما إذا كنا نحتاج إعادة بناء أم تحديث أرقام فقط
                 const structSig = list.map(e => `${e.key}:${e.displayName || ""}:${e.text || ""}:${e.badge || ""}:${Boolean(e.frozen)}:${e.ytId || ""}`).sort().join("|");
 
-                // التحديث الذكي في مكانه (In-Place Patch) — صفر إعادة رسم للصور و صفر قطع لمقاطع اليوتيوب!
                 if (!forceRebuild && list.length && grid.dataset.structSig === structSig) {
                     const cardMap = {};
                     grid.querySelectorAll(":scope > .lce-card[data-ekey]").forEach(el => { cardMap[el.dataset.ekey] = el; });
@@ -2141,7 +2423,6 @@
                                     vBtn.style.color = "";
                                 }
                             }
-                            // إعادة الترتيب بدون هدم العناصر (مع تخطي نقل العقد إذا كان هناك فيديو يوتيوب يعمل حالياً)
                             if (!hasPlayingYt && grid.children[idx] !== card) {
                                 grid.insertBefore(card, grid.children[idx] || null);
                             }
@@ -2229,6 +2510,15 @@
                     <div class="lce-timer"><i class="fas fa-hourglass-half"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>
                     ${info.paused ? '<div style="color:#fca5a5;font-weight:bold;margin-top:8px;">⏸️ التصويت متوقف مؤقتاً</div>' : ""}
                 </div>
+                ${canTransfer ? (myTrReq ? `
+                <div class="lce-form" style="border-color:#f59e0b;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div style="font-size:.84rem;color:#fde68a;font-weight:700;">⏳ طلب انسحابك وتحويل أصواتك إلى (<b>${h.esc(myTrReq.toName)}</b>) قيد مراجعة الإدارة...</div>
+                    <button type="button" id="lce-tr-abort" class="lce-btn lce-btn-red" style="padding:6px 12px;font-size:.78rem;"><i class="fas fa-times"></i> إلغاء الطلب</button>
+                </div>` : (!info.paused ? `
+                <div class="lce-form" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div style="font-size:.83rem;color:#cbd5e1;font-weight:700;"><i class="fas fa-exchange-alt" style="color:var(--lce-ac);"></i> هل ترغب بالانسحاب وإهداء أصواتك لمتسابق آخر؟ <span style="color:#94a3b8;font-size:.75rem;">(يتطلب موافقة الإدارة)</span></div>
+                    <button type="button" id="lce-tr-open" class="lce-btn lce-btn-out" style="padding:7px 13px;font-size:.8rem;"><i class="fas fa-hand-holding-heart"></i> طلب انسحاب وتحويل الأصوات</button>
+                </div>` : "")) : ""}
                 <div class="lce-filters">
                     ${isDual ? `
                         <button type="button" class="lce-fbtn ${"all" === st.catFilter ? "active" : ""}" data-vf="all">الكل</button>
@@ -2247,6 +2537,12 @@
             });
             const vs = document.getElementById("lce-vsearch");
             if (vs) vs.oninput = () => { st.searchQuery = vs.value; fillVoteGrid(!0); };
+            document.getElementById("lce-tr-open")?.addEventListener("click", () => openTransferModal(cid, c, myEntry));
+            document.getElementById("lce-tr-abort")?.addEventListener("click", () => {
+                if (confirm("إلغاء طلب الانسحاب وتحويل الأصوات؟")) {
+                    dbOps.cancelTransfer(cid, myKey).then(() => showToast("تم إلغاء الطلب."));
+                }
+            });
             return;
         }
 
@@ -2289,7 +2585,7 @@
             return;
         }
 
-        // 8. النتائج والتتويج (جميع الـ 10 أنظمة)
+        // 8. النتائج والتتويج (جميع الـ 11 نظاماً)
         body.dataset.phase = "results";
         const counts = computeVoteCounts(entries, votes);
         if (c.tieBreaker && void 0 !== counts[c.tieBreaker]) counts[c.tieBreaker]++;
@@ -2325,8 +2621,8 @@
                 ${winners.map((w, wi) => {
                     const cm = getCatMeta(c, w.category);
                     const wNameHtml = isDuo ? `${h.esc(w.displayName || w.username)} ❤️ ${h.esc(w.partnerName || "")}` : (w.html ? h.sanHtml(w.html) : h.esc(w.displayName || w.username));
-                    const wLabel = isDual ? cm.label : (isQuiz ? `⚡ المركز #${wi + 1} (الأسرع)` : (isRaffle ? `🎟️ فائز بالقرعة #${wi + 1}` : (isBracket ? "⚔️ بطل البطولة" : "🏆 المركز الأول")));
-                    const badgeTxt = isQuiz ? `⚡ ${h.fmtDate(w.joinedAt)}` : (isRaffle ? "🎰 فائز بالسحب" : (isPredict ? "✅ توقع صحيح" : (isBracket ? "👑 بطل المواجهات" : `🔥 ${counts[w.key] || 0} صوت`)));
+                    const wLabel = isTeams ? "⚔️ الفريق الفائز بالمعركة" : (isDual ? cm.label : (isQuiz ? `⚡ المركز #${wi + 1} (الأسرع)` : (isRaffle ? `🎟️ فائز بالقرعة #${wi + 1}` : (isBracket ? "⚔️ بطل البطولة" : "🏆 المركز الأول"))));
+                    const badgeTxt = isQuiz ? `⚡ ${h.fmtDate(w.joinedAt)}` : (isRaffle ? "🎰 فائز بالسحب" : (isPredict ? "✅ توقع صحيح" : (isBracket ? "👑 بطل المواجهات" : `🔥 ${counts[w.key] || 0} ${isTeams ? "نقطة" : "صوت"}`)));
                     return `
                     <div class="lce-podium">
                         <div style="font-size:34px;margin-bottom:4px;">${h.esc(cm.icon)}</div>
@@ -2346,21 +2642,21 @@
                 <button type="button" class="lce-btn lce-btn-out" id="lce-res-pz"><i class="fas fa-gift"></i> الجوائز المستحقة</button>
             </div>
             ${allSorted.length > winners.length ? `
-                <div style="font-weight:800;color:#94a3b8;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:6px;">باقي المراكز والمشاركات:</div>
+                <div style="font-weight:800;color:#94a3b8;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:6px;">${isTeams ? "الترتيب النهائي للفريقين:" : "باقي المراكز والمشاركات:"}</div>
                 ${allSorted.map((e, i) => {
                     const cm = getCatMeta(c, e.category);
                     const thumb = isPhoto && h.isValidImg(e.image) ? e.image : (h.isValidImg(e.avatar) ? e.avatar : "");
                     return `
                     <div class="lce-prize-item" style="margin-bottom:7px;padding:8px 12px;">
                         <b style="color:var(--lce-ac);width:28px;text-align:center;">#${i + 1}</b>
-                        ${thumb ? `<img loading="lazy" decoding="async" src="${h.esc(thumb)}" class="${isPhoto ? "lce-zoomable" : ""}" style="width:42px;height:42px;border-radius:${isPhoto ? "8px" : "50%"};object-fit:cover;border:1px solid var(--lce-ac);${isPhoto ? "cursor:zoom-in;" : ""}">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
+                        ${thumb ? `<img loading="lazy" decoding="async" src="${h.esc(thumb)}" class="${isPhoto ? "lce-zoomable" : ""}" style="width:42px;height:42px;border-radius:${isPhoto ? "8px" : "50%"};object-fit:cover;border:1px solid var(--lce-ac);${isPhoto ? "cursor:zoom-in;" : ""}">` : `<div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;">${isTeams ? h.esc(cm.icon) : '<i class="fas fa-user-circle" style="color:#64748b;"></i>'}</div>`}
                         <div style="flex:1;min-width:0;">
                             <div class="lce-cname" style="font-size:.9rem;margin:0;text-align:right;">${isDuo ? `${h.esc(e.displayName)} ❤️ ${h.esc(e.partnerName || "")}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username))}</div>
                             <div style="font-size:.74rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${isDual ? `${h.esc(cm.icon)} ${h.esc(cm.label)} • ` : ""}${h.esc(e.title || (!isQuiz ? e.text : "") || "")}</div>
                         </div>
                         ${noVotesMode
                             ? `<span style="background:${e.isWinner ? "rgba(16,185,129,.2)" : "rgba(255,255,255,.06)"};color:${e.isWinner ? "#6ee7b7" : "#94a3b8"};padding:4px 10px;border-radius:12px;font-size:.78rem;font-weight:800;">${e.isWinner ? "✅ فائز" : "مشارك"}</span>`
-                            : `<span style="background:var(--lce-soft);color:var(--lce-tx);padding:4px 10px;border-radius:12px;font-size:.8rem;font-weight:800;">${counts[e.key] || 0} صوت</span>`}
+                            : `<span style="background:var(--lce-soft);color:var(--lce-tx);padding:4px 10px;border-radius:12px;font-size:.8rem;font-weight:800;">${counts[e.key] || 0} ${isTeams ? "نقطة" : "صوت"}</span>`}
                     </div>`;
                 }).join("")}` : ""}`;
 
@@ -2372,7 +2668,7 @@
             const lines = winners.map(w => {
                 const cm = getCatMeta(c, w.category);
                 const nm = isDuo ? `${w.displayName || w.username} ❤️ ${w.partnerName || ""}` : (w.displayName || w.username);
-                return `${cm.icon} ${isDual ? cm.label : "الفائز"}: ${nm}${!noVotesMode ? ` (${counts[w.key] || 0} صوت)` : ""}`;
+                return `${cm.icon} ${isTeams ? "الفريق الفائز" : (isDual ? cm.label : "الفائز")}: ${nm}${!noVotesMode ? ` (${counts[w.key] || 0} ${isTeams ? "نقطة" : "صوت"})` : ""}`;
             }).join("\n");
             h.copy(`🏆✨ ألف مبروك التتويج في (${c.title}) ✨🏆\n\n${lines}\n\n🎁 الجوائز جاهزة للتفعيل! 🎉`, "📋 تم نسخ إعلان التتويج!");
         };
@@ -2448,7 +2744,7 @@
         }).catch(() => alert("❌ فشل حفظ المشاركة."));
     }
 
-    function castVote(cid, c, targetKey, targetCat, matchKey = null) {
+    function castVote(cid, c, targetKey, targetCat, matchKey = null, cheer = "") {
         if (!st.db) return showToast("تعذر الاتصال بالقاعدة", 3000, "red");
         if (Date.now() - st.lastVoteAt < 1200) return showToast("⏳ انتظر لحظة...", 1800);
         if (!c.cfg.allowGuestsVote && h.isGuest() && !h.isAdmin(cid)) return alert("التصويت متاح للأعضاء المسجلين فقط 🏆");
@@ -2460,8 +2756,9 @@
         const target = st.data.entries?.[targetKey];
         if (!target || target.frozen) return showToast("❄️ التصويت لهذه المشاركة مجمد مؤقتاً.", 3000, "red");
         const myK = h.myKey();
-        if (!c.cfg.allowSelfVote && !h.isAdmin(cid) && myK === targetKey) return showToast("🚫 لا يمكنك التصويت لنفسك!", 3500, "red");
-        const isDual = "dual" === c.mode && !matchKey;
+        const isTeams = "teams" === c.template;
+        if (!isTeams && !c.cfg.allowSelfVote && !h.isAdmin(cid) && myK === targetKey) return showToast("🚫 لا يمكنك التصويت لنفسك!", 3500, "red");
+        const isDual = "dual" === c.mode && !matchKey && !isTeams;
         const voteKey = getVoteKey(cid, myK, targetCat, isDual, matchKey);
         if (st.data.votes?.[voteKey] && !c.cfg.allowVoteChange) return showToast("⚠️ لقد استخدمت صوتك مسبقاً.", 3500, "red");
         const label = c.cfg.blindVoting && !h.isAdmin(cid) ? "هذه المشاركة" : `(${target.displayName || targetKey})`;
@@ -2471,18 +2768,22 @@
         let weight = Math.max(1, Number(c.voteMultiplier) || 1);
         if (h.isVip(cid)) weight = Math.max(weight, h.getVipWeight(cid));
 
+        const cleanCheer = String(cheer || "").trim().slice(0, 75);
         dbOps.saveVote(cid, voteKey, {
             target: targetKey,
             category: targetCat,
             matchKey: matchKey || null,
             voterName: st.myUser,
+            cheer: cleanCheer,
             weight,
             ts: Date.now()
-        }).then(() => showToast(`✅ تم احتساب صوتك بنجاح${weight > 1 ? ` (×${weight})` : ""}!`, 3500, "gold"))
-          .catch(() => alert("❌ تعذر تسجيل الصوت."));
+        }).then(() => {
+            const ci = document.getElementById("lce-team-cheer");
+            if (ci) ci.value = "";
+            showToast(`✅ تم احتساب صوتك بنجاح${weight > 1 ? ` (×${weight})` : ""}!`, 3500, "gold");
+        }).catch(() => alert("❌ تعذر تسجيل الصوت."));
     }
 
-    // عدّاد خفيف يتوقف تلقائياً بمجرد انتهاء المرحلة أو الإيقاف المؤقت (لا يحسب الأصوات كل ثانية)
     function startCountdownLoop() {
         clearInterval(st.timerId);
         let prevPhase = "contest" === st.viewMode ? getPhaseInfo(h.getContest(st.activeCid)).phase : "hub";
@@ -2500,7 +2801,6 @@
             }
             const c = h.getContest(st.activeCid);
             if (!c || c.paused) { clearInterval(st.timerId); return; }
-            // حساب سريع بالوقت فقط بدون computeVoteCounts
             const fastInfo = getPhaseInfo(c);
             if (fastInfo.phase !== prevPhase) {
                 prevPhase = fastInfo.phase;
@@ -2514,11 +2814,12 @@
         }, 1000);
     }
     // ====== نهاية الجزء 2 من 3 ======
-    
+
     // ====== بداية الجزء 3 من 3 ======
     const BROADCAST_PRESETS = [
         { label: "🔥 انطلاق المشاركة", theme: "gold", text: t => `🔥 باب المشاركة مفتوح الآن في (${t})! ادخل وسجّل حضورك قبل انتهاء الوقت.` },
         { label: "🗳️ بدأ التصويت", theme: "emerald", text: t => `🗳️ بدأ التصويت الرسمي في (${t})! ادخل وصوّت لمن يستحق اللقب.` },
+        { label: "⚔️ حماس الفريقين", theme: "maroon", text: t => `⚔️ المواجهة مشتعلة في (${t})! ادخل الآن وادعم فريقك بصوتك وهتافك 🔥` },
         { label: "⏳ آخر ساعة", theme: "red", text: t => `⏳ باقي أقل من ساعة على إغلاق (${t})! سارع بالمشاركة والتصويت الآن.` },
         { label: "⚡ ساعة مضاعفة", theme: "purple", text: t => `⚡ ساعة المضاعفة الذهبية نشطة الآن في (${t})! صوتك يُحسب مضاعفاً 🔥` },
         { label: "🏆 ظهرت النتائج", theme: "gold", text: t => `🏆 أُعلنت نتائج (${t}) رسمياً! ادخل لتهنئة الفائزين.` }
@@ -2687,7 +2988,8 @@
             const c = h.getContest(cid), it = st.data.entries?.[key];
             if (!c || !it || !st.db) return;
             document.getElementById("lce-edit-entry-sub")?.remove();
-            const isPhoto = "photo" === c.template, isDual = "dual" === c.mode, isDuo = "duo" === c.template, isMedia = "media" === c.template;
+            const isPhoto = "photo" === c.template, isTeams = "teams" === c.template;
+            const isDual = "dual" === c.mode && !isTeams, isDuo = "duo" === c.template, isMedia = "media" === c.template;
             let editMedia = isPhoto ? (it.image || "") : (it.avatar || "");
             const ov = document.createElement("div");
             ov.id = "lce-edit-entry-sub";
@@ -2695,7 +2997,7 @@
             ov.innerHTML = `
                 <div class="lce-subbox" style="max-width:460px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:13px;">
-                        <b style="color:#D4AF37;font-size:1rem;"><i class="fas fa-user-edit"></i> تعديل المشاركة</b>
+                        <b style="color:#D4AF37;font-size:1rem;"><i class="fas fa-user-edit"></i> ${isTeams ? "تعديل بيانات الفريق" : "تعديل المشاركة"}</b>
                         <button type="button" class="lce-ibtn sq x" id="lce-ee-x"><i class="fas fa-times"></i></button>
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:13px;">
@@ -2708,11 +3010,11 @@
                             <button type="button" id="lce-ee-rmav" class="lcea-btn lcea-b-dng lcea-mini" style="${h.isValidImg(editMedia) ? "" : "display:none;"}"><i class="fas fa-trash"></i> إزالة</button>
                         </div>
                     </div>
-                    <div style="margin-bottom:9px;"><label class="lcea-lbl">الاسم الظاهر / عنوان الخيار</label><input id="lce-ee-name" class="lcea-inp" maxlength="55" value="${h.esc(it.displayName || it.username)}"></div>
+                    <div style="margin-bottom:9px;"><label class="lcea-lbl">${isTeams ? "اسم الفريق" : "الاسم الظاهر / عنوان الخيار"}</label><input id="lce-ee-name" class="lcea-inp" maxlength="55" value="${h.esc(it.displayName || it.username)}"></div>
                     ${isDuo ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">اسم الشريك (الثنائي)</label><input id="lce-ee-partner" class="lcea-inp" maxlength="45" value="${h.esc(it.partnerName || "")}"></div>` : ""}
                     ${isMedia ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">رابط أو معرف يوتيوب</label><input id="lce-ee-yt" class="lcea-inp" dir="ltr" value="${h.esc(it.ytId || "")}"></div>` : ""}
                     ${("talent" === c.template || isMedia) ? `<div style="margin-bottom:9px;"><label class="lcea-lbl">عنوان الموهبة / الأغنية</label><input id="lce-ee-title" class="lcea-inp" maxlength="70" value="${h.esc(it.title || "")}"></div>` : ""}
-                    <div style="margin-bottom:9px;"><label class="lcea-lbl">النص / الشعار / الإجابة</label><textarea id="lce-ee-text" class="lcea-inp" rows="3" maxlength="550">${h.esc(it.text || "")}</textarea></div>
+                    <div style="margin-bottom:9px;"><label class="lcea-lbl">${isTeams ? "شعار الفريق (اختياري)" : "النص / الشعار / الإجابة"}</label><textarea id="lce-ee-text" class="lcea-inp" rows="3" maxlength="550">${h.esc(it.text || "")}</textarea></div>
                     <div class="lcea-g2" style="margin-bottom:13px;">
                         ${isDual ? `<div><label class="lcea-lbl">الفئة</label><select id="lce-ee-cat" class="lcea-inp"><option value="cat1" ${"cat2" !== it.category ? "selected" : ""}>${h.esc(c.cat1Icon || "👑")} ${h.esc(c.cat1Label || "الفئة 1")}</option><option value="cat2" ${"cat2" === it.category ? "selected" : ""}>${h.esc(c.cat2Icon || "👸")} ${h.esc(c.cat2Label || "الفئة 2")}</option></select></div>` : `<div><label class="lcea-lbl">الحالة</label><select id="lce-ee-st" class="lcea-inp"><option value="approved" ${"pending" !== it.status ? "selected" : ""}>✅ معتمد</option><option value="pending" ${"pending" === it.status ? "selected" : ""}>⏳ معلق</option></select></div>`}
                         <div><label class="lcea-lbl">شارة التمييز (اختياري)</label><input id="lce-ee-badge" class="lcea-inp" maxlength="25" value="${h.esc(it.badge || "")}" placeholder="مثلاً: مرشح مميز"></div>
@@ -2759,6 +3061,10 @@
                 else if (document.getElementById("lce-ee-st")) up.status = document.getElementById("lce-ee-st").value;
                 if (newName !== (it.displayName || it.username)) up.html = h.esc(newName);
                 dbOps.updateEntry(cid, key, up).then(() => {
+                    if (isTeams) {
+                        if ("team1" === key) this.patchContest(cid, { cat1Label: newName });
+                        else if ("team2" === key) this.patchContest(cid, { cat2Label: newName });
+                    }
                     this.log("تعديل مشاركة", c.title, newName);
                     close();
                     showToast("✅ تم حفظ التعديلات", 3000, "gold");
@@ -2802,7 +3108,7 @@
                     <button type="button" class="lcea-tab" data-atab="contests"><i class="fas fa-plus-circle"></i> المسابقات</button>
                     <button type="button" class="lcea-tab" data-atab="control" data-perm="control"><i class="fas fa-sliders-h"></i> التحكم</button>
                     <button type="button" class="lcea-tab" data-atab="entries" data-perm="entries"><i class="fas fa-users"></i> المشاركات <span id="lcea-pbdg" class="lcea-bdg">0</span></button>
-                    <button type="button" class="lcea-tab" data-atab="votes" data-perm="votes"><i class="fas fa-vote-yea"></i> الأصوات</button>
+                    <button type="button" class="lcea-tab" data-atab="votes" data-perm="votes"><i class="fas fa-vote-yea"></i> الأصوات <span id="lcea-tbdg" class="lcea-bdg">0</span></button>
                     <button type="button" class="lcea-tab" data-atab="radar" data-perm="radar"><i class="fas fa-eye"></i> الرادار والحظر</button>
                     <button type="button" class="lcea-tab" data-atab="prizes" data-perm="prizes"><i class="fas fa-gift"></i> الجوائز</button>
                     <button type="button" class="lcea-tab" data-atab="settings"><i class="fas fa-cog"></i> الصلاحيات</button>
@@ -2813,13 +3119,13 @@
                     <div id="lcea-v-contests" class="lcea-view">
                         ${fullAdm ? `
                         <div class="lcea-card" style="border-color:rgba(212,175,55,.45);">
-                            <div class="lcea-ct"><span><i class="fas fa-magic"></i> إنشاء مسابقة جديدة (13 قالب جاهز أو تخصيص كامل)</span></div>
+                            <div class="lcea-ct"><span><i class="fas fa-magic"></i> إنشاء مسابقة جديدة (14 قالب جاهز أو تخصيص كامل)</span></div>
                             <div class="lcea-row" style="margin-bottom:9px;gap:5px;">
                                 ${PRESETS.map(p => `<button type="button" class="lcea-preset-chip" data-preset="${p.key}">${p.label}</button>`).join("")}
                             </div>
                             <div class="lcea-g2" style="margin-bottom:6px;">
                                 <div><label class="lcea-lbl">اسم المسابقة *</label><input id="lcea-cr-title" class="lcea-inp" value="مسابقة ملك وملكة شات ليل"></div>
-                                <div><label class="lcea-lbl">نظام المسابقة (10 أنظمة)</label><select id="lcea-cr-tmpl" class="lcea-inp">${Object.values(TEMPLATES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
+                                <div><label class="lcea-lbl">نظام المسابقة (11 نظاماً)</label><select id="lcea-cr-tmpl" class="lcea-inp">${Object.values(TEMPLATES).map(t => `<option value="${t.id}">${t.name}</option>`).join("")}</select></div>
                             </div>
                             <div style="margin-bottom:6px;"><label class="lcea-lbl">وصف مختصر للمسابقة</label><input id="lcea-cr-sub" class="lcea-inp" placeholder="اشرح فكرة المسابقة بسطر جذاب..."></div>
                             <div class="lcea-g3" style="margin-bottom:6px;">
@@ -2828,8 +3134,8 @@
                                 <div><label class="lcea-lbl">نظام الفئات</label><select id="lcea-cr-mode" class="lcea-inp"><option value="single">فئة واحدة</option><option value="dual">فئتان (مثلاً ملك + ملكة)</option></select></div>
                             </div>
                             <div id="lcea-cr-cats" class="lcea-g2" style="margin-bottom:6px;display:none;">
-                                <div><label class="lcea-lbl">مسمى الفئة الأولى</label><input id="lcea-cr-c1" class="lcea-inp" value="ملك الشات"></div>
-                                <div><label class="lcea-lbl">مسمى الفئة الثانية</label><input id="lcea-cr-c2" class="lcea-inp" value="ملكة الشات"></div>
+                                <div><label class="lcea-lbl" id="lcea-cr-c1-lbl">مسمى الفئة الأولى</label><input id="lcea-cr-c1" class="lcea-inp" value="ملك الشات"></div>
+                                <div><label class="lcea-lbl" id="lcea-cr-c2-lbl">مسمى الفئة الثانية</label><input id="lcea-cr-c2" class="lcea-inp" value="ملكة الشات"></div>
                             </div>
                             <div id="lcea-cr-quiz-box" style="display:none;margin-bottom:6px;">
                                 <div style="margin-bottom:6px;"><label class="lcea-lbl">السؤال / اللغز / وصف الكود السري</label><textarea id="lcea-cr-qprompt" class="lcea-inp" rows="2" placeholder="اكتب السؤال أو اللغز هنا..."></textarea></div>
@@ -2910,7 +3216,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. المشاركات / المرشحون / خيارات الاستفتاء -->
+                    <!-- 3. المشاركات / المرشحون / خيارات الاستفتاء / الفريقان -->
                     <div id="lcea-v-entries" class="lcea-view">
                         <div class="lcea-card">
                             <div class="lcea-ct">
@@ -2938,8 +3244,15 @@
                         <div id="lcea-entries-list"></div>
                     </div>
 
-                    <!-- 4. الأصوات ومكافحة التلاعب -->
+                    <!-- 4. الأصوات وطلبات تحويل الأصوات ومكافحة التلاعب -->
                     <div id="lcea-v-votes" class="lcea-view">
+                        <div class="lcea-card" style="border-color:rgba(212,175,55,.45);">
+                            <div class="lcea-ct">
+                                <span><i class="fas fa-exchange-alt"></i> طلبات الانسحاب وتحويل الأصوات (بانتظار الموافقة)</span>
+                                <span id="lcea-tr-cnt" class="lcea-tag lcea-t-gold">0</span>
+                            </div>
+                            <div id="lcea-tr-list"></div>
+                        </div>
                         <div class="lcea-card" style="border-color:rgba(245,158,11,.35);">
                             <div class="lcea-ct"><span><i class="fas fa-shield-alt"></i> أدوات مكافحة التلاعب السريعة</span></div>
                             <div class="lcea-g3">
@@ -2950,7 +3263,7 @@
                         </div>
                         <div class="lcea-card">
                             <div class="lcea-ct"><span><i class="fas fa-search"></i> سجل الأصوات التفصيلي</span></div>
-                            <input id="lcea-vq" class="lcea-inp" style="margin-bottom:8px;" placeholder="ابحث باسم المصوّت أو المشارك...">
+                            <input id="lcea-vq" class="lcea-inp" style="margin-bottom:8px;" placeholder="ابحث باسم المصوّت أو المشارك أو الهتاف...">
                             <div id="lcea-votes-list"></div>
                         </div>
                     </div>
@@ -3032,6 +3345,7 @@
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">إظهار زر مستقل لها في قائمة الإضافات</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-menu"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تثبيت الزر بتوهج بأعلى القائمة</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-pin"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">✏️ السماح للعضو بتعديل مشاركته قبل التصويت</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-edit"><span class="lcea-sl"></span></label></div>
+                            <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">🔄 السماح بطلب الانسحاب وتحويل الأصوات (بموافقة الإدارة)</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-tr"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">🎭 التصويت الأعمى (إخفاء أسماء المشاركين)</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-blind"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">🔒 التصويت السري (إخفاء عداد الأصوات)</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-hide"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">مراجعة الإدارة قبل اعتماد المشاركة الجديدة</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-app"><span class="lcea-sl"></span></label></div>
@@ -3055,7 +3369,7 @@
                             <div class="lcea-g2" style="margin-bottom:7px;">
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">التحكم بالمراحل والوقت</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-control"><span class="lcea-sl"></span></label></div>
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">اعتماد وتعديل المشاركات</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-entries"><span class="lcea-sl"></span></label></div>
-                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">إدارة الأصوات والتصفير</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-votes"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">إدارة الأصوات والتحويلات</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-votes"><span class="lcea-sl"></span></label></div>
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">الرادار والحظر والطرد</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-radar"><span class="lcea-sl"></span></label></div>
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">تعديل الجوائز والقوانين</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-prizes"><span class="lcea-sl"></span></label></div>
                                 <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">إرسال بث فوري للشات</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-broadcast"><span class="lcea-sl"></span></label></div>
@@ -3220,6 +3534,7 @@
                 sc("lcea-cs-menu", !1 !== c.showInMenu);
                 sc("lcea-cs-pin", Boolean(c.pinTop));
                 sc("lcea-cs-edit", !1 !== c.cfg.allowEditEntry);
+                sc("lcea-cs-tr", !1 !== c.cfg.allowVoteTransfer);
                 sc("lcea-cs-blind", Boolean(c.cfg.blindVoting));
                 sc("lcea-cs-hide", Boolean(c.cfg.hideLiveVotes));
                 sc("lcea-cs-app", Boolean(c.cfg.requireApproval));
@@ -3288,7 +3603,12 @@
             const syncCreateFields = () => {
                 if (!tmplSel) return;
                 const T = tmplSel.value;
-                if (catsWrap) catsWrap.style.display = "dual" === modeSel?.value ? "grid" : "none";
+                const isTms = "teams" === T;
+                if (catsWrap) catsWrap.style.display = ("dual" === modeSel?.value || isTms) ? "grid" : "none";
+                const l1 = document.getElementById("lcea-cr-c1-lbl"), l2 = document.getElementById("lcea-cr-c2-lbl");
+                if (l1) l1.textContent = isTms ? "اسم الفريق الأول (الأزرق ⚡)" : "مسمى الفئة الأولى";
+                if (l2) l2.textContent = isTms ? "اسم الفريق الثاني (الوردي 🌸)" : "مسمى الفئة الثانية";
+                if (modeSel) modeSel.disabled = isTms;
                 if (quizBox) quizBox.style.display = ("quiz" === T || "prediction" === T) ? "block" : "none";
             };
             if (modeSel) modeSel.onchange = syncCreateFields;
@@ -3296,7 +3616,13 @@
                 tmplSel.onchange = () => {
                     const T = tmplSel.value, t = TEMPLATES[T];
                     if (t) document.getElementById("lcea-cr-ico").value = t.icon;
-                    if ("poll" === T) document.getElementById("lcea-cr-nomh").value = 0;
+                    if ("poll" === T || "teams" === T) document.getElementById("lcea-cr-nomh").value = 0;
+                    if ("teams" === T) {
+                        document.getElementById("lcea-cr-mode").value = "single";
+                        const c1 = document.getElementById("lcea-cr-c1"), c2 = document.getElementById("lcea-cr-c2");
+                        if (c1 && (!c1.value.trim() || "ملك الشات" === c1.value.trim())) c1.value = "فريق الشباب";
+                        if (c2 && (!c2.value.trim() || "ملكة الشات" === c2.value.trim())) c2.value = "فريق البنات";
+                    }
                     if (["prediction", "raffle", "quiz"].includes(T)) document.getElementById("lcea-cr-voth").value = 0;
                     syncCreateFields();
                 };
@@ -3310,8 +3636,8 @@
                 document.getElementById("lcea-cr-theme").value = d.theme;
                 document.getElementById("lcea-cr-ico").value = d.icon;
                 document.getElementById("lcea-cr-mode").value = d.mode || "single";
-                document.getElementById("lcea-cr-c1").value = d.cat1Label || "الفئة الأولى";
-                document.getElementById("lcea-cr-c2").value = d.cat2Label || "الفئة الثانية";
+                document.getElementById("lcea-cr-c1").value = d.cat1Label || ("teams" === d.template ? "فريق الشباب" : "الفئة الأولى");
+                document.getElementById("lcea-cr-c2").value = d.cat2Label || ("teams" === d.template ? "فريق البنات" : "الفئة الثانية");
                 document.getElementById("lcea-cr-nomh").value = d.nomHours;
                 document.getElementById("lcea-cr-voth").value = d.voteHours;
                 document.getElementById("lcea-cr-maxw").value = d.maxWinners || 1;
@@ -3330,25 +3656,26 @@
                 const title = document.getElementById("lcea-cr-title").value.trim();
                 if (!title) return alert("أدخل اسم المسابقة.");
                 const template = document.getElementById("lcea-cr-tmpl").value;
+                const isTms = "teams" === template;
                 const theme = document.getElementById("lcea-cr-theme").value;
                 const icon = document.getElementById("lcea-cr-ico").value.trim() || TEMPLATES[template]?.icon || "fa-crown";
                 const subtitle = document.getElementById("lcea-cr-sub").value.trim();
-                const mode = document.getElementById("lcea-cr-mode").value;
-                const cat1Label = document.getElementById("lcea-cr-c1").value.trim() || "الفئة الأولى";
-                const cat2Label = document.getElementById("lcea-cr-c2").value.trim() || "الفئة الثانية";
+                const mode = isTms ? "single" : document.getElementById("lcea-cr-mode").value;
+                const cat1Label = document.getElementById("lcea-cr-c1").value.trim() || (isTms ? "فريق الشباب" : "الفئة الأولى");
+                const cat2Label = document.getElementById("lcea-cr-c2").value.trim() || (isTms ? "فريق البنات" : "الفئة الثانية");
                 const nomH = Math.max(0, parseFloat(document.getElementById("lcea-cr-nomh").value) || 0);
                 const votH = Math.max(0, parseFloat(document.getElementById("lcea-cr-voth").value) || 0);
                 const maxWinners = Math.max(1, parseInt(document.getElementById("lcea-cr-maxw").value, 10) || 1);
                 const quizPrompt = document.getElementById("lcea-cr-qprompt").value.trim();
                 const correctAnswer = document.getElementById("lcea-cr-qans").value.trim();
                 const now = Date.now();
-                const noSub = "poll" === template;
+                const noSub = "poll" === template || isTms;
                 const noVote = ["prediction", "raffle", "quiz"].includes(template);
                 const nomEnd = noSub ? now - 1000 : now + Math.max(0.25, nomH) * 36e5;
                 const voteEnd = noVote ? nomEnd : nomEnd + Math.max(1, votH) * 36e5;
                 const cid = h.genId("cnt");
                 const cfg = Object.assign({}, DEFAULT_CONTEST_CFG, {
-                    blindVoting: document.getElementById("lcea-cr-blind").checked,
+                    blindVoting: isTms ? !1 : document.getElementById("lcea-cr-blind").checked,
                     hideLiveVotes: document.getElementById("lcea-cr-hide").checked
                 });
                 const showInMenu = document.getElementById("lcea-cr-menu").checked;
@@ -3356,8 +3683,8 @@
 
                 const meta = {
                     title, subtitle, template, theme, icon, mode,
-                    cat1Label, cat1Icon: "royal" === template ? "👑" : "⭐",
-                    cat2Label, cat2Icon: "royal" === template ? "👸" : "✨",
+                    cat1Label, cat1Icon: isTms ? "⚡" : ("royal" === template ? "👑" : "⭐"),
+                    cat2Label, cat2Icon: isTms ? "🌸" : ("royal" === template ? "👸" : "✨"),
                     status: "active", season: 1, nomEnd, voteEnd, paused: !1, voteMultiplier: 1,
                     showInMenu, pinTop, resultsPublished: !1, maxWinners, quizPrompt, correctAnswer,
                     createdBy: st.myUser || "الإدارة", createdAt: now, cfg
@@ -3365,7 +3692,11 @@
                 const updates = {};
                 updates[`index/${cid}`] = meta;
                 updates[`data/${cid}/prizes`] = DEFAULT_PRIZES;
-                updates["broadcast"] = { text: `🔥 انطلقت مسابقة (${title})! ادخل وشارك الآن.`, theme, cid, ts: now, by: st.myUser || "الإدارة" };
+                if (isTms) updates[`data/${cid}/entries`] = h.makeTeamEntries(cat1Label, cat2Label, now);
+                updates["broadcast"] = {
+                    text: isTms ? `⚔️ اشتعلت (${title})! ادخل الآن وصوّت لفريقك المفضل 🔥` : `🔥 انطلقت مسابقة (${title})! ادخل وشارك الآن.`,
+                    theme, cid, ts: now, by: st.myUser || "الإدارة"
+                };
                 st.db.ref(ROOT).update(updates).then(() => {
                     st.adminCid = cid;
                     this.log("إنشاء مسابقة", title, `${template} | ${theme}`);
@@ -3410,13 +3741,20 @@
             document.getElementById("lcea-tog-mode").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
                 if (!c || !h.canPerm(cid, "control")) return;
+                if ("teams" === c.template) return showToast("معركة الفريقين تعمل بنظام الفريقين المباشر.", 3000);
                 const next = "dual" === c.mode ? "single" : "dual";
                 this.patchContest(cid, { mode: next }, "dual" === next ? "النظام الآن: فئتان" : "النظام الآن: فئة واحدة");
             };
 
             document.getElementById("lcea-go-sub").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
-                if (!c || !h.canPerm(cid, "control") || !confirm("إعادة فتح مرحلة التقديم لمدة 24 ساعة؟")) return;
+                if (!c || !h.canPerm(cid, "control")) return;
+                if ("teams" === c.template || "poll" === c.template) {
+                    if (!confirm("تمديد / إعادة فتح التصويت لمدة 24 ساعة؟")) return;
+                    const now = Date.now();
+                    return this.patchContest(cid, { status: "active", nomEnd: now - 1000, voteEnd: now + 24 * 36e5, paused: !1, resultsPublished: !1 }, "🔄 تم فتح التصويت لمدة 24 ساعة");
+                }
+                if (!confirm("إعادة فتح مرحلة التقديم لمدة 24 ساعة؟")) return;
                 const now = Date.now(), noVote = ["prediction", "raffle", "quiz"].includes(c.template);
                 const vDur = Math.max(24 * 36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
                 this.patchContest(cid, { status: "active", nomEnd: now + 24 * 36e5, voteEnd: noVote ? now + 24 * 36e5 : now + 24 * 36e5 + vDur, paused: !1, resultsPublished: !1 }, "🔄 تم فتح مرحلة التقديم");
@@ -3478,7 +3816,7 @@
                     list = getApprovedEntries(entries).filter(e => e.isWinner);
                 } else {
                     const all = getApprovedEntries(entries).sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
-                    list = "dual" === c.mode ? [all.find(x => "cat2" !== x.category), all.find(x => "cat2" === x.category)].filter(Boolean) : all.slice(0, 1);
+                    list = ("dual" === c.mode && "teams" !== c.template) ? [all.find(x => "cat2" !== x.category), all.find(x => "cat2" === x.category)].filter(Boolean) : all.slice(0, 1);
                 }
                 if (!list.length) return showToast("لا يوجد فائز لحفظه", 3000, "red");
                 list.forEach(w => {
@@ -3487,7 +3825,7 @@
                     dbOps.pushHof(cid, {
                         contestId: cid, contestTitle: c.title, season: c.season || 1,
                         name: wName, catKey: w.category,
-                        categoryLabel: "dual" === c.mode ? `${cm.icon} ${cm.label}` : `${cm.icon} بطل المسابقة`,
+                        categoryLabel: "teams" === c.template ? `${cm.icon} الفريق الفائز` : ("dual" === c.mode ? `${cm.icon} ${cm.label}` : `${cm.icon} بطل المسابقة`),
                         avatar: ("photo" === c.template ? w.image : w.avatar) || "",
                         votes: ["prediction", "raffle", "quiz", "bracket"].includes(c.template) ? 0 : (counts[w.key] || 0),
                         date: Date.now()
@@ -3676,6 +4014,7 @@
                 this.patchContestCfg(cid, {
                     enabled: document.getElementById("lcea-cs-en").checked,
                     allowEditEntry: document.getElementById("lcea-cs-edit").checked,
+                    allowVoteTransfer: document.getElementById("lcea-cs-tr").checked,
                     blindVoting: document.getElementById("lcea-cs-blind").checked,
                     hideLiveVotes: document.getElementById("lcea-cs-hide").checked,
                     requireApproval: document.getElementById("lcea-cs-app").checked,
@@ -3767,7 +4106,8 @@
                 const counts = computeVoteCounts(st.data.entries, st.data.votes);
                 const top = getApprovedEntries(st.data.entries).sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0)).slice(0, 5);
                 if (!top.length) return showToast("لا توجد مشاركات بعد");
-                const txt = `🏆 الترتيب المباشر — ${c.title} 🏆\n\n` + top.map((e, i) => `${i + 1}. ${"duo" === c.template ? `${e.displayName} ❤️ ${e.partnerName}` : (e.displayName || e.username)} — (${counts[e.key] || 0} صوت)`).join("\n") + "\n\n🗳️ صوّت الآن لمرشحك المفضل!";
+                const unit = "teams" === c.template ? "نقطة" : "صوت";
+                const txt = `🏆 الترتيب المباشر — ${c.title} 🏆\n\n` + top.map((e, i) => `${i + 1}. ${"duo" === c.template ? `${e.displayName} ❤️ ${e.partnerName}` : (e.displayName || e.username)} — (${counts[e.key] || 0} ${unit})`).join("\n") + "\n\n🗳️ صوّت الآن!";
                 h.copy(txt, "📋 تم نسخ الترتيب للشات!");
             };
             document.getElementById("lcea-copy-promo").onclick = () => {
@@ -3806,7 +4146,6 @@
                 }).join("") : '<option value="">لا توجد مسابقات — أنشئ مسابقة من تبويب المسابقات</option>';
             }
 
-            // عكس حالة الصلاحيات على التبويبات
             ov.querySelectorAll("[data-perm]").forEach(btn => {
                 btn.classList.toggle("locked", Boolean(st.adminCid && !h.canPerm(st.adminCid, btn.dataset.perm)));
             });
@@ -3834,16 +4173,22 @@
 
             const entriesArr = Object.values(st.data.entries || {});
             const pendCnt = entriesArr.filter(e => e && "pending" === e.status).length;
+            const trCnt = Object.keys(st.data.transfers || {}).length;
             const onCnt = Object.values(st.data.presence || {}).filter(x => x && Date.now() - (x.ts || 0) < 18e5).length;
             document.getElementById("lcea-st-en").textContent = entriesArr.length;
             document.getElementById("lcea-st-vt").textContent = Object.keys(st.data.votes || {}).length;
             document.getElementById("lcea-st-on").textContent = onCnt;
+
             const pb = document.getElementById("lcea-pbdg");
             if (pb) { pb.textContent = pendCnt; pb.style.display = pendCnt > 0 ? "inline-block" : "none"; }
+            const tb = document.getElementById("lcea-tbdg");
+            if (tb) { tb.textContent = trCnt; tb.style.display = trCnt > 0 ? "inline-block" : "none"; }
+            const tc = document.getElementById("lcea-tr-cnt");
+            if (tc) tc.textContent = trCnt;
 
             if ("contests" === st.adminTab) this.renderContestsList();
             else if ("entries" === st.adminTab) this.renderEntries();
-            else if ("votes" === st.adminTab) this.renderVotes();
+            else if ("votes" === st.adminTab) { this.renderTransfers(); this.renderVotes(); }
             else if ("radar" === st.adminTab) { this.renderPresence(); this.renderBans(); }
             else if ("prizes" === st.adminTab) this.renderPrizesAdmin();
             else if ("settings" === st.adminTab) { this.renderMgrList(); this.renderVipList(); this.renderSubAdminList(); }
@@ -3898,7 +4243,7 @@
                 const id = b.dataset.id, c = h.getContest(id); if (!c) return;
                 if (c.isLegacy) {
                     if (!confirm("⚠️ إغلاق وتصفير مسابقة «ملك وملكة الشات» الحالية وإخفاء زرها؟ (تبقى قاعة الشرف محفوظة)")) return;
-                    st.db?.ref(LEGACY_ROOT).update({ state: { status: "cleared", season: c.season || 1, showInMenu: !1 }, candidates: null, votes: null }).then(() => {
+                    st.db?.ref(LEGACY_ROOT).update({ state: { status: "cleared", season: c.season || 1, showInMenu: !1 }, candidates: null, votes: null, transfers: null }).then(() => {
                         this.log("إغلاق وتصفير", c.title); showToast("🗑️ تم الإغلاق والتصفير");
                     });
                     return;
@@ -3922,7 +4267,8 @@
                 .filter(([, it]) => it && (!q || `${it.displayName || ""} ${it.username || ""} ${it.partnerName || ""} ${it.text || ""} ${it.title || ""}`.toLowerCase().includes(q)))
                 .sort((a, b) => ("pending" === a[1].status ? -1 : 1) - ("pending" === b[1].status ? -1 : 1) || (counts[b[0]] || 0) - (counts[a[0]] || 0));
             if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد مشاركات مطابقة.</div>'; return; }
-            const isPhoto = "photo" === c.template, isDuo = "duo" === c.template, noVotes = ["prediction", "raffle", "quiz"].includes(c.template);
+            const isPhoto = "photo" === c.template, isDuo = "duo" === c.template, isTeams = "teams" === c.template;
+            const noVotes = ["prediction", "raffle", "quiz"].includes(c.template);
             box.innerHTML = list.map(([k, it]) => {
                 const pend = "pending" === it.status, frz = Boolean(it.frozen);
                 const thumb = isPhoto ? it.image : it.avatar;
@@ -3936,7 +4282,7 @@
                             ${frz ? '<span class="lcea-tag lcea-t-blue">❄️ مجمد</span>' : ""}
                             ${it.isWinner ? '<span class="lcea-tag lcea-t-green">🏆 فائز</span>' : ""}
                             <span class="lcea-tag ${pend ? "lcea-t-red" : "lcea-t-green"}">${pend ? "⏳ معلق" : "✅ معتمد"}</span>
-                            ${!noVotes ? `<span class="lcea-tag lcea-t-gold">${counts[k] || 0} صوت</span>` : ""}
+                            ${!noVotes ? `<span class="lcea-tag lcea-t-gold">${counts[k] || 0} ${isTeams ? "نقطة" : "صوت"}</span>` : ""}
                         </div>
                     </div>
                     ${it.text ? `<div style="font-size:11.5px;color:#94a3b8;margin-bottom:7px;white-space:pre-line;">«${h.esc(it.text)}»</div>` : ""}
@@ -3959,10 +4305,74 @@
             box.querySelectorAll(".lcea-e-frz").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.frozen); dbOps.updateEntry(cid, b.dataset.k, { frozen: !cur }); });
             box.querySelectorAll(".lcea-e-adj").forEach(b => b.onclick = () => {
                 if (!h.canPerm(cid, "votes")) return showToast("لا تملك صلاحية تعديل الأصوات", 3000, "red");
-                const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10);
+                const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات / نقاط إضافية (موجب أو سالب):", String(cur)), 10);
                 if (!isNaN(val)) dbOps.updateEntry(cid, b.dataset.k, { bonusVotes: val }).then(() => showToast("✅ تم التعديل"));
             });
             box.querySelectorAll(".lcea-e-del").forEach(b => b.onclick = () => { if (confirm("حذف هذه المشاركة نهائياً؟")) dbOps.removeEntry(cid, b.dataset.k).then(() => { this.log("حذف مشاركة", c.title, b.dataset.k); showToast("🗑️ تم الحذف"); }); });
+        },
+
+        renderTransfers() {
+            const box = document.getElementById("lcea-tr-list"), cid = st.adminCid, c = h.getContest(cid);
+            if (!box || !c) return;
+            const list = Object.values(st.data.transfers || {}).filter(Boolean).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+            if (!list.length) {
+                box.innerHTML = '<div style="text-align:center;color:#64748b;padding:10px;font-size:11.5px;">لا توجد طلبات انسحاب وتحويل أصوات معلّقة حالياً.</div>';
+                return;
+            }
+            const counts = computeVoteCounts(st.data.entries, st.data.votes);
+            box.innerHTML = list.map(req => {
+                const liveFrom = counts[req.fromKey] || 0;
+                const liveTo = counts[req.toKey] || 0;
+                const missing = !st.data.entries?.[req.fromKey] || !st.data.entries?.[req.toKey];
+                return `
+                <div class="lcea-card" style="border-color:rgba(245,158,11,.45);margin-bottom:7px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
+                        <div style="font-size:12px;">
+                            <b style="color:#fca5a5;">${h.esc(req.fromName)}</b>
+                            <span style="color:#94a3b8;"> ➔ ينسحب ويحول أصواته إلى ➔ </span>
+                            <b style="color:#6ee7b7;">${h.esc(req.toName)}</b>
+                        </div>
+                        <span class="lcea-tag lcea-t-gold">${liveFrom} صوت (${liveTo} ➔ ${liveTo + liveFrom})</span>
+                    </div>
+                    ${req.reason ? `<div style="font-size:11px;color:#cbd5e1;margin-bottom:6px;">💬 «${h.esc(req.reason)}»</div>` : ""}
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <span style="font-size:10px;color:#94a3b8;">${h.fmtDate(req.ts)}</span>
+                        <div class="lcea-row" style="gap:5px;">
+                            ${!missing ? `<button type="button" class="lcea-btn lcea-b-ok lcea-mini lcea-tr-ok" data-fk="${h.esc(req.fromKey)}"><i class="fas fa-check"></i> موافقة وتحويل</button>` : '<span class="lcea-tag lcea-t-red">متسابق محذوف</span>'}
+                            <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-tr-no" data-fk="${h.esc(req.fromKey)}"><i class="fas fa-times"></i> رفض</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join("");
+
+            box.querySelectorAll(".lcea-tr-ok").forEach(b => b.onclick = () => {
+                if (!h.canPerm(cid, "votes")) return showToast("لا تملك صلاحية إدارة الأصوات", 3000, "red");
+                const req = (st.data.transfers || {})[b.dataset.fk];
+                if (!req) return;
+                const liveV = computeVoteCounts(st.data.entries, st.data.votes)[req.fromKey] || 0;
+                if (!confirm(`تأكيد الموافقة على انسحاب (${req.fromName}) وتحويل (${liveV}) صوت إلى (${req.toName})؟\nلا يمكن التراجع بعد التنفيذ.`)) return;
+
+                dbOps.approveTransfer(cid, req).then(res => {
+                    this.log("موافقة تحويل أصوات", c.title, `${res.fromName} ➔ ${res.toName} (${res.movedWeight} صوت)`);
+                    dbOps.sendCmd(req.fromKey, "alert", `✅ وافقت الإدارة على انسحابك وتحويل أصواتك (${res.movedWeight} صوت) إلى (${res.toName}).`);
+                    dbOps.sendCmd(req.toKey, "alert", `🎁 تنازل (${res.fromName}) بأصواته لصالحك! أُضيف لرصيدك (${res.movedWeight} صوت) بموافقة الإدارة.`);
+                    showToast(`✅ تم تحويل ${res.movedWeight} صوت إلى ${res.toName}!`, 4000, "gold");
+                }).catch(err => alert(`❌ ${err || "تعذر تنفيذ التحويل."}`));
+            });
+
+            box.querySelectorAll(".lcea-tr-no").forEach(b => b.onclick = () => {
+                if (!h.canPerm(cid, "votes")) return showToast("لا تملك صلاحية إدارة الأصوات", 3000, "red");
+                const req = (st.data.transfers || {})[b.dataset.fk];
+                if (!req) return;
+                const why = prompt(`رفض طلب (${req.fromName}) بتحويل أصواته إلى (${req.toName})؟\nاكتب سبب الرفض (اختياري):`, "");
+                if (null === why) return;
+
+                dbOps.rejectTransfer(cid, req.fromKey).then(() => {
+                    this.log("رفض تحويل أصوات", c.title, `${req.fromName} ➔ ${req.toName}`);
+                    dbOps.sendCmd(req.fromKey, "alert", `❌ تم رفض طلبك بتحويل الأصوات إلى (${req.toName})${why.trim() ? ` — السبب: ${why.trim()}` : ""}.`);
+                    showToast("تم رفض الطلب وإشعار العضو.");
+                });
+            });
         },
 
         renderVotes() {
@@ -3970,12 +4380,15 @@
             const q = (document.getElementById("lcea-vq")?.value || "").trim().toLowerCase();
             const list = Object.entries(st.data.votes || {})
                 .map(([k, v]) => Object.assign({ k, targetName: st.data.entries?.[v.target]?.displayName || v.target }, v))
-                .filter(x => !q || `${x.voterName} ${x.targetName} ${x.k}`.toLowerCase().includes(q))
+                .filter(x => !q || `${x.voterName} ${x.targetName} ${x.cheer || ""} ${x.k}`.toLowerCase().includes(q))
                 .sort((a, b) => (b.ts || 0) - (a.ts || 0));
             if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:14px;font-size:12px;">لا توجد أصوات.</div>'; return; }
             box.innerHTML = list.slice(0, 140).map(v => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:rgba(0,0,0,.22);border-radius:8px;margin-bottom:4px;font-size:11.5px;gap:6px;">
-                    <div style="flex:1;min-width:0;"><b>${h.esc(v.voterName || v.k)}</b> ➔ <b style="color:#D4AF37;">${h.esc(v.targetName)}</b> ${v.weight > 1 ? `<span class="lcea-tag lcea-t-gold">×${v.weight}</span>` : ""} <span style="color:#64748b;font-size:10px;">(${h.fmtDate(v.ts)})</span></div>
+                    <div style="flex:1;min-width:0;">
+                        <b>${h.esc(v.voterName || v.k)}</b> ➔ <b style="color:#D4AF37;">${h.esc(v.targetName)}</b> ${v.weight > 1 ? `<span class="lcea-tag lcea-t-gold">×${v.weight}</span>` : ""} <span style="color:#64748b;font-size:10px;">(${h.fmtDate(v.ts)})</span>
+                        ${v.cheer ? `<div style="color:#94a3b8;font-size:10.5px;margin-top:2px;">💬 «${h.esc(v.cheer)}»</div>` : ""}
+                    </div>
                     <button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-vdel" data-k="${h.esc(v.k)}" style="padding:3px 7px;">سحب</button>
                 </div>`).join("");
             box.querySelectorAll(".lcea-vdel").forEach(b => b.onclick = () => { if (st.adminCid && confirm("سحب هذا الصوت؟")) dbOps.removeVote(st.adminCid, b.dataset.k).then(() => showToast("🗑️ تم السحب")); });
@@ -4106,7 +4519,7 @@
             st.heavyCid = targetCid;
             st.heavyLoaded = !1;
             const defP = isLegacy(targetCid) ? ROYAL_DEFAULT_PRIZES.slice() : DEFAULT_PRIZES.slice();
-            st.data = { entries: {}, votes: {}, prizes: defP, presence: st.data.presence || {} };
+            st.data = { entries: {}, votes: {}, transfers: {}, prizes: defP, presence: st.data.presence || {} };
 
             const bind = (fullPath, fn) => {
                 const ref = st.db.ref(fullPath);
@@ -4140,13 +4553,18 @@
                         if (!v || !v.target) return;
                         norm[k] = {
                             target: v.target, category: "queen" === v.role ? "cat2" : "cat1",
-                            matchKey: null, voterName: v.voterName || k,
+                            matchKey: null, voterName: v.voterName || k, cheer: v.cheer || "",
                             weight: Math.max(1, Number(v.weight) || 1), ts: v.ts || 0
                         };
                     });
                     st.data.votes = norm;
                     if (st.heavyLoaded) scheduleRenderMain(350);
                     contestsAdmin.scheduleRefresh(400);
+                });
+                bind(`${LEGACY_ROOT}/transfers`, sn => {
+                    st.data.transfers = sn.val() || {};
+                    if (st.heavyLoaded) scheduleRenderMain(150);
+                    contestsAdmin.scheduleRefresh(150);
                 });
                 bind(`${LEGACY_ROOT}/prizes`, sn => {
                     const v = sn.val();
@@ -4166,6 +4584,11 @@
                     if (st.heavyLoaded) scheduleRenderMain(350);
                     contestsAdmin.scheduleRefresh(400);
                 });
+                bind(`${ROOT}/data/${targetCid}/transfers`, sn => {
+                    st.data.transfers = sn.val() || {};
+                    if (st.heavyLoaded) scheduleRenderMain(150);
+                    contestsAdmin.scheduleRefresh(150);
+                });
                 bind(`${ROOT}/data/${targetCid}/prizes`, sn => {
                     const v = sn.val();
                     st.data.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice();
@@ -4181,8 +4604,7 @@
                 st.heavyRefs = [];
                 st.heavyCid = null;
                 st.heavyLoaded = !1;
-                // تفريغ الذاكرة من الصور والمشاركات فور إغلاق النافذة
-                st.data = { entries: {}, votes: {}, prizes: DEFAULT_PRIZES.slice(), presence: {} };
+                st.data = { entries: {}, votes: {}, transfers: {}, prizes: DEFAULT_PRIZES.slice(), presence: {} };
             }, 400);
         }
     }
