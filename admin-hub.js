@@ -67,6 +67,15 @@ const PANELS = [
     color: "#D4AF37",
     badgeId: "lfb-admin-badge",
     fallback: () => window.LaylFeedback?.openAdmin?.()
+    },
+    {
+    id: "btn-lce-admin",
+    title: "إدارة المسابقات",
+    desc: "المسابقات، المراحل، المشاركات، الأصوات والرادار",
+    icon: "fas fa-crown",
+    bg: "linear-gradient(135deg, #422006, #a16207)",
+    color: "#fbbf24",
+    fallback: () => window.LaylContests?.openAdmin?.()
   }
 ];
 
