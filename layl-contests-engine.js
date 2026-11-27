@@ -75,6 +75,11 @@
             soft: "rgba(212,175,55,.16)", border: "rgba(212,175,55,.46)", text: "#fde68a",
             shellBg: "linear-gradient(180deg,#161829 0%,#0b0c14 100%)", btnText: "#111111"
         },
+        obsidian: {
+            id: "obsidian", name: "فحمي وذهبي فاخر", accent: "#fbbf24", accent2: "#b45309",
+            soft: "rgba(251,191,36,.14)", border: "rgba(251,191,36,.42)", text: "#fef3c7",
+            shellBg: "linear-gradient(180deg,#111115 0%,#060608 100%)", btnText: "#111111"
+        },
         maroon: {
             id: "maroon", name: "عنابي وذهبي", accent: "#D4AF37", accent2: "#9f1239",
             soft: "rgba(159,18,57,.24)", border: "rgba(212,175,55,.48)", text: "#fecdd3",
@@ -112,7 +117,7 @@
         { key: "music_taste", label: "🎵 الذوق الموسيقي", data: { title: "مسابقة أفضل ذوق موسيقي", subtitle: "شارك برابط أغنيتك أو شيلتك المفضلة — التصويت أعمى!", template: "media", theme: "purple", icon: "fa-music", mode: "single", nomHours: 48, voteHours: 48, blindVoting: !0, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
         { key: "lucky_raffle", label: "🎰 سحب عشوائي", data: { title: "السحب العشوائي الكبير", subtitle: "احجز تذكرتك بضغطة زر وادخل القرعة على جوائز شات ليل!", template: "raffle", theme: "emerald", icon: "fa-dice", mode: "single", nomHours: 24, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3 } },
         { key: "fast_quiz", label: "⚡ أسرع إجابة", data: { title: "تحدي اللغز السريع", subtitle: "أول الأعضاء إجابةً بالشكل الصحيح يتوّجون فوراً!", template: "quiz", theme: "blue", icon: "fa-bolt", mode: "single", nomHours: 12, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3, quizPrompt: "اكتب سؤالك أو اللغز هنا...", correctAnswer: "" } },
-        { key: "voice_code", label: "🔑 صيد الكود", data: { title: "صيد الكود السري (الصوتي)", subtitle: "استمع للكود السري في الروم الصوتي وسجّله هنا بأسرع وقت!", template: "quiz", theme: "gold", icon: "fa-key", mode: "single", nomHours: 6, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3, quizPrompt: "أدخل الكود السري الذي تم ذكره في البث الصوتي:", correctAnswer: "" } },
+        { key: "voice_code", label: "🔑 صيد الكود", data: { title: "صيد الكود السري (الصوتي)", subtitle: "استمع للكود السري في الروم الصوتي وسجّله هنا بأسرع وقت!", template: "quiz", theme: "obsidian", icon: "fa-key", mode: "single", nomHours: 6, voteHours: 0, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 3, quizPrompt: "أدخل الكود السري الذي تم ذكره في البث الصوتي:", correctAnswer: "" } },
         { key: "knockout", label: "⚔️ خروج المغلوب", data: { title: "بطولة نجوم ليل (1 ضد 1)", subtitle: "مواجهات إقصائية مباشرة حتى يتوّج بطل واحد على العرش!", template: "bracket", theme: "maroon", icon: "fa-trophy", mode: "single", nomHours: 24, voteHours: 48, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !0, maxWinners: 1 } },
         { key: "quick_poll", label: "🗳️ استفتاء مباشر", data: { title: "استفتاء شات ليل الأسبوعي", subtitle: "شارك برأيك واختر الأفضل من الخيارات المطروحة", template: "poll", theme: "blue", icon: "fa-poll", mode: "single", nomHours: 0, voteHours: 48, blindVoting: !1, hideLiveVotes: !1, showInMenu: !0, pinTop: !1, maxWinners: 1 } },
         { key: "match_predict", label: "🎯 توقع نتيجة", data: { title: "تحدي توقع النتيجة", subtitle: "سجّل توقعك قبل إغلاق الوقت وادخل قائمة الفائزين", template: "prediction", theme: "emerald", icon: "fa-bullseye", mode: "single", nomHours: 24, voteHours: 0, blindVoting: !0, hideLiveVotes: !0, showInMenu: !0, pinTop: !1, maxWinners: 5 } }
@@ -138,6 +143,15 @@
 
     const DEFAULT_RULES = "• يحق لكل عضو المشاركة مرة واحدة فقط في المسابقة.\n• التصويت حق لكل عضو مسجل مرة واحدة (أو حسب نظام الجولات/الفئات).\n• يُمنع التلاعب أو استخدام حسابات وهمية ويؤدي للاستبعاد الفوري.\n• في حال تعادل المركز الأول تحسم الإدارة النتيجة بالصوت الحاسم.";
 
+    const DEFAULT_MANAGER_PERMS = {
+        control: !0,
+        entries: !0,
+        votes: !0,
+        radar: !0,
+        prizes: !0,
+        broadcast: !0
+    };
+
     const DEFAULT_GLOBAL = {
         enabled: !0,
         disabledMsg: "نظام المسابقات متوقف مؤقتاً للصيانة 🏆",
@@ -154,6 +168,7 @@
         allowGuestsVote: !1,
         allowSelfVote: !1,
         allowVoteChange: !1,
+        allowEditEntry: !0,
         requireApproval: !1,
         blindVoting: !1,
         hideLiveVotes: !1,
@@ -164,17 +179,18 @@
         welcomeText: "",
         welcomeVersion: 0,
         rulesText: DEFAULT_RULES,
-        managers: []
+        managers: [],
+        managerPerms: Object.assign({}, DEFAULT_MANAGER_PERMS)
     };
 
     const LEGACY_DEFAULT_SETTINGS = {
         enabled: !0,
         disabledMsg: "مسابقة ملك وملكة الشات متوقفة مؤقتاً للصيانة 👑",
-        allowGuestsVote: !1, allowSelfVote: !1, allowVoteChange: !1,
+        allowGuestsVote: !1, allowSelfVote: !1, allowVoteChange: !1, allowEditEntry: !0,
         requireApproval: !1, hideLiveVotes: !1, showToastAd: !0,
         maxCandidates: 0, vipVoteWeight: 2, bannerText: "", bannerTheme: "gold",
         welcomeText: "", welcomeVersion: 0, rulesText: DEFAULT_RULES,
-        vipUsers: [], subAdmins: []
+        vipUsers: [], subAdmins: [], managerPerms: Object.assign({}, DEFAULT_MANAGER_PERMS)
     };
 
     const st = {
@@ -219,6 +235,10 @@
         timerId: null,
         toastTimer: null,
         adTimer: null,
+        renderTimer: null,
+        adminRefreshTimer: null,
+        menuSyncTimer: null,
+        lastVoteAt: 0,
         fbTries: 0,
         confettiFiredKey: null
     };
@@ -232,7 +252,7 @@
     if (!document.getElementById("lce-menu-btn-style")) {
         const ms = document.createElement("style");
         ms.id = "lce-menu-btn-style";
-        ms.textContent = `@keyframes lceGoldPulse{0%,100%{opacity:.25}50%{opacity:1}}`;
+        ms.textContent = `@keyframes lceGoldPulse{0%,100%{opacity:.3}50%{opacity:.95}}@media(prefers-reduced-motion:reduce){.lce-pulse-off::before{animation:none!important}}`;
         (document.head || document.documentElement).appendChild(ms);
     }
 
@@ -279,6 +299,7 @@
                 allowGuestsVote: Boolean(oSet.allowGuestsVote),
                 allowSelfVote: Boolean(oSet.allowSelfVote),
                 allowVoteChange: Boolean(oSet.allowVoteChange),
+                allowEditEntry: !1 !== oSet.allowEditEntry,
                 requireApproval: Boolean(oSet.requireApproval),
                 blindVoting: !1,
                 hideLiveVotes: Boolean(oSet.hideLiveVotes),
@@ -289,7 +310,8 @@
                 welcomeText: oSet.welcomeText || "",
                 welcomeVersion: Number(oSet.welcomeVersion) || 0,
                 rulesText: oSet.rulesText || DEFAULT_RULES,
-                managers: Array.isArray(oSet.subAdmins) ? oSet.subAdmins : []
+                managers: Array.isArray(oSet.subAdmins) ? oSet.subAdmins : [],
+                managerPerms: Object.assign({}, DEFAULT_MANAGER_PERMS, oSet.managerPerms || {})
             })
         };
     }
@@ -327,13 +349,16 @@
             if (isLegacy(cid)) return buildLegacyMeta();
             const raw = st.index ? st.index[cid] : null;
             if (!raw) return null;
-            return Object.assign({ id: cid, isLegacy: !1 }, raw, { cfg: Object.assign({}, DEFAULT_CONTEST_CFG, raw.cfg || {}) });
+            const cfg = Object.assign({}, DEFAULT_CONTEST_CFG, raw.cfg || {});
+            cfg.managerPerms = Object.assign({}, DEFAULT_MANAGER_PERMS, raw.cfg?.managerPerms || {});
+            return Object.assign({ id: cid, isLegacy: !1 }, raw, { cfg });
         },
         getAllContestIds() {
             const ids = Object.keys(st.index || {});
             if (buildLegacyMeta() && !ids.includes(LEGACY_CID)) ids.unshift(LEGACY_CID);
             return ids;
         },
+        // ضغط ذكي محسّن لتقليل استهلاك الرام والإنترنت على الجوال بنسبة ~45%
         compressImg(file, mode = "avatar") {
             return new Promise((resolve, reject) => {
                 if (!file || (file.type && !file.type.startsWith("image/"))) return reject("الرجاء اختيار ملف صورة صالح");
@@ -344,25 +369,25 @@
                         const cv = document.createElement("canvas");
                         const ctx = cv.getContext("2d");
                         if ("photo" === mode) {
-                            const MAX = 900;
+                            const MAX = 680;
                             let w = img.width, ht = img.height;
                             if (w > ht) { if (w > MAX) { ht = Math.round(ht * MAX / w); w = MAX; } }
                             else { if (ht > MAX) { w = Math.round(w * MAX / ht); ht = MAX; } }
                             cv.width = w; cv.height = ht;
                             ctx.drawImage(img, 0, 0, w, ht);
-                            let data = cv.toDataURL("image/webp", 0.72);
-                            if (!data.startsWith("data:image/webp") || data.length > 210000) data = cv.toDataURL("image/jpeg", 0.74);
-                            if (data.length > 260000) data = cv.toDataURL("image/jpeg", 0.56);
+                            let data = cv.toDataURL("image/webp", 0.66);
+                            if (!data.startsWith("data:image/webp") || data.length > 135000) data = cv.toDataURL("image/jpeg", 0.66);
+                            if (data.length > 165000) data = cv.toDataURL("image/jpeg", 0.5);
                             URL.revokeObjectURL(url);
                             resolve(data);
                         } else {
-                            const MAX = 220;
+                            const MAX = 180;
                             const side = Math.min(img.width, img.height);
                             const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
                             cv.width = MAX; cv.height = MAX;
                             ctx.drawImage(img, sx, sy, side, side, 0, 0, MAX, MAX);
-                            let data = cv.toDataURL("image/jpeg", 0.78);
-                            if (data.length > 65000) data = cv.toDataURL("image/jpeg", 0.6);
+                            let data = cv.toDataURL("image/jpeg", 0.72);
+                            if (data.length > 40000) data = cv.toDataURL("image/jpeg", 0.55);
                             URL.revokeObjectURL(url);
                             resolve(data);
                         }
@@ -414,6 +439,14 @@
             if (h.isSuperAdmin() || h.isGlobalSubAdmin()) return !0;
             if (cid) return h.isContestManager(cid);
             return h.getAllContestIds().some(id => h.isContestManager(id));
+        },
+        // نظام الصلاحيات التفصيلي لمديري المسابقات
+        canPerm(cid, perm) {
+            if (h.isSuperAdmin() || h.isGlobalSubAdmin()) return !0;
+            if (!cid || !h.isContestManager(cid)) return !1;
+            const c = h.getContest(cid);
+            const perms = c?.cfg?.managerPerms || DEFAULT_MANAGER_PERMS;
+            return !1 !== perms[perm];
         },
         isVip(cid = null) {
             const u = st.myUser || "", s = h.san(u);
@@ -501,7 +534,7 @@
         fireConfetti() {
             const run = () => {
                 if (!window.confetti) return;
-                window.confetti({ particleCount: window.innerWidth < 600 ? 55 : 115, spread: 80, origin: { y: 0.6 }, colors: ["#D4AF37", "#fbbf24", "#ffffff", "#ef4444", "#a855f7", "#38bdf8", "#34d399"], zIndex: 2147483647 });
+                window.confetti({ particleCount: window.innerWidth < 600 ? 48 : 105, spread: 78, origin: { y: 0.6 }, colors: ["#D4AF37", "#fbbf24", "#ffffff", "#ef4444", "#a855f7", "#38bdf8", "#34d399"], zIndex: 2147483647 });
             };
             if (window.confetti) return run();
             const sc = document.createElement("script");
@@ -614,6 +647,32 @@
             if (isLegacy(cid)) ps.push(st.db.ref(`${LEGACY_ROOT}/broadcast`).set({ text, theme, ts: payload.ts, by: payload.by }));
             return Promise.all(ps);
         },
+        cloneContest(cid) {
+            if (!st.db) return Promise.reject();
+            const src = h.getContest(cid);
+            if (!src) return Promise.reject();
+            const now = Date.now(), newCid = h.genId("cnt");
+            const noSub = "poll" === src.template, noVote = ["prediction", "raffle", "quiz"].includes(src.template);
+            const nomEnd = noSub ? now - 1000 : now + 48 * 36e5;
+            const voteEnd = noVote ? nomEnd : nomEnd + 72 * 36e5;
+            const copyMeta = {
+                title: `${src.title} (نسخة)`,
+                subtitle: src.subtitle || "",
+                template: src.template, theme: src.theme, icon: src.icon, mode: src.mode,
+                cat1Label: src.cat1Label || "الفئة الأولى", cat1Icon: src.cat1Icon || "👑",
+                cat2Label: src.cat2Label || "الفئة الثانية", cat2Icon: src.cat2Icon || "👸",
+                status: "active", season: 1, nomEnd, voteEnd, paused: !1, voteMultiplier: 1,
+                showInMenu: !1, pinTop: !1, resultsPublished: !1,
+                maxWinners: Number(src.maxWinners) || 1,
+                quizPrompt: src.quizPrompt || "", correctAnswer: src.correctAnswer || "",
+                createdBy: st.myUser || "الإدارة", createdAt: now,
+                cfg: Object.assign({}, src.cfg)
+            };
+            const up = {};
+            up[`index/${newCid}`] = copyMeta;
+            up[`data/${newCid}/prizes`] = Array.isArray(st.data.prizes) && st.data.prizes.length ? st.data.prizes : DEFAULT_PRIZES;
+            return st.db.ref(ROOT).update(up).then(() => newCid);
+        },
         startNewSeason(cid, c) {
             if (!st.db) return Promise.reject();
             const noSub = "poll" === c.template, noVote = ["prediction", "raffle", "quiz"].includes(c.template);
@@ -717,12 +776,12 @@
             });
         if (!pinnedIds.length) return;
         const btn = document.getElementById(`btn-lce-c-${pinnedIds[0]}`);
-        if (!btn || !btn.parentElement) return;
+        if (!btn || !btn.parentElement || null === btn.offsetParent) return;
         const list = btn.parentElement;
         const disp = window.getComputedStyle(list).display || "";
         if (disp.includes("grid")) return;
         const visible = Array.from(list.children).filter(el =>
-            el.tagName === "BUTTON" && el !== btn && window.getComputedStyle(el).display !== "none"
+            el.tagName === "BUTTON" && el !== btn && el.offsetParent !== null
         );
         if (!visible.length) return;
         const firstTop = visible[0].offsetTop;
@@ -741,29 +800,43 @@
 
     function computeVoteCounts(entriesObj, votesObj, matchKey = null) {
         const counts = {};
-        Object.keys(entriesObj || {}).forEach(k => {
-            const e = entriesObj[k];
-            if (e) counts[k] = matchKey ? 0 : (Number(e.bonusVotes) || 0);
-        });
-        Object.values(votesObj || {}).forEach(v => {
-            if (!v || !v.target || void 0 === counts[v.target]) return;
-            if (matchKey && v.matchKey !== matchKey) return;
-            counts[v.target] += Math.max(1, Number(v.weight) || 1);
-        });
+        if (entriesObj) {
+            for (const k in entriesObj) {
+                const e = entriesObj[k];
+                if (e) counts[k] = matchKey ? 0 : (Number(e.bonusVotes) || 0);
+            }
+        }
+        if (votesObj) {
+            for (const vk in votesObj) {
+                const v = votesObj[vk];
+                if (!v || !v.target || void 0 === counts[v.target]) continue;
+                if (matchKey && v.matchKey !== matchKey) continue;
+                counts[v.target] += Math.max(1, Number(v.weight) || 1);
+            }
+        }
         return counts;
     }
 
     function getApprovedEntries(entriesObj, catFilter = null) {
-        return Object.entries(entriesObj || {})
-            .filter(([, e]) => e && "pending" !== e.status && (!catFilter || "all" === catFilter || e.category === catFilter))
-            .map(([k, e]) => Object.assign({ key: k }, e));
+        const out = [];
+        if (!entriesObj) return out;
+        for (const k in entriesObj) {
+            const e = entriesObj[k];
+            if (e && "pending" !== e.status && (!catFilter || "all" === catFilter || e.category === catFilter)) {
+                out.push(Object.assign({ key: k }, e));
+            }
+        }
+        return out;
     }
 
     function getTiedLeaders(entriesObj, counts, catFilter = null) {
         const list = getApprovedEntries(entriesObj, catFilter);
         if (!list.length) return [];
         let max = -1;
-        list.forEach(c => { const v = counts[c.key] || 0; if (v > max) max = v; });
+        for (let i = 0; i < list.length; i++) {
+            const v = counts[list[i].key] || 0;
+            if (v > max) max = v;
+        }
         if (max <= 0) return [];
         return list.filter(c => (counts[c.key] || 0) === max);
     }
@@ -785,7 +858,8 @@
         }
         if ("quiz" === c.template) {
             const maxW = Math.max(1, Number(c.maxWinners) || 3);
-            const wonCnt = entriesObj ? Object.values(entriesObj).filter(e => e && e.isWinner).length : 0;
+            let wonCnt = 0;
+            if (entriesObj) { for (const k in entriesObj) { if (entriesObj[k]?.isWinner) wonCnt++; } }
             if (c.resultsPublished || (entriesObj && wonCnt >= maxW) || now >= (c.nomEnd || 0)) {
                 return { phase: "results", remaining: 0, paused: !1 };
             }
@@ -830,7 +904,7 @@
         ref.set({ name: st.myUser || k, status: statusTxt, ts: Date.now() }).catch(() => {});
     }
 
-    function showToast(msg, ms = 3800, theme = "") {
+    function showToast(msg, ms = 3600, theme = "") {
         ensureBaseStyles();
         let el = document.getElementById("lce-toast");
         if (!el) {
@@ -864,7 +938,7 @@
         document.getElementById("lce-ad-msg").textContent = msg;
         clearTimeout(st.adTimer);
         requestAnimationFrame(() => ad.classList.add("show"));
-        st.adTimer = setTimeout(() => ad.classList.remove("show"), 12000);
+        st.adTimer = setTimeout(() => ad.classList.remove("show"), 11000);
     }
 
     function announceContestPhase(cid, c) {
@@ -899,8 +973,8 @@
         let tries = 0;
         const iv = setInterval(() => {
             if (isChatReady()) { clearInterval(iv); setTimeout(fire, 1500); }
-            else if (++tries >= 120) clearInterval(iv);
-        }, 800);
+            else if (++tries >= 100) clearInterval(iv);
+        }, 900);
     }
 
     function ensureBaseStyles() {
@@ -908,14 +982,15 @@
         const s = document.createElement("style");
         s.id = "lce-styles";
         s.textContent = `
-        .lce-ov{--lce-ac:#D4AF37;--lce-ac2:#f59e0b;--lce-soft:rgba(212,175,55,.16);--lce-bd:rgba(212,175,55,.42);--lce-tx:#fde68a;--lce-bt:#111;position:fixed;inset:0;background:rgba(5,7,14,.94);z-index:2147483642;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);direction:rtl;font-family:system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;padding:12px;box-sizing:border-box}
+        .lce-ov{--lce-ac:#D4AF37;--lce-ac2:#f59e0b;--lce-soft:rgba(212,175,55,.16);--lce-bd:rgba(212,175,55,.42);--lce-tx:#fde68a;--lce-bt:#111;position:fixed;inset:0;background:rgba(5,7,14,.94);z-index:2147483642;display:none;align-items:center;justify-content:center;direction:rtl;font-family:system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;padding:12px;box-sizing:border-box}
+        @media(min-width:769px){.lce-ov{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
         .lce-ov.open{display:flex}
-        .lce-shell{background:linear-gradient(180deg,#161829 0%,#0b0c14 100%);border:1px solid var(--lce-bd);border-radius:22px;width:100%;max-width:960px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-shadow:0 30px 70px rgba(0,0,0,.9),0 0 40px var(--lce-soft);position:relative}
+        .lce-shell{background:linear-gradient(180deg,#161829 0%,#0b0c14 100%);border:1px solid var(--lce-bd);border-radius:22px;width:100%;max-width:960px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-shadow:0 24px 60px rgba(0,0,0,.88);position:relative;contain:layout style}
         .lce-hdr{padding:13px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,var(--lce-soft),rgba(255,255,255,.02));border-bottom:1px solid var(--lce-bd);flex-shrink:0;gap:10px}
-        .lce-brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:1.08rem;color:var(--lce-ac);min-width:0}
+        .lce-brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:1.06rem;color:var(--lce-ac);min-width:0}
         .lce-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .lce-hbtns{display:flex;gap:6px;align-items:center;flex-shrink:0}
-        .lce-ibtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;height:34px;padding:0 10px;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:.2s;font-family:inherit}
+        .lce-ibtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;height:34px;padding:0 10px;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:background .18s,border-color .18s;font-family:inherit}
         .lce-ibtn:hover{background:var(--lce-soft);border-color:var(--lce-ac);color:#fff}
         .lce-ibtn.sq{width:34px;padding:0;justify-content:center}
         .lce-ibtn.x:hover{background:#ef4444;border-color:#ef4444}
@@ -923,22 +998,22 @@
         .lce-banner.th-red{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.42);color:#fecaca}
         .lce-banner.th-blue{background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.42);color:#bfdbfe}
         .lce-mult-bar{margin:8px 18px 0;padding:8px 14px;border-radius:10px;background:linear-gradient(90deg,rgba(245,158,11,.22),rgba(236,72,153,.18));border:1px solid rgba(251,191,36,.5);color:#fef08a;font-size:.84rem;font-weight:800;text-align:center;display:none;flex-shrink:0}
-        .lce-body{flex:1;overflow-y:auto;padding:18px 20px 26px;-webkit-overflow-scrolling:touch}
+        .lce-body{flex:1;overflow-y:auto;padding:18px 20px 26px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
         .lce-body::-webkit-scrollbar{width:6px}
         .lce-body::-webkit-scrollbar-thumb{background:var(--lce-bd);border-radius:10px}
         .lce-hero{text-align:center;padding:18px 16px;background:radial-gradient(circle at top,var(--lce-soft),transparent 72%);border:1px solid var(--lce-bd);border-radius:18px;margin-bottom:16px}
-        .lce-hero h2{margin:6px 0 8px;font-size:1.38rem;font-weight:900;color:var(--lce-ac)}
+        .lce-hero h2{margin:6px 0 8px;font-size:1.35rem;font-weight:900;color:var(--lce-ac)}
         .lce-hero p{margin:0 auto;max-width:580px;color:#cbd5e1;font-size:.88rem;line-height:1.65}
-        .lce-timer{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:rgba(0,0,0,.5);border:1px solid var(--lce-bd);color:var(--lce-tx);padding:7px 18px;border-radius:30px;font-family:monospace;font-size:1.06rem;font-weight:900;letter-spacing:1px;direction:ltr}
-        .lce-btn{background:linear-gradient(135deg,var(--lce-ac),var(--lce-ac2));color:var(--lce-bt);border:none;padding:10px 18px;border-radius:12px;font-weight:900;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s;font-family:inherit;box-shadow:0 6px 20px var(--lce-soft)}
-        .lce-btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.08)}
+        .lce-timer{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:rgba(0,0,0,.5);border:1px solid var(--lce-bd);color:var(--lce-tx);padding:7px 18px;border-radius:30px;font-family:monospace;font-size:1.05rem;font-weight:900;letter-spacing:1px;direction:ltr}
+        .lce-btn{background:linear-gradient(135deg,var(--lce-ac),var(--lce-ac2));color:var(--lce-bt);border:none;padding:10px 18px;border-radius:12px;font-weight:900;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,filter .15s;font-family:inherit;box-shadow:0 4px 14px var(--lce-soft)}
+        .lce-btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.06)}
         .lce-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
         .lce-btn-out{background:rgba(255,255,255,.06);color:var(--lce-tx);border:1px solid var(--lce-bd);box-shadow:none}
         .lce-btn-out:hover{background:var(--lce-soft)}
-        .lce-btn-red{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 6px 18px rgba(239,68,68,.25)}
+        .lce-btn-red{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.24)}
         .lce-form{background:rgba(255,255,255,.03);border:1px solid var(--lce-bd);border-radius:16px;padding:16px;margin-bottom:18px}
         .lce-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-        .lce-role-opt{background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;cursor:pointer;text-align:center;transition:.2s;color:#cbd5e1;font-weight:800;font-size:.9rem}
+        .lce-role-opt{background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;cursor:pointer;text-align:center;transition:border-color .18s,background .18s;color:#cbd5e1;font-weight:800;font-size:.9rem}
         .lce-role-opt.sel-c1{border-color:#38bdf8;background:rgba(56,189,248,.14);color:#7dd3fc}
         .lce-role-opt.sel-c2{border-color:#ec4899;background:rgba(236,72,153,.14);color:#f9a8d4}
         .lce-inp{width:100%;box-sizing:border-box;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.14);color:#fff;padding:10px 14px;border-radius:12px;font-family:inherit;font-size:.9rem;outline:none}
@@ -946,78 +1021,77 @@
         .lce-pick-row{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.32);border:1px dashed var(--lce-bd);border-radius:12px;padding:9px 12px;margin-bottom:10px}
         .lce-pick-thumb{width:46px;height:46px;border-radius:50%;border:2px solid var(--lce-ac);background:#1e293b;display:flex;align-items:center;justify-content:center;color:var(--lce-ac);font-size:18px;flex-shrink:0;overflow:hidden}
         .lce-pick-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-        .lce-upload-zone{border:2px dashed var(--lce-bd);border-radius:15px;padding:24px 16px;background:var(--lce-soft);cursor:pointer;text-align:center;margin-bottom:12px;transition:.2s}
-        .lce-upload-zone:hover{filter:brightness(1.12)}
-        .lce-photo-prev{max-width:100%;max-height:260px;border-radius:12px;border:2px solid var(--lce-ac);display:block;margin:0 auto 12px;cursor:pointer;object-fit:contain;background:#000}
+        .lce-upload-zone{border:2px dashed var(--lce-bd);border-radius:15px;padding:24px 16px;background:var(--lce-soft);cursor:pointer;text-align:center;margin-bottom:12px;transition:filter .18s}
+        .lce-upload-zone:hover{filter:brightness(1.1)}
+        .lce-photo-prev{max-width:100%;max-height:240px;border-radius:12px;border:2px solid var(--lce-ac);display:block;margin:0 auto 12px;cursor:pointer;object-fit:contain;background:#000}
         .lce-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-        .lce-fbtn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#cbd5e1;padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+        .lce-fbtn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#cbd5e1;padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
         .lce-fbtn.active{background:var(--lce-ac);color:var(--lce-bt);border-color:var(--lce-ac)}
-        .lce-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:14px}
-        .lce-hub-card{background:linear-gradient(180deg,rgba(28,31,50,.96),rgba(14,16,28,.98));border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;cursor:pointer;transition:.22s;text-align:right}
-        .lce-hub-card:hover{transform:translateY(-3px);border-color:var(--hc-ac,#D4AF37);box-shadow:0 12px 28px rgba(0,0,0,.5)}
+        .lce-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+        .lce-hub-card{background:linear-gradient(180deg,#1c1f32,#0e101c);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;cursor:pointer;transition:transform .18s,border-color .18s;text-align:right;contain:layout style}
+        .lce-hub-card:hover{transform:translateY(-2px);border-color:var(--hc-ac,#D4AF37)}
         .lce-hub-top{display:flex;align-items:center;gap:11px}
         .lce-hub-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
         .lce-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
-        .lce-card{background:linear-gradient(180deg,rgba(30,33,54,.95),rgba(17,19,32,.98));border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:15px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;transition:.22s;overflow:hidden}
-        .lce-card:hover{transform:translateY(-3px);border-color:var(--lce-bd);box-shadow:0 12px 26px rgba(0,0,0,.45)}
-        .lce-card.voted{border-color:#10b981;box-shadow:0 0 22px rgba(16,185,129,.22)}
-        .lce-card.winner-mark{border-color:#10b981;background:linear-gradient(180deg,rgba(16,185,129,.16),rgba(17,19,32,.98))}
+        .lce-card{background:linear-gradient(180deg,#1e2136,#111320);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:15px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;transition:border-color .18s;overflow:hidden;contain:layout style}
+        .lce-card:hover{border-color:var(--lce-bd)}
+        .lce-card.voted{border-color:#10b981;box-shadow:0 0 16px rgba(16,185,129,.2)}
+        .lce-card.winner-mark{border-color:#10b981;background:linear-gradient(180deg,#122925,#111320)}
         .lce-card.cat1-card{border-top:3px solid #38bdf8}
         .lce-card.cat2-card{border-top:3px solid #ec4899}
         .lce-photo-card{padding:0}
         .lce-photo-media{width:100%;height:185px;object-fit:cover;display:block;cursor:zoom-in;background:#090b12;border-bottom:1px solid rgba(255,255,255,.08)}
         .lce-yt-wrap{position:relative;width:100%;height:168px;background:#05070e;cursor:pointer;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.08)}
-        .lce-yt-wrap img{width:100%;height:100%;object-fit:cover;display:block;opacity:.88;transition:.25s}
-        .lce-yt-wrap:hover img{opacity:1;transform:scale(1.03)}
-        .lce-yt-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(239,68,68,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 6px 24px rgba(0,0,0,.75);border:2px solid rgba(255,255,255,.8)}
+        .lce-yt-wrap img{width:100%;height:100%;object-fit:cover;display:block;opacity:.88}
+        .lce-yt-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 4px 16px rgba(0,0,0,.7);border:2px solid rgba(255,255,255,.8)}
         .lce-duo-avs{display:flex;align-items:center;justify-content:center;margin:14px 0 8px}
-        .lce-duo-avs .lce-av{margin:0;width:68px;height:68px}
+        .lce-duo-avs .lce-av{margin:0;width:66px;height:66px}
         .lce-duo-avs .lce-av:last-child{margin-right:-16px}
-        .lce-duo-heart{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f43f5e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:2;margin:0 -8px;border:2px solid #131627;box-shadow:0 3px 10px rgba(0,0,0,.5)}
-        .lce-match-card{background:linear-gradient(180deg,rgba(30,33,54,.96),rgba(14,16,28,.98));border:1px solid var(--lce-bd);border-radius:18px;padding:15px;margin-bottom:14px}
+        .lce-duo-heart{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f43f5e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:2;margin:0 -8px;border:2px solid #131627}
+        .lce-match-card{background:linear-gradient(180deg,#1e2136,#0e101c);border:1px solid var(--lce-bd);border-radius:18px;padding:15px;margin-bottom:14px;contain:layout style}
         .lce-match-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
-        .lce-vs-badge{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-weight:900;font-size:.85rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(239,68,68,.4);border:2px solid rgba(255,255,255,.25)}
+        .lce-vs-badge{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-weight:900;font-size:.85rem;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25)}
         .lce-match-side{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center}
         .lce-match-side.voted{border-color:#10b981;background:rgba(16,185,129,.1)}
         .lce-photo-inner{padding:12px 13px 14px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;flex:1}
-        .lce-role-tag{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:800;z-index:2;backdrop-filter:blur(6px)}
-        .lce-role-tag.cat1{background:rgba(15,23,42,.82);color:#7dd3fc;border:1px solid rgba(56,189,248,.45)}
-        .lce-role-tag.cat2{background:rgba(15,23,42,.82);color:#f9a8d4;border:1px solid rgba(236,72,153,.45)}
-        .lce-rank-num{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.68);color:var(--lce-ac);font-size:.76rem;font-weight:900;padding:3px 8px;border-radius:10px;border:1px solid var(--lce-bd);z-index:2}
+        .lce-role-tag{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:800;z-index:2}
+        .lce-role-tag.cat1{background:rgba(15,23,42,.92);color:#7dd3fc;border:1px solid rgba(56,189,248,.45)}
+        .lce-role-tag.cat2{background:rgba(15,23,42,.92);color:#f9a8d4;border:1px solid rgba(236,72,153,.45)}
+        .lce-rank-num{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.78);color:var(--lce-ac);font-size:.76rem;font-weight:900;padding:3px 8px;border-radius:10px;border:1px solid var(--lce-bd);z-index:2}
         .lce-spot-bdg{margin-top:4px;background:linear-gradient(135deg,var(--lce-ac),var(--lce-ac2));color:var(--lce-bt);font-size:.7rem;font-weight:900;padding:2px 9px;border-radius:12px}
-        .lce-av{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--lce-ac);background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--lce-ac);margin:14px 0 8px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+        .lce-av{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--lce-ac);background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--lce-ac);margin:14px 0 8px}
         .lce-cname{font-size:.98rem;font-weight:800;color:#fff;margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
         #lce-modal .lce-cname .user-identity,#lce-modal .lce-cname .user-identity-name,#lce-modal .lce-cname .message-username,#lce-modal .lce-cname span{background:transparent!important;background-color:transparent!important;background-image:none!important;box-shadow:none!important;border:none!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
         #lce-modal .lce-cname .user-identity::before,#lce-modal .lce-cname .user-identity::after,#lce-modal .lce-cname .user-identity-name::before,#lce-modal .lce-cname .user-identity-name::after{background:transparent!important;background-image:none!important;box-shadow:none!important}
-        .lce-slogan{font-size:.82rem;color:#94a3b8;line-height:1.55;min-height:32px;margin-bottom:9px;word-break:break-word;white-space:pre-line}
+        .lce-slogan{font-size:.82rem;color:#94a3b8;line-height:1.55;min-height:30px;margin-bottom:9px;word-break:break-word;white-space:pre-line}
         .lce-talent-box{width:100%;box-sizing:border-box;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px;margin:8px 0 10px;text-align:right;font-size:.86rem;line-height:1.7;color:#e2e8f0;max-height:135px;overflow:hidden;position:relative;white-space:pre-line;cursor:pointer}
-        .lce-bar-wrap{width:100%;background:rgba(255,255,255,.07);height:7px;border-radius:10px;overflow:hidden;margin-bottom:6px}
-        .lce-bar-fill{height:100%;background:linear-gradient(90deg,var(--lce-ac),var(--lce-ac2));border-radius:10px;transition:width .4s ease}
+        .lce-bar-wrap{width:100%;background:rgba(255,255,255,.08);height:7px;border-radius:10px;overflow:hidden;margin-bottom:6px}
+        .lce-bar-fill{height:100%;background:linear-gradient(90deg,var(--lce-ac),var(--lce-ac2));border-radius:10px;transition:width .3s ease}
         .lce-vstat{font-size:.78rem;color:var(--lce-tx);font-weight:700;margin-bottom:10px}
         .lce-cacts{display:flex;gap:6px;width:100%;margin-top:auto}
-        .lce-podium{background:linear-gradient(135deg,var(--lce-soft),rgba(20,22,38,.95));border:2px solid var(--lce-ac);border-radius:20px;padding:24px 18px;text-align:center;position:relative;margin-bottom:18px;box-shadow:0 0 35px var(--lce-soft)}
-        .lce-podium .lce-av{width:104px;height:104px;border-width:3px;margin:10px auto 12px}
-        .lce-podium-img{max-width:100%;max-height:280px;border-radius:14px;border:2px solid var(--lce-ac);margin:12px auto;display:block;object-fit:contain;background:#000;cursor:zoom-in}
+        .lce-podium{background:linear-gradient(135deg,var(--lce-soft),#141626);border:2px solid var(--lce-ac);border-radius:20px;padding:24px 18px;text-align:center;position:relative;margin-bottom:18px}
+        .lce-podium .lce-av{width:100px;height:100px;border-width:3px;margin:10px auto 12px}
+        .lce-podium-img{max-width:100%;max-height:260px;border-radius:14px;border:2px solid var(--lce-ac);margin:12px auto;display:block;object-fit:contain;background:#000;cursor:zoom-in}
         .lce-prize-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-top:10px}
         .lce-prize-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid var(--lce-bd);border-radius:14px;padding:10px 13px;text-align:right}
         .lce-prize-ico{width:36px;height:36px;border-radius:10px;background:var(--lce-soft);color:var(--lce-ac);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-        .lce-subov{position:fixed;inset:0;background:rgba(4,6,12,.92);z-index:2147483646;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);direction:rtl;padding:14px}
-        .lce-subbox{background:linear-gradient(180deg,#1a1d32,#0e101d);border:1px solid rgba(212,175,55,.45);border-radius:20px;width:100%;max-width:540px;max-height:86vh;overflow-y:auto;padding:18px;color:#fff;box-shadow:0 25px 60px rgba(0,0,0,.9)}
-        .lce-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:2147483647;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px;direction:rtl}
+        .lce-subov{position:fixed;inset:0;background:rgba(4,6,12,.94);z-index:2147483646;display:flex;align-items:center;justify-content:center;direction:rtl;padding:14px}
+        .lce-subbox{background:linear-gradient(180deg,#1a1d32,#0e101d);border:1px solid rgba(212,175,55,.45);border-radius:20px;width:100%;max-width:540px;max-height:86vh;overflow-y:auto;padding:18px;color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.85)}
+        .lce-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:2147483647;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px;direction:rtl}
         .lce-lightbox.open{display:flex}
-        .lce-lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:12px;border:2px solid rgba(212,175,55,.5);box-shadow:0 15px 45px rgba(0,0,0,.8)}
-        .lce-mini-fab{position:fixed;bottom:95px;right:20px;background:linear-gradient(135deg,#D4AF37,#b59226);color:#111;padding:10px 16px;border-radius:30px;font-weight:900;font-size:.86rem;box-shadow:0 10px 25px rgba(0,0,0,.6);display:none;align-items:center;gap:8px;z-index:2147483643;cursor:pointer;direction:rtl;border:2px solid rgba(255,255,255,.3)}
-        .lce-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#121424;border:1px solid #D4AF37;color:#fff;padding:10px 20px;border-radius:30px;font-size:.86rem;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.75);z-index:2147483647;opacity:0;pointer-events:none;transition:all .35s ease;direction:rtl;max-width:90vw;text-align:center}
+        .lce-lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:12px;border:2px solid rgba(212,175,55,.5)}
+        .lce-mini-fab{position:fixed;bottom:95px;right:20px;background:linear-gradient(135deg,#D4AF37,#b59226);color:#111;padding:10px 16px;border-radius:30px;font-weight:900;font-size:.86rem;box-shadow:0 8px 20px rgba(0,0,0,.6);display:none;align-items:center;gap:8px;z-index:2147483643;cursor:pointer;direction:rtl;border:2px solid rgba(255,255,255,.3)}
+        .lce-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#121424;border:1px solid #D4AF37;color:#fff;padding:10px 20px;border-radius:30px;font-size:.86rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:2147483647;opacity:0;pointer-events:none;transition:transform .28s ease,opacity .28s ease;direction:rtl;max-width:90vw;text-align:center}
         .lce-toast.th-gold{background:linear-gradient(135deg,#2a210a,#121424);color:#fde68a;border-color:#D4AF37}
         .lce-toast.th-red{background:linear-gradient(135deg,#351015,#121424);color:#fecaca;border-color:#ef4444}
         .lce-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-        #lce-live-ad{position:fixed;bottom:-120px;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 22px));background:linear-gradient(135deg,#1d1a2c 0%,#0f111c 100%);border:1px solid rgba(212,175,55,.65);color:#fff;padding:10px 14px;border-radius:16px;display:flex;align-items:center;gap:10px;z-index:2147483646;opacity:0;visibility:hidden;transition:bottom .4s cubic-bezier(.2,.8,.2,1),opacity .3s ease,visibility 0s linear .3s;direction:rtl;box-sizing:border-box;box-shadow:0 14px 35px rgba(0,0,0,.78),0 0 22px rgba(212,175,55,.18)}
+        #lce-live-ad{position:fixed;bottom:-120px;left:50%;transform:translateX(-50%);width:min(520px,calc(100vw - 22px));background:linear-gradient(135deg,#1d1a2c 0%,#0f111c 100%);border:1px solid rgba(212,175,55,.65);color:#fff;padding:10px 14px;border-radius:16px;display:flex;align-items:center;gap:10px;z-index:2147483646;opacity:0;visibility:hidden;transition:bottom .35s ease,opacity .25s ease,visibility 0s linear .25s;direction:rtl;box-sizing:border-box;box-shadow:0 12px 28px rgba(0,0,0,.75)}
         #lce-live-ad.th-red{border-color:rgba(239,68,68,.75);background:linear-gradient(135deg,#2e1015,#110c14)}
         #lce-live-ad.th-maroon{border-color:rgba(212,175,55,.7);background:linear-gradient(135deg,#310c18,#12070c)}
         #lce-live-ad.th-purple{border-color:rgba(168,85,247,.75);background:linear-gradient(135deg,#221238,#100d1b)}
         #lce-live-ad.th-blue{border-color:rgba(56,189,248,.75);background:linear-gradient(135deg,#0f2338,#090f18)}
         #lce-live-ad.th-emerald{border-color:rgba(52,211,153,.75);background:linear-gradient(135deg,#0c2c22,#081410)}
-        #lce-live-ad.show{bottom:74px;opacity:1;visibility:visible;transition:bottom .4s cubic-bezier(.2,.8,.2,1),opacity .3s ease,visibility 0s linear 0s}
+        #lce-live-ad.show{bottom:74px;opacity:1;visibility:visible;transition:bottom .35s ease,opacity .25s ease,visibility 0s linear 0s}
         .lce-ad-ico{width:32px;height:32px;border-radius:10px;background:rgba(212,175,55,.18);color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
         #lce-ad-msg{flex:1;min-width:0;font-size:12.5px;font-weight:700;line-height:1.45;color:#fef3c7;text-align:right}
         .lce-ad-btns{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -1025,7 +1099,7 @@
         .lce-ad-x{background:rgba(255,255,255,.08);color:#cbd5e1;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
         .lce-ad-x:hover{background:rgba(239,68,68,.8);color:#fff}
         @media(max-width:650px){
-            .lce-ov{padding:0}.lce-shell{max-width:100%;height:100%;max-height:100%;border-radius:0;border:none}
+            .lce-ov{padding:0}.lce-shell{max-width:100%;height:100%;max-height:100%;border-radius:0;border:none;box-shadow:none}
             .lce-hdr{padding:11px 13px}.lce-brand{font-size:.96rem}.lce-ibtn span{display:none}.lce-body{padding:13px}
             .lce-grid{grid-template-columns:1fr 1fr;gap:10px}.lce-card{padding:11px}.lce-photo-card{padding:0}.lce-av{width:62px;height:62px}.lce-photo-media{height:140px}.lce-yt-wrap{height:132px}
             .lce-match-grid{grid-template-columns:1fr;gap:8px}.lce-vs-badge{margin:0 auto}
@@ -1036,7 +1110,7 @@
         document.head.appendChild(s);
     }
     // ====== نهاية الجزء 1 من 3 ======
-    // ====== بداية الجزء 2 من 3 ======
+// ====== بداية الجزء 2 من 3 ======
     function applyModalTheme(themeKey) {
         const modal = document.getElementById("lce-modal");
         const shell = modal?.querySelector(".lce-shell");
@@ -1095,12 +1169,12 @@
 
     function activateYtEmbed(wrap) {
         const ytId = wrap?.dataset?.yt;
-        if (!ytId) return;
+        if (!ytId || wrap.classList.contains("playing")) return;
         document.querySelectorAll("#lce-modal .lce-yt-wrap.playing").forEach(other => {
             if (other === wrap) return;
             const oid = other.dataset.yt;
             other.classList.remove("playing");
-            other.innerHTML = `<img src="https://img.youtube.com/vi/${h.esc(oid)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div>`;
+            other.innerHTML = `<img loading="lazy" decoding="async" src="https://img.youtube.com/vi/${h.esc(oid)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div>`;
         });
         wrap.classList.add("playing");
         wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${h.esc(ytId)}?autoplay=1&rel=0&playsinline=1" style="width:100%;height:100%;border:0;display:block;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
@@ -1226,7 +1300,7 @@
             const list = getMergedHofList(filterCid);
             box.innerHTML = list.length ? list.map(w => `
                 <div class="lce-prize-item" style="margin-bottom:8px;">
-                    ${h.isValidImg(w.avatar) ? `<img src="${h.esc(w.avatar)}" class="lce-hof-zoom" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;cursor:zoom-in;">` : `<div class="lce-prize-ico"><i class="fas fa-crown"></i></div>`}
+                    ${h.isValidImg(w.avatar) ? `<img loading="lazy" decoding="async" src="${h.esc(w.avatar)}" class="lce-hof-zoom" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #D4AF37;cursor:zoom-in;">` : `<div class="lce-prize-ico"><i class="fas fa-crown"></i></div>`}
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:900;color:#fff;font-size:.94rem;">${h.esc(w.categoryLabel || "🏆 الفائز")}: ${h.esc(w.name)}</div>
                         <div style="font-size:.76rem;color:#D4AF37;margin-top:2px;">${h.esc(w.contestTitle || "مسابقة شات ليل")} • الموسم #${h.esc(w.season || 1)} ${w.votes ? `• ${w.votes} صوت` : ""} • ${h.fmtDate(w.date)}</div>
@@ -1256,6 +1330,88 @@
         } else renderHofBody();
     }
 
+    // ميزة جديدة: السماح للعضو بتعديل مشاركته قبل إغلاق باب التقديم
+    function openEditMyEntryModal(cid, c, mine) {
+        if (!mine || !st.db) return;
+        document.getElementById("lce-myedit-sub")?.remove();
+        const T = c.template, isPhoto = "photo" === T, isTalent = "talent" === T, isDuo = "duo" === T, isMedia = "media" === T;
+        let newMedia = isPhoto ? (mine.image || "") : (mine.avatar || "");
+        const ov = document.createElement("div");
+        ov.id = "lce-myedit-sub";
+        ov.className = "lce-subov";
+        ov.innerHTML = `
+            <div class="lce-subbox" style="max-width:460px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:12px;">
+                    <b style="color:#D4AF37;font-size:1rem;"><i class="fas fa-edit"></i> تعديل مشاركتي</b>
+                    <button type="button" class="lce-ibtn sq x" id="lce-me2-x"><i class="fas fa-times"></i></button>
+                </div>
+                ${(isPhoto || (!isTalent && !isMedia && !1 !== c.cfg.allowPhotoWithEntry)) ? `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <div id="lce-me2-prev" style="width:${isPhoto ? "100%" : "82px"};height:${isPhoto ? "160px" : "82px"};margin:0 auto 8px;border-radius:${isPhoto ? "12px" : "50%"};border:2px solid #D4AF37;background:#111320;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#D4AF37;font-size:28px;">
+                        ${h.isValidImg(newMedia) ? `<img src="${h.esc(newMedia)}" style="width:100%;height:100%;object-fit:${isPhoto ? "contain" : "cover"};">` : `<i class="fas ${h.esc(c.icon || "fa-camera")}"></i>`}
+                    </div>
+                    <input type="file" id="lce-me2-file" accept="image/*" style="display:none;">
+                    <button type="button" id="lce-me2-pick" class="lce-btn lce-btn-out" style="padding:6px 14px;font-size:.82rem;"><i class="fas fa-images"></i> تغيير الصورة</button>
+                </div>` : ""}
+                ${isDuo ? `<input id="lce-me2-partner" class="lce-inp" style="margin-bottom:9px;" maxlength="45" placeholder="اسم شريك الثنائي *" value="${h.esc(mine.partnerName || "")}">` : ""}
+                ${isMedia ? `<input id="lce-me2-yt" class="lce-inp" dir="ltr" style="margin-bottom:9px;" placeholder="رابط يوتيوب *" value="${mine.ytId ? `https://youtu.be/${h.esc(mine.ytId)}` : ""}">` : ""}
+                ${(isTalent || isMedia) ? `<input id="lce-me2-title" class="lce-inp" style="margin-bottom:9px;" maxlength="70" placeholder="العنوان..." value="${h.esc(mine.title || "")}">` : ""}
+                ${!isMedia ? `<textarea id="lce-me2-text" class="lce-inp" rows="${isTalent ? 4 : 2}" maxlength="550" style="margin-bottom:12px;" placeholder="النص / الشعار / التوقع...">${h.esc(mine.text || "")}</textarea>` : ""}
+                <div style="display:flex;gap:8px;">
+                    <button type="button" id="lce-me2-save" class="lce-btn" style="flex:1;"><i class="fas fa-save"></i> حفظ التعديل</button>
+                    <button type="button" id="lce-me2-cancel" class="lce-btn lce-btn-out">إلغاء</button>
+                </div>
+            </div>`;
+        document.body.appendChild(ov);
+        const close = () => ov.remove();
+        ov.onclick = e => { if (e.target === ov) close(); };
+        document.getElementById("lce-me2-x").onclick = close;
+        document.getElementById("lce-me2-cancel").onclick = close;
+
+        const fInp = document.getElementById("lce-me2-file");
+        if (fInp) {
+            document.getElementById("lce-me2-pick").onclick = () => fInp.click();
+            fInp.onchange = ev => {
+                const file = ev.target.files?.[0]; ev.target.value = ""; if (!file) return;
+                h.compressImg(file, isPhoto ? "photo" : "avatar").then(data => {
+                    newMedia = data;
+                    document.getElementById("lce-me2-prev").innerHTML = `<img src="${data}" style="width:100%;height:100%;object-fit:${isPhoto ? "contain" : "cover"};">`;
+                    showToast("📷 تم تجهيز الصورة الجديدة");
+                }).catch(err => showToast(`❌ ${err}`, 3000, "red"));
+            };
+        }
+
+        document.getElementById("lce-me2-save").onclick = () => {
+            const up = {};
+            if (isPhoto) {
+                if (!newMedia) return showToast("📸 الصورة مطلوبة", 2800, "red");
+                up.image = newMedia;
+            } else if (newMedia && newMedia !== mine.avatar) up.avatar = newMedia;
+            if (isDuo) {
+                const pr = (document.getElementById("lce-me2-partner")?.value || "").trim();
+                if (!pr) return showToast("💑 أدخل اسم شريكك", 2800, "red");
+                const pd = h.detectFromDOM(pr) || {};
+                up.partnerName = pd.displayName || pr;
+                if (pd.avatar) up.partnerAvatar = pd.avatar;
+            }
+            if (isMedia) {
+                const yt = h.parseYtId(document.getElementById("lce-me2-yt")?.value || "");
+                if (!yt) return showToast("🎵 رابط يوتيوب غير صحيح", 2800, "red");
+                up.ytId = yt;
+            }
+            if (isTalent || isMedia) up.title = (document.getElementById("lce-me2-title")?.value || "").trim().slice(0, 70);
+            if (!isMedia) {
+                const txt = (document.getElementById("lce-me2-text")?.value || "").trim().slice(0, 550);
+                if ((isTalent || "prediction" === T) && !txt) return showToast("✍️ النص مطلوب", 2800, "red");
+                up.text = txt;
+            }
+            dbOps.updateEntry(cid, h.myKey(), up).then(() => {
+                close();
+                showToast("✅ تم تحديث مشاركتك بنجاح!", 3000, "gold");
+            }).catch(() => alert("❌ فشل حفظ التعديل."));
+        };
+    }
+
     function ensureIdentity() {
         if (st.myUser) {
             const det = h.detectFromDOM(st.myUser);
@@ -1277,7 +1433,7 @@
     }
 
     function renderAvatar(av, icon = "fa-crown") {
-        if (h.isValidImg(av)) return `<img class="lce-av" src="${h.esc(av)}" alt="">`;
+        if (h.isValidImg(av)) return `<img class="lce-av" loading="lazy" decoding="async" src="${h.esc(av)}" alt="">`;
         return `<div class="lce-av"><i class="fas ${h.esc(icon)}"></i></div>`;
     }
 
@@ -1309,7 +1465,7 @@
 
     // ==================== محرك القرعة والسحب العشوائي ====================
     function runRaffleDraw(cid, c) {
-        if (!st.db || !h.isAdmin(cid)) return;
+        if (!st.db || !h.canPerm(cid, "control")) return showToast("لا تملك صلاحية إجراء السحب", 3000, "red");
         const pool = getApprovedEntries(st.data.entries);
         if (!pool.length) return showToast("لا يوجد مشاركون في السحب بعد!", 3000, "red");
         const count = Math.min(pool.length, Math.max(1, Number(c.maxWinners) || 1));
@@ -1355,6 +1511,7 @@
     }
 
     function startBracketTournament(cid, c) {
+        if (!h.canPerm(cid, "control")) return showToast("لا تملك صلاحية إدارة البطولة", 3000, "red");
         const list = getApprovedEntries(st.data.entries).map(e => e.key);
         if (list.length < 2) return showToast("تحتاج على الأقل مشاركين اثنين لبدء البطولة!", 3500, "red");
         if (!confirm(`سحب قرعة الجولة الأولى بين (${list.length}) متنافس وبدء التصويت؟`)) return;
@@ -1372,6 +1529,7 @@
     }
 
     function advanceBracketRound(cid, c) {
+        if (!h.canPerm(cid, "control")) return showToast("لا تملك صلاحية إدارة البطولة", 3000, "red");
         const br = c.bracket;
         if (!br || !Array.isArray(br.matches) || !br.matches.length) return;
         const winners = [];
@@ -1383,7 +1541,7 @@
             if (va === vb) {
                 const nA = st.data.entries?.[m.a]?.displayName || m.a;
                 const nB = st.data.entries?.[m.b]?.displayName || m.b;
-                return showToast(`⚖️ تعادل بين (${nA}) و (${nB})! احسم المواجهة أولاً بزر "تأهيل" أسفلها.`, 4500, "red");
+                return showToast(`⚖️ تعادل بين (${nA}) و (${nB})! احسم المواجهة أولاً بزر "حسم وتأهيل".`, 4500, "red");
             }
             winners.push(va > vb ? m.a : m.b);
         }
@@ -1473,7 +1631,15 @@
         body.querySelectorAll("[data-open-cid]").forEach(card => card.onclick = () => window.LaylContests.open(card.dataset.openCid));
     }
 
-    // ==================== عرض المسابقة النشطة (محرك جميع الـ 10 أنظمة) ====================
+    // ==================== جدولة التحديث الخفيف (Debounce لمنع تجمّد الجوال) ====================
+    function scheduleRenderMain(delayMs = 0) {
+        if (!document.getElementById("lce-modal")?.classList.contains("open")) return;
+        clearTimeout(st.renderTimer);
+        if (delayMs <= 0) { renderMainBody(); return; }
+        st.renderTimer = setTimeout(renderMainBody, delayMs);
+    }
+
+    // ==================== عرض المسابقة النشطة (تحديث ذكي بدون مسح الصور واليوتيوب) ====================
     function renderMainBody() {
         const modal = document.getElementById("lce-modal");
         if (!modal || !modal.classList.contains("open")) return;
@@ -1556,7 +1722,8 @@
             const maxE = Number(c.cfg.maxEntries) || 0;
             const isFull = maxE > 0 && Object.keys(entries).length >= maxE && !isAdm;
             const hideSubGallery = ((isPhoto || isMedia) && isBlind) || isPredict || isQuiz;
-            const nKey = `${cid}_${Boolean(mine)}_${mine?.status || ""}_${Boolean(mine?.isWinner)}_${Boolean(info.paused)}_${isFull}_${c.season || 1}_${T}_${c.mode}`;
+            const canEditMine = Boolean(mine && !1 !== c.cfg.allowEditEntry && !isQuiz && !isRaffle && !info.paused);
+            const nKey = `${cid}_${Boolean(mine)}_${mine?.status || ""}_${Boolean(mine?.isWinner)}_${mine?.text || ""}_${Boolean(mine?.image)}_${mine?.ytId || ""}_${Boolean(info.paused)}_${isFull}_${c.season || 1}_${T}_${c.mode}_${canEditMine}`;
 
             const renderSubCards = () => {
                 if (isQuiz) {
@@ -1582,13 +1749,13 @@
                     if (isPhoto) {
                         return `<div class="lce-card lce-photo-card ${cm.cls}-card">
                             ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
-                            <img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">
+                            <img loading="lazy" decoding="async" class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">
                             <div class="lce-photo-inner"><div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}</div>
                         </div>`;
                     }
                     if (isMedia && e.ytId) {
                         return `<div class="lce-card lce-photo-card">
-                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
+                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img loading="lazy" decoding="async" src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
                             <div class="lce-photo-inner"><div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>${e.title ? `<div style="font-size:.82rem;color:var(--lce-tx);font-weight:700;">🎵 ${h.esc(e.title)}</div>` : ""}</div>
                         </div>`;
                     }
@@ -1626,10 +1793,15 @@
             };
 
             if ("submission" === body.dataset.phase && body.dataset.nkey === nKey && document.getElementById("lce-sub-grid")) {
-                const cntEl = document.getElementById("lce-sub-cnt");
-                if (cntEl) cntEl.textContent = hideSubGallery && !isAdm ? Object.keys(entries).length : approved.length;
-                document.getElementById("lce-sub-grid").innerHTML = renderSubCards();
-                bindSubCardClicks();
+                const subSig = approved.map(e => `${e.key}:${e.text || ""}:${e.title || ""}:${e.ytId || ""}:${Boolean(e.isWinner)}`).join("|");
+                const sg = document.getElementById("lce-sub-grid");
+                if (sg.dataset.subSig !== subSig) {
+                    sg.dataset.subSig = subSig;
+                    const cntEl = document.getElementById("lce-sub-cnt");
+                    if (cntEl) cntEl.textContent = hideSubGallery && !isAdm ? Object.keys(entries).length : approved.length;
+                    sg.innerHTML = renderSubCards();
+                    bindSubCardClicks();
+                }
                 return;
             }
 
@@ -1647,11 +1819,12 @@
                     <div class="lce-form" style="border-color:${isPend ? "#f59e0b" : (isQuiz && c.correctAnswer && !mine.isWinner ? "#ef4444" : "#10b981")};text-align:center;">
                         <div style="font-size:26px;margin-bottom:5px;">${isPend ? "⏳" : (isQuiz && c.correctAnswer && !mine.isWinner ? "❌" : "✅")}</div>
                         <div style="font-weight:900;font-size:1.02rem;color:${isPend ? "#fcd34d" : "#6ee7b7"};">${statusMsg}</div>
-                        ${isPhoto && h.isValidImg(mine.image) ? `<img src="${h.esc(mine.image)}" class="lce-photo-prev lce-zoomable" style="max-height:170px;margin-top:10px;">` : ""}
+                        ${isPhoto && h.isValidImg(mine.image) ? `<img loading="lazy" decoding="async" src="${h.esc(mine.image)}" class="lce-photo-prev lce-zoomable" style="max-height:170px;margin-top:10px;">` : ""}
                         ${isDuo ? `<div style="margin-top:6px;color:var(--lce-tx);font-weight:800;">💑 ${h.esc(mine.displayName)} ❤️ ${h.esc(mine.partnerName || "")}</div>` : ""}
                         ${mine.text && !isQuiz ? `<div style="color:#cbd5e1;font-size:.86rem;margin:6px 0 10px;white-space:pre-line;">«${h.esc(mine.text)}»</div>` : ""}
                         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
-                            ${!isBlind && !isPredict && !isQuiz && !isRaffle ? `<button type="button" class="lce-btn" id="lce-copy-camp"><i class="fas fa-bullhorn"></i> نسخ رسالة حملتي</button>` : ""}
+                            ${canEditMine ? `<button type="button" class="lce-btn lce-btn-out" id="lce-edit-mine" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-edit"></i> تعديل مشاركتي</button>` : ""}
+                            ${!isBlind && !isPredict && !isQuiz && !isRaffle ? `<button type="button" class="lce-btn" id="lce-copy-camp" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-bullhorn"></i> نسخ رسالة حملتي</button>` : ""}
                             ${!isQuiz ? `<button type="button" class="lce-btn lce-btn-red" id="lce-withdraw" style="padding:9px 14px;font-size:.84rem;"><i class="fas fa-sign-out-alt"></i> سحب المشاركة</button>` : ""}
                         </div>
                     </div>`;
@@ -1718,9 +1891,10 @@
                     </div>`;
             }
 
-            const admQuickAction = isAdm && isBracket && approved.length >= 2
+            const canCtrl = h.canPerm(cid, "control");
+            const admQuickAction = canCtrl && isBracket && approved.length >= 2
                 ? `<div style="margin-bottom:14px;text-align:center;"><button type="button" id="lce-br-start" class="lce-btn" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;"><i class="fas fa-random"></i> سحب قرعة المواجهات وبدء الجولة #1 (${approved.length} متنافس)</button></div>`
-                : (isAdm && isRaffle && approved.length >= 1
+                : (canCtrl && isRaffle && approved.length >= 1
                     ? `<div style="margin-bottom:14px;text-align:center;"><button type="button" id="lce-rf-draw-now" class="lce-btn"><i class="fas fa-dice"></i> إنهاء التسجيل وإجراء السحب العشوائي الآن</button></div>` : "");
 
             body.innerHTML = `
@@ -1741,6 +1915,7 @@
             document.getElementById("lce-rf-draw-now")?.addEventListener("click", () => runRaffleDraw(cid, c));
 
             if (mine) {
+                document.getElementById("lce-edit-mine")?.addEventListener("click", () => openEditMyEntryModal(cid, c, mine));
                 document.getElementById("lce-copy-camp")?.addEventListener("click", () => {
                     h.copy(`✨ شاركت في (${c.title}) داخل شات ليل!\n👤 ${isDuo ? `${mine.displayName} ❤️ ${mine.partnerName}` : (mine.displayName || mine.username)}${mine.text ? `\n💬 «${mine.text}»` : ""}\n🔥 ادعموني بأصواتكم!`, "📋 تم نسخ رسالة حملتك!");
                 });
@@ -1786,7 +1961,7 @@
                     <div style="font-size:44px;">🎰</div>
                     <h2>أُغلق التسجيل — بانتظار السحب العشوائي!</h2>
                     <p>عدد التذاكر المسجلة: <b>${list.length}</b> • عدد الفائزين المطلوب: <b>${Math.max(1, Number(c.maxWinners) || 1)}</b></p>
-                    ${isAdm ? `<div style="margin-top:14px;"><button type="button" id="lce-do-draw" class="lce-btn"><i class="fas fa-dice"></i> إجراء السحب العشوائي وإعلان الفائزين 🎉</button></div>` : '<div style="margin-top:10px;color:#fde68a;font-weight:800;">جاري تجهيز القرعة بواسطة الإدارة...</div>'}
+                    ${h.canPerm(cid, "control") ? `<div style="margin-top:14px;"><button type="button" id="lce-do-draw" class="lce-btn"><i class="fas fa-dice"></i> إجراء السحب العشوائي وإعلان الفائزين 🎉</button></div>` : '<div style="margin-top:10px;color:#fde68a;font-weight:800;">جاري تجهيز القرعة بواسطة الإدارة...</div>'}
                 </div>
                 <div class="lce-grid">
                     ${list.map(e => `<div class="lce-card" style="padding:11px;">${renderAvatar(e.avatar, "fa-ticket-alt")}<div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div><span class="lce-spot-bdg">🎟️ ${(e.tickets || 1) > 1 ? `×${e.tickets} فرص VIP` : "تذكرة سحب"}</span></div>`).join("")}
@@ -1799,12 +1974,13 @@
         if ("judging" === info.phase) {
             body.dataset.phase = "judging";
             const list = getApprovedEntries(entries);
+            const canJudge = h.canPerm(cid, "control") || h.canPerm(cid, "entries");
             body.innerHTML = `
                 <div class="lce-hero">
                     <div style="font-size:40px;">⚖️</div>
                     <h2>أُغلق باب التوقعات — جاري الفرز!</h2>
-                    <p>${isAdm ? "اضغط على التوقعات الصحيحة لتعليمها كفائزة ثم اضغط «اعتماد وإعلان الفائزين»." : "أُغلق باب استقبال التوقعات وبانتظار إعلان الإدارة عن النتيجة الصحيحة."}</p>
-                    ${isAdm ? `<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                    <p>${canJudge ? "اضغط على التوقعات الصحيحة لتعليمها كفائزة ثم اضغط «اعتماد وإعلان الفائزين»." : "أُغلق باب استقبال التوقعات وبانتظار إعلان الإدارة عن النتيجة الصحيحة."}</p>
+                    ${canJudge ? `<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
                         <input id="lce-pred-ans" class="lce-inp" style="max-width:300px;" placeholder="الإجابة الصحيحة الرسمية..." value="${h.esc(c.correctAnswer || "")}">
                         <button type="button" id="lce-pred-pub" class="lce-btn"><i class="fas fa-flag-checkered"></i> اعتماد وإعلان الفائزين</button>
                     </div>` : ""}
@@ -1815,7 +1991,7 @@
                             ${renderAvatar(e.avatar, "fa-bullseye")}
                             <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
                             <div class="lce-talent-box" style="text-align:center;">${h.esc(e.text || "-")}</div>
-                            ${isAdm ? `<button type="button" class="lce-btn ${e.isWinner ? "" : "lce-btn-out"} lce-tog-win" data-k="${h.esc(e.key)}" style="width:100%;padding:7px;font-size:.82rem;">${e.isWinner ? "✅ توقع صحيح (فائز)" : "تحديد كفائز 🏆"}</button>` : (e.isWinner ? '<span class="lce-spot-bdg">✅ فائز</span>' : "")}
+                            ${canJudge ? `<button type="button" class="lce-btn ${e.isWinner ? "" : "lce-btn-out"} lce-tog-win" data-k="${h.esc(e.key)}" style="width:100%;padding:7px;font-size:.82rem;">${e.isWinner ? "✅ توقع صحيح (فائز)" : "تحديد كفائز 🏆"}</button>` : (e.isWinner ? '<span class="lce-spot-bdg">✅ فائز</span>' : "")}
                         </div>`).join("") : '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:24px;">لا توجد توقعات مسجلة.</div>'}
                 </div>`;
             body.querySelectorAll(".lce-tog-win").forEach(b => b.onclick = () => {
@@ -1837,13 +2013,14 @@
         if ("voting" === info.phase && isBracket) {
             body.dataset.phase = "voting_bracket";
             const br = c.bracket;
+            const canCtrl = h.canPerm(cid, "control");
             if (!br || !Array.isArray(br.matches) || !br.matches.length) {
                 body.innerHTML = `
                     <div class="lce-hero">
                         <div style="font-size:42px;">⚔️</div>
                         <h2>${h.esc(c.title)} — تجهيز قرعة المواجهات</h2>
                         <p>أُغلق التسجيل (${getApprovedEntries(entries).length} متنافس) وبانتظار سحب قرعة الجولة الأولى.</p>
-                        ${isAdm ? `<button type="button" id="lce-br-init" class="lce-btn" style="margin-top:14px;"><i class="fas fa-random"></i> سحب القرعة وبدء الجولة #1</button>` : ""}
+                        ${canCtrl ? `<button type="button" id="lce-br-init" class="lce-btn" style="margin-top:14px;"><i class="fas fa-random"></i> سحب القرعة وبدء الجولة #1</button>` : ""}
                     </div>`;
                 document.getElementById("lce-br-init")?.addEventListener("click", () => startBracketTournament(cid, c));
                 return;
@@ -1855,7 +2032,7 @@
                     <h2>${h.esc(c.title)}</h2>
                     <p>لك صوت واحد في كل مواجهة مستقلة! اختر من يستحق التأهل للجولة التالية.</p>
                     ${info.remaining > 0 ? `<div class="lce-timer"><i class="fas fa-hourglass-half"></i> <span id="lce-cd-txt">${h.fmtTime(info.remaining)}</span></div>` : ""}
-                    ${isAdm ? `<div style="margin-top:12px;"><button type="button" id="lce-br-next" class="lce-btn"><i class="fas fa-forward"></i> ${br.matches.length === 1 ? "تتويج بطل البطولة 🏆" : `إنهاء الجولة وتأهيل الفائزين للجولة #${br.round + 1}`}</button></div>` : ""}
+                    ${canCtrl ? `<div style="margin-top:12px;"><button type="button" id="lce-br-next" class="lce-btn"><i class="fas fa-forward"></i> ${br.matches.length === 1 ? "تتويج بطل البطولة 🏆" : `إنهاء الجولة وتأهيل الفائزين للجولة #${br.round + 1}`}</button></div>` : ""}
                 </div>
                 ${br.matches.map((m, idx) => {
                     const ea = entries[m.a], eb = m.b ? entries[m.b] : null;
@@ -1878,7 +2055,7 @@
                             <div class="lce-cname">${e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username)}</div>
                             ${!c.cfg.hideLiveVotes || isAdm ? `<div class="lce-bar-wrap" style="margin-top:6px;"><div class="lce-bar-fill" style="width:${pct}%;"></div></div><div class="lce-vstat">🔥 ${vCnt} صوت (${pct}%)</div>` : '<div class="lce-vstat">🔒 سري</div>'}
                             ${m.winner === k ? '<span class="lce-spot-bdg">✅ متأهل</span>' : (voted ? '<button type="button" class="lce-btn" style="width:100%;padding:7px;font-size:.8rem;background:#10b981;color:#fff;" disabled>✓ صوتك هنا</button>' : `<button type="button" class="lce-btn lce-br-vote" data-k="${h.esc(k)}" data-mid="${h.esc(m.id)}" style="width:100%;padding:7px;font-size:.8rem;" ${canV ? "" : "disabled"}>صوّت 🗳️</button>`)}
-                            ${isAdm && !m.winner ? `<button type="button" class="lce-btn lce-btn-out lce-br-force" data-k="${h.esc(k)}" data-mi="${idx}" style="width:100%;padding:5px;font-size:.74rem;margin-top:6px;">حسم وتأهيل ⚖️</button>` : ""}
+                            ${canCtrl && !m.winner ? `<button type="button" class="lce-btn lce-btn-out lce-br-force" data-k="${h.esc(k)}" data-mi="${idx}" style="width:100%;padding:5px;font-size:.74rem;margin-top:6px;">حسم وتأهيل ⚖️</button>` : ""}
                         </div>`;
                     };
                     return `<div class="lce-match-card">
@@ -1897,12 +2074,12 @@
             return;
         }
 
-        // 6. مرحلة التصويت القياسية (royal / photo / talent / duo / media / poll)
+        // 6. مرحلة التصويت القياسية مع تحديث ذكي للـ DOM (يمنع إعادة فك ضغط الصور وقطع اليوتيوب!)
         if ("voting" === info.phase) {
             const hideVotes = Boolean(c.cfg.hideLiveVotes) && !isAdm;
-            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip(cid)}_${T}`;
+            const vKey = `${cid}_${Boolean(info.paused)}_${c.mode}_${hideVotes}_${isBlind}_${c.season || 1}_${h.isVip(cid)}_${T}_${Boolean(c.cfg.allowVoteChange)}`;
 
-            const fillVoteGrid = () => {
+            const fillVoteGrid = (forceRebuild = !1) => {
                 const grid = document.getElementById("lce-vote-grid");
                 if (!grid) return;
                 const counts = computeVoteCounts(entries, votes);
@@ -1912,7 +2089,7 @@
                     list = list.filter(e => `${e.displayName || ""} ${e.username || ""} ${e.partnerName || ""} ${e.title || ""} ${e.text || ""}`.toLowerCase().includes(q));
                 }
                 if (hideVotes || isBlind) list.sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-                else list.sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
+                else list.sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0) || (a.joinedAt || 0) - (b.joinedAt || 0));
 
                 const totalVotes = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
                 const vkS = getVoteKey(cid, myKey, "cat1", !1);
@@ -1922,6 +2099,58 @@
                 const myVoteC1 = myKey && votes[vk1] ? votes[vk1].target : null;
                 const myVoteC2 = myKey && votes[vk2] ? votes[vk2].target : null;
 
+                // بصمة هيكلية للعناصر (بدون عدد الأصوات) للتحقق مما إذا كنا نحتاج إعادة بناء أم تحديث أرقام فقط
+                const structSig = list.map(e => `${e.key}:${e.displayName || ""}:${e.text || ""}:${e.badge || ""}:${Boolean(e.frozen)}:${e.ytId || ""}`).sort().join("|");
+
+                // التحديث الذكي في مكانه (In-Place Patch) — صفر إعادة رسم للصور و صفر قطع لمقاطع اليوتيوب!
+                if (!forceRebuild && list.length && grid.dataset.structSig === structSig) {
+                    const cardMap = {};
+                    grid.querySelectorAll(":scope > .lce-card[data-ekey]").forEach(el => { cardMap[el.dataset.ekey] = el; });
+                    const hasAll = list.every(e => Boolean(cardMap[e.key]));
+                    if (hasAll) {
+                        const hasPlayingYt = Boolean(grid.querySelector(".lce-yt-wrap.playing"));
+                        list.forEach((e, idx) => {
+                            const card = cardMap[e.key];
+                            const vCnt = counts[e.key] || 0;
+                            const pct = Math.min(100, Math.round((vCnt / totalVotes) * 100));
+                            const slotCat = "cat2" === e.category ? "cat2" : "cat1";
+                            const votedForThis = isDual ? (("cat1" === slotCat ? myVoteC1 : myVoteC2) === e.key) : (myVoteSingle === e.key);
+                            const hasVotedSlot = isDual ? Boolean("cat1" === slotCat ? myVoteC1 : myVoteC2) : Boolean(myVoteSingle);
+                            const isFrozen = Boolean(e.frozen);
+                            const canVoteBtn = !info.paused && !isFrozen && (!hasVotedSlot || c.cfg.allowVoteChange) && !votedForThis;
+
+                            card.classList.toggle("voted", votedForThis);
+                            const rk = card.querySelector(".lce-rank-num");
+                            if (rk) rk.textContent = `#${idx + 1}`;
+                            const bf = card.querySelector(".lce-bar-fill");
+                            if (bf) bf.style.width = `${pct}%`;
+                            const vs = card.querySelector(".lce-vstat");
+                            if (vs && !hideVotes) vs.textContent = `🔥 ${vCnt} صوت (${pct}%)`;
+
+                            const vBtn = card.querySelector(".lce-vbtn-slot");
+                            if (vBtn && !isFrozen) {
+                                if (votedForThis) {
+                                    vBtn.textContent = "✓ تم تصويتك";
+                                    vBtn.disabled = !0;
+                                    vBtn.style.background = "#10b981";
+                                    vBtn.style.color = "#fff";
+                                } else {
+                                    vBtn.textContent = hasVotedSlot && c.cfg.allowVoteChange ? "تغيير صوتي" : "صوّت 🗳️";
+                                    vBtn.disabled = !canVoteBtn;
+                                    vBtn.style.background = "";
+                                    vBtn.style.color = "";
+                                }
+                            }
+                            // إعادة الترتيب بدون هدم العناصر (مع تخطي نقل العقد إذا كان هناك فيديو يوتيوب يعمل حالياً)
+                            if (!hasPlayingYt && grid.children[idx] !== card) {
+                                grid.insertBefore(card, grid.children[idx] || null);
+                            }
+                        });
+                        return;
+                    }
+                }
+
+                grid.dataset.structSig = structSig;
                 grid.innerHTML = list.length ? list.map((e, idx) => {
                     const cm = getCatMeta(c, e.category);
                     const vCnt = counts[e.key] || 0;
@@ -1943,28 +2172,26 @@
                         <div class="lce-cacts">
                             ${isFrozen
                                 ? `<button type="button" class="lce-btn" style="flex:1;padding:8px;font-size:.82rem;background:#334155;color:#cbd5e1;" disabled>❄️ مجمد مؤقتاً</button>`
-                                : votedForThis
-                                ? `<button type="button" class="lce-btn" style="flex:1;padding:8px;font-size:.82rem;background:#10b981;color:#fff;" disabled>✓ تم تصويتك</button>`
-                                : `<button type="button" class="lce-btn lce-vote-go" data-k="${h.esc(e.key)}" data-cat="${slotCat}" style="flex:1;padding:8px;font-size:.82rem;" ${canVoteBtn ? "" : "disabled"}>${hasVotedSlot && c.cfg.allowVoteChange ? "تغيير صوتي" : "صوّت 🗳️"}</button>`}
+                                : `<button type="button" class="lce-btn lce-vote-go lce-vbtn-slot" data-k="${h.esc(e.key)}" data-cat="${slotCat}" style="flex:1;padding:8px;font-size:.82rem;${votedForThis ? "background:#10b981;color:#fff;" : ""}" ${votedForThis || !canVoteBtn ? "disabled" : ""}>${votedForThis ? "✓ تم تصويتك" : (hasVotedSlot && c.cfg.allowVoteChange ? "تغيير صوتي" : "صوّت 🗳️")}</button>`}
                             ${!isBlind ? `<button type="button" class="lce-ibtn sq lce-share-entry" data-name="${h.esc(isDuo ? `${e.displayName} و ${e.partnerName}` : (e.displayName || e.username))}" title="دعم ومشاركة"><i class="fas fa-share-alt"></i></button>` : ""}
                         </div>`;
 
                     if (isPhoto) {
-                        return `<div class="lce-card lce-photo-card ${cm.cls}-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
+                        return `<div class="lce-card lce-photo-card ${cm.cls}-card ${votedForThis ? "voted" : ""}" data-ekey="${h.esc(e.key)}" style="${isFrozen ? "opacity:.72;" : ""}">
                             ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
                             ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
-                            <img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" data-cap="${h.esc(isBlind && !isAdm ? blindLabel : (e.displayName || ""))}" alt="" title="اضغط للتكبير">
+                            <img loading="lazy" decoding="async" class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" data-cap="${h.esc(isBlind && !isAdm ? blindLabel : (e.displayName || ""))}" alt="" title="اضغط للتكبير">
                             <div class="lce-photo-inner"><div class="lce-cname">${nameHtml}</div>${e.text ? `<div class="lce-slogan">${h.esc(e.text)}</div>` : ""}${voteCtrlHtml}</div>
                         </div>`;
                     }
                     if (isMedia && e.ytId) {
-                        return `<div class="lce-card lce-photo-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
+                        return `<div class="lce-card lce-photo-card ${votedForThis ? "voted" : ""}" data-ekey="${h.esc(e.key)}" style="${isFrozen ? "opacity:.72;" : ""}">
                             ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
-                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
+                            <div class="lce-yt-wrap" data-yt="${h.esc(e.ytId)}"><img loading="lazy" decoding="async" src="https://img.youtube.com/vi/${h.esc(e.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>
                             <div class="lce-photo-inner"><div class="lce-cname">${nameHtml}</div>${e.title ? `<div class="lce-slogan" style="min-height:22px;color:var(--lce-tx);">🎵 ${h.esc(e.title)}</div>` : ""}${voteCtrlHtml}</div>
                         </div>`;
                     }
-                    return `<div class="lce-card ${cm.cls}-card ${votedForThis ? "voted" : ""}" style="${isFrozen ? "opacity:.72;" : ""}">
+                    return `<div class="lce-card ${cm.cls}-card ${votedForThis ? "voted" : ""}" data-ekey="${h.esc(e.key)}" style="${isFrozen ? "opacity:.72;" : ""}">
                         ${isDual ? `<span class="lce-role-tag ${cm.cls}">${h.esc(cm.icon)} ${h.esc(cm.label)}</span>` : ""}
                         ${!hideVotes && !isBlind ? `<span class="lce-rank-num">#${idx + 1}</span>` : ""}
                         ${isDuo ? renderDuoAvatars(e.avatar, e.partnerAvatar) : (!isBlind || isAdm ? renderAvatar(e.avatar, c.icon || tmpl.icon) : `<div class="lce-av"><i class="fas ${h.esc(c.icon || tmpl.icon)}"></i></div>`)}
@@ -1988,7 +2215,7 @@
             };
 
             if ("voting" === body.dataset.phase && body.dataset.vkey === vKey && document.getElementById("lce-vote-grid")) {
-                fillVoteGrid();
+                fillVoteGrid(!1);
                 return;
             }
 
@@ -2012,14 +2239,14 @@
                 </div>
                 <div class="lce-grid" id="lce-vote-grid"></div>`;
 
-            fillVoteGrid();
+            fillVoteGrid(!0);
             body.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => {
                 st.catFilter = b.dataset.vf;
                 body.querySelectorAll("[data-vf]").forEach(x => x.classList.toggle("active", x === b));
-                fillVoteGrid();
+                fillVoteGrid(!0);
             });
             const vs = document.getElementById("lce-vsearch");
-            if (vs) vs.oninput = () => { st.searchQuery = vs.value; fillVoteGrid(); };
+            if (vs) vs.oninput = () => { st.searchQuery = vs.value; fillVoteGrid(!0); };
             return;
         }
 
@@ -2027,16 +2254,17 @@
         if ("tiebreaker" === info.phase) {
             body.dataset.phase = "tiebreaker";
             const counts = computeVoteCounts(entries, votes);
+            const canCtrl = h.canPerm(cid, "control");
             const renderTieGroup = (arr, label, slot) => !arr || !arr.length ? "" : `
                 <h3 style="color:#fca5a5;margin:14px 0 10px;text-align:center;">⚖️ تعادل على لقب ${h.esc(label)}</h3>
                 <div class="lce-grid">
                     ${arr.map(e => `
                         <div class="lce-card ${isPhoto ? "lce-photo-card" : ""}" style="border-color:#ef4444;">
-                            ${isPhoto && h.isValidImg(e.image) ? `<img class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">` : (isDuo ? renderDuoAvatars(e.avatar, e.partnerAvatar) : renderAvatar(e.avatar, c.icon || tmpl.icon))}
+                            ${isPhoto && h.isValidImg(e.image) ? `<img loading="lazy" decoding="async" class="lce-photo-media lce-zoomable" src="${h.esc(e.image)}" alt="">` : (isDuo ? renderDuoAvatars(e.avatar, e.partnerAvatar) : renderAvatar(e.avatar, c.icon || tmpl.icon))}
                             <div class="${isPhoto ? "lce-photo-inner" : ""}" style="width:100%;">
                                 <div class="lce-cname">${isDuo ? `${h.esc(e.displayName)} ❤️ ${h.esc(e.partnerName)}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username))}</div>
                                 <div class="lce-vstat">متعادل بـ ${counts[e.key] || 0} صوت</div>
-                                ${isAdm ? `<button type="button" class="lce-btn lce-btn-red lce-tb-pick" data-k="${h.esc(e.key)}" data-slot="${slot}" style="width:100%;">منح الصوت الحاسم 🏆</button>` : '<span style="font-size:.82rem;color:#fcd34d;">بانتظار حسم الإدارة...</span>'}
+                                ${canCtrl ? `<button type="button" class="lce-btn lce-btn-red lce-tb-pick" data-k="${h.esc(e.key)}" data-slot="${slot}" style="width:100%;">منح الصوت الحاسم 🏆</button>` : '<span style="font-size:.82rem;color:#fcd34d;">بانتظار حسم الإدارة...</span>'}
                             </div>
                         </div>`).join("")}
                 </div>`;
@@ -2045,7 +2273,7 @@
                 <div class="lce-hero" style="border-color:rgba(239,68,68,.4);">
                     <div style="font-size:40px;">⚖️</div>
                     <h2>تعادل في المركز الأول!</h2>
-                    <p>${isAdm ? "بصفتك من الإدارة، اختر الفائز بالصوت الحاسم الآن." : "بانتظار الصوت الحاسم من الإدارة لإعلان النتيجة النهائية."}</p>
+                    <p>${canCtrl ? "بصفتك من الإدارة، اختر الفائز بالصوت الحاسم الآن." : "بانتظار الصوت الحاسم من الإدارة لإعلان النتيجة النهائية."}</p>
                 </div>
                 ${isDual ? (renderTieGroup(info.c1Ties, c.cat1Label || "الفئة 1", "tieBreakerCat1") + renderTieGroup(info.c2Ties, c.cat2Label || "الفئة 2", "tieBreakerCat2")) : renderTieGroup(info.ties, c.title, "tieBreaker")}`;
 
@@ -2090,7 +2318,7 @@
 
         body.innerHTML = `
             <div style="text-align:center;margin-bottom:14px;">
-                <h2 style="margin:0;color:var(--lce-ac);font-size:1.42rem;font-weight:900;">🏆 التتويج وكشف النتائج — الموسم #${h.esc(c.season || 1)} 🏆</h2>
+                <h2 style="margin:0;color:var(--lce-ac);font-size:1.4rem;font-weight:900;">🏆 التتويج وكشف النتائج — الموسم #${h.esc(c.season || 1)} 🏆</h2>
                 ${(isPredict || isQuiz) && c.correctAnswer ? `<div style="margin-top:8px;display:inline-block;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.45);color:#6ee7b7;padding:5px 16px;border-radius:20px;font-size:.86rem;font-weight:800;">✅ الإجابة المعتمدة: ${h.esc(c.correctAnswer.split("|")[0])}</div>` : ""}
             </div>
             ${winners.length ? `<div style="display:grid;grid-template-columns:${winners.length > 1 ? "repeat(auto-fit,minmax(250px,1fr))" : "1fr"};gap:14px;">
@@ -2103,8 +2331,8 @@
                     <div class="lce-podium">
                         <div style="font-size:34px;margin-bottom:4px;">${h.esc(cm.icon)}</div>
                         <div style="color:var(--lce-tx);font-size:.9rem;font-weight:800;">${h.esc(wLabel)}</div>
-                        ${isPhoto && h.isValidImg(w.image) ? `<img class="lce-podium-img lce-zoomable" src="${h.esc(w.image)}" alt="">`
-                            : (isMedia && w.ytId ? `<div class="lce-yt-wrap" data-yt="${h.esc(w.ytId)}" style="max-width:380px;margin:12px auto;border-radius:12px;"><img src="https://img.youtube.com/vi/${h.esc(w.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>`
+                        ${isPhoto && h.isValidImg(w.image) ? `<img loading="lazy" decoding="async" class="lce-podium-img lce-zoomable" src="${h.esc(w.image)}" alt="">`
+                            : (isMedia && w.ytId ? `<div class="lce-yt-wrap" data-yt="${h.esc(w.ytId)}" style="max-width:380px;margin:12px auto;border-radius:12px;"><img loading="lazy" decoding="async" src="https://img.youtube.com/vi/${h.esc(w.ytId)}/hqdefault.jpg" alt=""><div class="lce-yt-play"><i class="fas fa-play"></i></div></div>`
                             : (isDuo ? renderDuoAvatars(w.avatar, w.partnerAvatar) : renderAvatar(w.avatar, c.icon || tmpl.icon)))}
                         <div class="lce-cname" style="font-size:1.2rem;">${wNameHtml}</div>
                         ${w.title ? `<div style="color:var(--lce-tx);font-weight:800;font-size:.9rem;margin-top:4px;">${h.esc(w.title)}</div>` : ""}
@@ -2125,7 +2353,7 @@
                     return `
                     <div class="lce-prize-item" style="margin-bottom:7px;padding:8px 12px;">
                         <b style="color:var(--lce-ac);width:28px;text-align:center;">#${i + 1}</b>
-                        ${thumb ? `<img src="${h.esc(thumb)}" class="${isPhoto ? "lce-zoomable" : ""}" style="width:42px;height:42px;border-radius:${isPhoto ? "8px" : "50%"};object-fit:cover;border:1px solid var(--lce-ac);${isPhoto ? "cursor:zoom-in;" : ""}">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
+                        ${thumb ? `<img loading="lazy" decoding="async" src="${h.esc(thumb)}" class="${isPhoto ? "lce-zoomable" : ""}" style="width:42px;height:42px;border-radius:${isPhoto ? "8px" : "50%"};object-fit:cover;border:1px solid var(--lce-ac);${isPhoto ? "cursor:zoom-in;" : ""}">` : '<i class="fas fa-user-circle" style="font-size:32px;color:#64748b;"></i>'}
                         <div style="flex:1;min-width:0;">
                             <div class="lce-cname" style="font-size:.9rem;margin:0;text-align:right;">${isDuo ? `${h.esc(e.displayName)} ❤️ ${h.esc(e.partnerName || "")}` : (e.html ? h.sanHtml(e.html) : h.esc(e.displayName || e.username))}</div>
                             <div style="font-size:.74rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${isDual ? `${h.esc(cm.icon)} ${h.esc(cm.label)} • ` : ""}${h.esc(e.title || (!isQuiz ? e.text : "") || "")}</div>
@@ -2222,6 +2450,7 @@
 
     function castVote(cid, c, targetKey, targetCat, matchKey = null) {
         if (!st.db) return showToast("تعذر الاتصال بالقاعدة", 3000, "red");
+        if (Date.now() - st.lastVoteAt < 1200) return showToast("⏳ انتظر لحظة...", 1800);
         if (!c.cfg.allowGuestsVote && h.isGuest() && !h.isAdmin(cid)) return alert("التصويت متاح للأعضاء المسجلين فقط 🏆");
         if (!ensureIdentity()) return;
         const ban = h.getMyBan(cid);
@@ -2234,10 +2463,11 @@
         if (!c.cfg.allowSelfVote && !h.isAdmin(cid) && myK === targetKey) return showToast("🚫 لا يمكنك التصويت لنفسك!", 3500, "red");
         const isDual = "dual" === c.mode && !matchKey;
         const voteKey = getVoteKey(cid, myK, targetCat, isDual, matchKey);
-        if (st.data.votes?.[voteKey] && !c.cfg.allowVoteChange) return showToast("⚠️ لقد استخدمت صوتك مسبقاً.", 3000, "red");
+        if (st.data.votes?.[voteKey] && !c.cfg.allowVoteChange) return showToast("⚠️ لقد استخدمت صوتك مسبقاً.", 3500, "red");
         const label = c.cfg.blindVoting && !h.isAdmin(cid) ? "هذه المشاركة" : `(${target.displayName || targetKey})`;
         if (!confirm(`تأكيد منح صوتك لـ ${label}؟${c.cfg.allowVoteChange ? "" : "\nلا يمكن التراجع بعد التصويت."}`)) return;
 
+        st.lastVoteAt = Date.now();
         let weight = Math.max(1, Number(c.voteMultiplier) || 1);
         if (h.isVip(cid)) weight = Math.max(weight, h.getVipWeight(cid));
 
@@ -2252,38 +2482,58 @@
           .catch(() => alert("❌ تعذر تسجيل الصوت."));
     }
 
+    // عدّاد خفيف يتوقف تلقائياً بمجرد انتهاء المرحلة أو الإيقاف المؤقت (لا يحسب الأصوات كل ثانية)
     function startCountdownLoop() {
         clearInterval(st.timerId);
-        let prevPhase = "contest" === st.viewMode ? getPhaseInfo(h.getContest(st.activeCid), st.data.entries, st.data.votes).phase : "hub";
+        let prevPhase = "contest" === st.viewMode ? getPhaseInfo(h.getContest(st.activeCid)).phase : "hub";
         st.timerId = setInterval(() => {
             const modal = document.getElementById("lce-modal");
-            if (!modal || !modal.classList.contains("open")) return;
+            if (!modal || !modal.classList.contains("open")) { clearInterval(st.timerId); return; }
             if ("hub" === st.viewMode) {
-                modal.querySelectorAll(".lce-hub-cd").forEach(el => {
+                const cds = modal.querySelectorAll(".lce-hub-cd");
+                if (!cds.length) { clearInterval(st.timerId); return; }
+                cds.forEach(el => {
                     const c = h.getContest(el.dataset.cid);
                     if (c) el.textContent = h.fmtTime(getPhaseInfo(c).remaining);
                 });
                 return;
             }
             const c = h.getContest(st.activeCid);
-            if (!c) return;
-            const info = getPhaseInfo(c, st.data.entries, st.data.votes);
-            if (info.phase !== prevPhase) { prevPhase = info.phase; renderMainBody(); return; }
+            if (!c || c.paused) { clearInterval(st.timerId); return; }
+            // حساب سريع بالوقت فقط بدون computeVoteCounts
+            const fastInfo = getPhaseInfo(c);
+            if (fastInfo.phase !== prevPhase) {
+                prevPhase = fastInfo.phase;
+                renderMainBody();
+                if ("submission" !== fastInfo.phase && "voting" !== fastInfo.phase) clearInterval(st.timerId);
+                return;
+            }
+            if ("submission" !== fastInfo.phase && "voting" !== fastInfo.phase) { clearInterval(st.timerId); return; }
             const cd = document.getElementById("lce-cd-txt");
-            if (cd) cd.textContent = h.fmtTime(info.remaining);
+            if (cd) cd.textContent = h.fmtTime(fastInfo.remaining);
         }, 1000);
     }
     // ====== نهاية الجزء 2 من 3 ======
+    
     // ====== بداية الجزء 3 من 3 ======
+    const BROADCAST_PRESETS = [
+        { label: "🔥 انطلاق المشاركة", theme: "gold", text: t => `🔥 باب المشاركة مفتوح الآن في (${t})! ادخل وسجّل حضورك قبل انتهاء الوقت.` },
+        { label: "🗳️ بدأ التصويت", theme: "emerald", text: t => `🗳️ بدأ التصويت الرسمي في (${t})! ادخل وصوّت لمن يستحق اللقب.` },
+        { label: "⏳ آخر ساعة", theme: "red", text: t => `⏳ باقي أقل من ساعة على إغلاق (${t})! سارع بالمشاركة والتصويت الآن.` },
+        { label: "⚡ ساعة مضاعفة", theme: "purple", text: t => `⚡ ساعة المضاعفة الذهبية نشطة الآن في (${t})! صوتك يُحسب مضاعفاً 🔥` },
+        { label: "🏆 ظهرت النتائج", theme: "gold", text: t => `🏆 أُعلنت نتائج (${t}) رسمياً! ادخل لتهنئة الفائزين.` }
+    ];
+
     const contestsAdmin = {
         injectStyles() {
             if (document.getElementById("lcea-styles")) return;
             const s = document.createElement("style");
             s.id = "lcea-styles";
             s.textContent = `
-            .lcea-ov{position:fixed;inset:0;background:rgba(7,9,16,.93);z-index:2147483645;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);direction:rtl;font-family:'Segoe UI',tahoma,sans-serif;opacity:0;transition:opacity .22s}
+            .lcea-ov{position:fixed;inset:0;background:rgba(7,9,16,.94);z-index:2147483645;display:flex;align-items:center;justify-content:center;direction:rtl;font-family:system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;opacity:0;transition:opacity .2s}
+            @media(min-width:769px){.lcea-ov{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
             .lcea-ov.active{opacity:1}
-            .lcea-box{background:linear-gradient(180deg,rgba(26,29,52,.99),rgba(13,15,28,.99));border:1px solid rgba(212,175,55,.45);border-radius:20px;width:96%;max-width:760px;max-height:90vh;max-height:90dvh;padding:14px 16px 16px;box-shadow:0 25px 60px rgba(0,0,0,.9);display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-sizing:border-box}
+            .lcea-box{background:linear-gradient(180deg,#1a1d34,#0d0f1c);border:1px solid rgba(212,175,55,.45);border-radius:20px;width:96%;max-width:780px;max-height:90vh;max-height:90dvh;padding:14px 16px 16px;box-shadow:0 20px 55px rgba(0,0,0,.88);display:flex;flex-direction:column;overflow:hidden;color:#f8fafc;box-sizing:border-box;contain:layout style}
             .lcea-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;gap:8px;flex-wrap:wrap}
             .lcea-title{display:flex;align-items:center;gap:8px;color:#D4AF37;font-weight:900;font-size:15px}
             .lcea-ctx-bar{display:flex;align-items:center;gap:7px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:11px;padding:6px 10px;margin-bottom:9px;flex-shrink:0}
@@ -2297,7 +2547,8 @@
             .lcea-tabs::-webkit-scrollbar{display:none}
             .lcea-tab{flex:1 0 auto;background:transparent;color:#94a3b8;border:none;padding:0 10px;height:100%;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit;font-size:11.5px;font-weight:bold;cursor:pointer;white-space:nowrap}
             .lcea-tab.active{background:rgba(212,175,55,.16);color:#D4AF37;border-bottom:2px solid #D4AF37}
-            .lcea-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding-left:4px;margin-left:-4px;-webkit-overflow-scrolling:touch}
+            .lcea-tab.locked{opacity:.42}
+            .lcea-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding-left:4px;margin-left:-4px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
             .lcea-body::-webkit-scrollbar{width:5px}
             .lcea-body::-webkit-scrollbar-thumb{background:rgba(212,175,55,.35);border-radius:10px}
             .lcea-view{display:none}.lcea-view.active{display:block}
@@ -2327,15 +2578,16 @@
             .lcea-t-blue{background:rgba(56,189,248,.18);color:#38bdf8}
             .lcea-srow{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 11px;margin-bottom:6px;gap:10px}
             .lcea-sw{position:relative;width:40px;height:21px;flex-shrink:0}.lcea-sw input{opacity:0;width:0;height:0}
-            .lcea-sl{position:absolute;cursor:pointer;inset:0;background:#334155;border-radius:21px;transition:.25s}
-            .lcea-sl:before{content:"";position:absolute;height:15px;width:15px;right:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+            .lcea-sl{position:absolute;cursor:pointer;inset:0;background:#334155;border-radius:21px;transition:.2s}
+            .lcea-sl:before{content:"";position:absolute;height:15px;width:15px;right:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
             .lcea-sw input:checked+.lcea-sl{background:#10b981}.lcea-sw input:checked+.lcea-sl:before{transform:translateX(-19px)}
             .lcea-bdg{background:#ef4444;color:#fff;font-size:9.5px;font-weight:900;padding:1px 6px;border-radius:12px;margin-right:3px;display:none}
             .lcea-up-box{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px dashed rgba(212,175,55,.35);border-radius:10px;padding:6px 9px}
             .lcea-up-prev{width:34px;height:34px;border-radius:50%;border:1.5px solid #D4AF37;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#D4AF37;font-size:14px;flex-shrink:0;overflow:hidden}
             .lcea-up-prev img{width:100%;height:100%;object-fit:cover;display:block}
-            .lcea-preset-chip{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);color:#fde68a;border-radius:18px;padding:4.5px 9px;font-size:10.8px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
+            .lcea-preset-chip{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.35);color:#fde68a;border-radius:18px;padding:4.5px 9px;font-size:10.8px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
             .lcea-preset-chip:hover{background:#D4AF37;color:#111}
+            @media(max-width:650px){.lcea-box{width:100%;height:100%;max-height:100%;border-radius:0;border:none;padding:11px 12px}.lcea-g3{grid-template-columns:1fr 1fr}}
             `;
             document.head.appendChild(s);
         },
@@ -2355,6 +2607,13 @@
             return st.adminCid;
         },
 
+        scheduleRefresh(delayMs = 200) {
+            if (!document.getElementById("lce-admin-modal")) return;
+            clearTimeout(st.adminRefreshTimer);
+            if (delayMs <= 0) { this.refresh(); return; }
+            st.adminRefreshTimer = setTimeout(() => this.refresh(), delayMs);
+        },
+
         log(action, target, details = "") {
             if (!st.db) return;
             st.db.ref(`${ROOT}/logs`).push({
@@ -2365,6 +2624,7 @@
 
         sendUserCmd(sanUser, cmd, text = "") {
             if (!st.db || !sanUser) return;
+            if (!h.canPerm(st.adminCid, "radar")) return showToast("لا تملك صلاحية أوامر الرادار", 3000, "red");
             dbOps.sendCmd(sanUser, cmd, text).then(() => {
                 this.log("kick" === cmd ? "إخراج فوري" : "تنبيه خاص", sanUser, text || cmd);
                 showToast("kick" === cmd ? "⚡ تم إخراج العضو من المسابقة" : "📩 تم إرسال التنبيه للعضو");
@@ -2376,7 +2636,7 @@
             st.db.ref(`${ROOT}/global`).update(part).then(() => {
                 st.global = Object.assign({}, st.global, part);
                 this.log("إعدادات عامة", "النظام", Object.keys(part).join(", "));
-                syncMenuItems();
+                scheduleSyncMenuItems();
                 this.refresh();
                 if (msg) showToast(msg, 3000, "gold");
             }).catch(() => alert("❌ فشل الحفظ."));
@@ -2398,7 +2658,32 @@
             }).catch(() => alert("❌ فشل حفظ الإعدادات."));
         },
 
+        exportResultsCSV(cid) {
+            const c = h.getContest(cid);
+            if (!c) return;
+            const counts = computeVoteCounts(st.data.entries, st.data.votes);
+            const list = getApprovedEntries(st.data.entries).sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0));
+            if (!list.length) return showToast("لا توجد بيانات للتصدير", 2800, "red");
+            const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+            const rows = [["الترتيب", "الاسم", "اسم المستخدم", "الشريك", "الفئة", "الأصوات", "فائز", "الحالة", "النص", "وقت المشاركة"].map(q).join(",")];
+            list.forEach((e, i) => {
+                rows.push([
+                    i + 1, e.displayName || e.username, e.username, e.partnerName || "",
+                    "cat2" === e.category ? (c.cat2Label || "فئة 2") : (c.cat1Label || "فئة 1"),
+                    counts[e.key] || 0, e.isWinner ? "نعم" : "لا", e.status || "approved",
+                    e.text || e.title || "", h.fmtDate(e.joinedAt)
+                ].map(q).join(","));
+            });
+            const blob = new Blob(["\uFEFF" + rows.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob), a = document.createElement("a");
+            a.href = url; a.download = `layl-results-${cid}-${new Date().toISOString().split("T")[0]}.csv`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast("📊 تم تصدير جدول النتائج (CSV) بنجاح!", 3200, "gold");
+        },
+
         openEditEntry(cid, key) {
+            if (!h.canPerm(cid, "entries")) return showToast("لا تملك صلاحية تعديل المشاركات", 3000, "red");
             const c = h.getContest(cid), it = st.data.entries?.[key];
             if (!c || !it || !st.db) return;
             document.getElementById("lce-edit-entry-sub")?.remove();
@@ -2489,6 +2774,7 @@
             if (preselectCid) st.adminTab = "control";
             document.getElementById("lce-admin-modal")?.remove();
 
+            const fullAdm = this.isFullAdmin();
             const ov = document.createElement("div");
             ov.id = "lce-admin-modal";
             ov.className = "lcea-ov";
@@ -2514,18 +2800,18 @@
                 </div>
                 <div class="lcea-tabs">
                     <button type="button" class="lcea-tab" data-atab="contests"><i class="fas fa-plus-circle"></i> المسابقات</button>
-                    <button type="button" class="lcea-tab" data-atab="control"><i class="fas fa-sliders-h"></i> التحكم</button>
-                    <button type="button" class="lcea-tab" data-atab="entries"><i class="fas fa-users"></i> المشاركات <span id="lcea-pbdg" class="lcea-bdg">0</span></button>
-                    <button type="button" class="lcea-tab" data-atab="votes"><i class="fas fa-vote-yea"></i> الأصوات</button>
-                    <button type="button" class="lcea-tab" data-atab="radar"><i class="fas fa-eye"></i> الرادار والحظر</button>
-                    <button type="button" class="lcea-tab" data-atab="prizes"><i class="fas fa-gift"></i> الجوائز</button>
+                    <button type="button" class="lcea-tab" data-atab="control" data-perm="control"><i class="fas fa-sliders-h"></i> التحكم</button>
+                    <button type="button" class="lcea-tab" data-atab="entries" data-perm="entries"><i class="fas fa-users"></i> المشاركات <span id="lcea-pbdg" class="lcea-bdg">0</span></button>
+                    <button type="button" class="lcea-tab" data-atab="votes" data-perm="votes"><i class="fas fa-vote-yea"></i> الأصوات</button>
+                    <button type="button" class="lcea-tab" data-atab="radar" data-perm="radar"><i class="fas fa-eye"></i> الرادار والحظر</button>
+                    <button type="button" class="lcea-tab" data-atab="prizes" data-perm="prizes"><i class="fas fa-gift"></i> الجوائز</button>
                     <button type="button" class="lcea-tab" data-atab="settings"><i class="fas fa-cog"></i> الصلاحيات</button>
                     <button type="button" class="lcea-tab" data-atab="analytics"><i class="fas fa-chart-bar"></i> التحليلات والسجل</button>
                 </div>
                 <div class="lcea-body">
-                    <!-- 1. إدارة وإنشاء المسابقات (10 أنظمة + 13 قالب جاهز) -->
+                    <!-- 1. إدارة وإنشاء المسابقات -->
                     <div id="lcea-v-contests" class="lcea-view">
-                        ${this.isFullAdmin() ? `
+                        ${fullAdm ? `
                         <div class="lcea-card" style="border-color:rgba(212,175,55,.45);">
                             <div class="lcea-ct"><span><i class="fas fa-magic"></i> إنشاء مسابقة جديدة (13 قالب جاهز أو تخصيص كامل)</span></div>
                             <div class="lcea-row" style="margin-bottom:9px;gap:5px;">
@@ -2604,6 +2890,9 @@
 
                         <div class="lcea-card" style="border-color:rgba(239,68,68,.35);">
                             <div class="lcea-ct" style="color:#fca5a5;"><span><i class="fas fa-bullhorn"></i> بث توست فوري لجميع المتواجدين بالشات</span></div>
+                            <div class="lcea-row" style="margin-bottom:7px;gap:4px;">
+                                ${BROADCAST_PRESETS.map((bp, i) => `<button type="button" class="lcea-preset-chip lcea-bc-pre" data-bi="${i}">${bp.label}</button>`).join("")}
+                            </div>
                             <div class="lcea-row">
                                 <input id="lcea-bc-inp" class="lcea-inp" style="flex:1;" placeholder="مثلاً: 🔥 بدأت ساعة التصويت المضاعف ×2 الآن!">
                                 <select id="lcea-bc-th" class="lcea-inp" style="width:86px;"><option value="gold">ذهبي</option><option value="red">عاجل</option><option value="maroon">عنابي</option><option value="purple">ملكي</option><option value="emerald">زمردي</option></select>
@@ -2645,6 +2934,7 @@
                             </div>
                             <button type="button" id="lcea-me-add" class="lcea-btn lcea-b-ok" style="width:100%;">إضافة واعتماد فوري</button>
                         </div>
+                        <input id="lcea-eq" class="lcea-inp" style="margin-bottom:8px;" placeholder="🔍 ابحث في المشاركات بالاسم أو النص...">
                         <div id="lcea-entries-list"></div>
                     </div>
 
@@ -2741,6 +3031,7 @@
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تفعيل هذه المسابقة للأعضاء</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-en"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">إظهار زر مستقل لها في قائمة الإضافات</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-menu"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تثبيت الزر بتوهج بأعلى القائمة</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-pin"><span class="lcea-sl"></span></label></div>
+                            <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">✏️ السماح للعضو بتعديل مشاركته قبل التصويت</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-edit"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">🎭 التصويت الأعمى (إخفاء أسماء المشاركين)</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-blind"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">🔒 التصويت السري (إخفاء عداد الأصوات)</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-hide"><span class="lcea-sl"></span></label></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">مراجعة الإدارة قبل اعتماد المشاركة الجديدة</div><label class="lcea-sw"><input type="checkbox" id="lcea-cs-app"><span class="lcea-sl"></span></label></div>
@@ -2752,15 +3043,27 @@
                         </div>
 
                         <div class="lcea-card" style="border-color:rgba(168,85,247,.35);">
-                            <div class="lcea-ct" style="color:#e9d5ff;"><span><i class="fas fa-user-shield"></i> مديرو هذه المسابقة فقط (صلاحية محلية)</span></div>
+                            <div class="lcea-ct" style="color:#e9d5ff;"><span><i class="fas fa-user-shield"></i> مديرو هذه المسابقة وصلاحياتهم المحددة</span></div>
+                            ${fullAdm ? `
                             <div class="lcea-row" style="margin-bottom:7px;">
                                 <input id="lcea-mgr-inp" class="lcea-inp" style="flex:1;" placeholder="اسم المستخدم...">
                                 <button type="button" id="lcea-mgr-add" class="lcea-btn lcea-b-info lcea-mini" style="padding:8px 13px;">تعيين مدير</button>
+                            </div>` : ""}
+                            <div id="lcea-mgr-list" style="margin-bottom:9px;"></div>
+                            ${fullAdm ? `
+                            <div style="font-size:11px;color:#cbd5e1;font-weight:800;margin-bottom:6px;">صلاحيات مديري هذه المسابقة:</div>
+                            <div class="lcea-g2" style="margin-bottom:7px;">
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">التحكم بالمراحل والوقت</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-control"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">اعتماد وتعديل المشاركات</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-entries"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">إدارة الأصوات والتصفير</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-votes"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">الرادار والحظر والطرد</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-radar"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">تعديل الجوائز والقوانين</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-prizes"><span class="lcea-sl"></span></label></div>
+                                <div class="lcea-srow" style="margin:0;"><span style="font-size:11px;">إرسال بث فوري للشات</span><label class="lcea-sw"><input type="checkbox" id="lcea-mp-broadcast"><span class="lcea-sl"></span></label></div>
                             </div>
-                            <div id="lcea-mgr-list"></div>
+                            <button type="button" id="lcea-mp-save" class="lcea-btn lcea-b-info" style="width:100%;">حفظ صلاحيات المديرين</button>` : ""}
                         </div>
 
-                        ${this.isFullAdmin() ? `
+                        ${fullAdm ? `
                         <div class="lcea-card" style="border-color:rgba(212,175,55,.4);">
                             <div class="lcea-ct"><span><i class="fas fa-globe"></i> إعدادات نظام المسابقات العامة</span></div>
                             <div class="lcea-srow"><div style="font-size:12px;font-weight:bold;">تفعيل نظام المسابقات بالكامل</div><label class="lcea-sw"><input type="checkbox" id="lcea-gs-en"><span class="lcea-sl"></span></label></div>
@@ -2807,9 +3110,10 @@
                         <div class="lcea-card">
                             <div class="lcea-ct"><span><i class="fas fa-chart-pie"></i> إحصائيات المسابقة ونسخ الإعلانات</span></div>
                             <div id="lcea-an-box" style="margin-bottom:8px;"></div>
-                            <div class="lcea-g2">
-                                <button type="button" id="lcea-copy-top" class="lcea-btn lcea-b-gold"><i class="fas fa-list-ol"></i> نسخ الترتيب المباشر للشات</button>
-                                <button type="button" id="lcea-copy-promo" class="lcea-btn lcea-b-info"><i class="fas fa-bullhorn"></i> نسخ إعلان الجوائز للشات</button>
+                            <div class="lcea-g3">
+                                <button type="button" id="lcea-copy-top" class="lcea-btn lcea-b-gold"><i class="fas fa-list-ol"></i> نسخ الترتيب</button>
+                                <button type="button" id="lcea-copy-promo" class="lcea-btn lcea-b-info"><i class="fas fa-bullhorn"></i> نسخ الجوائز</button>
+                                <button type="button" id="lcea-exp-csv" class="lcea-btn lcea-b-ok"><i class="fas fa-file-csv"></i> تصدير CSV</button>
                             </div>
                         </div>
                         <div class="lcea-card">
@@ -2830,7 +3134,7 @@
                             <div id="lcea-hof-list"></div>
                         </div>
                         <div class="lcea-card">
-                            <div class="lcea-ct"><span><i class="fas fa-clipboard-list"></i> سجل العمليات الإدارية</span><button type="button" id="lcea-clr-logs" class="lcea-btn lcea-b-dng lcea-mini">مسح</button></div>
+                            <div class="lcea-ct"><span><i class="fas fa-clipboard-list"></i> سجل العمليات الإدارية</span>${fullAdm ? '<button type="button" id="lcea-clr-logs" class="lcea-btn lcea-b-dng lcea-mini">مسح</button>' : ""}</div>
                             <input id="lcea-log-q" class="lcea-inp" style="margin-bottom:7px;" placeholder="🔍 ابحث في السجل...">
                             <div id="lcea-logs-list"></div>
                         </div>
@@ -2847,9 +3151,15 @@
         },
 
         switchTab(tab) {
-            st.adminTab = tab;
             const ov = document.getElementById("lce-admin-modal");
             if (!ov) return;
+            const tabBtn = ov.querySelector(`[data-atab="${tab}"]`);
+            const reqPerm = tabBtn?.dataset?.perm;
+            if (reqPerm && st.adminCid && !h.canPerm(st.adminCid, reqPerm)) {
+                showToast("🔒 هذه الصلاحية غير مفعّلة لمدير المسابقة", 3000, "red");
+                return;
+            }
+            st.adminTab = tab;
             ov.querySelectorAll("[data-atab]").forEach(x => x.classList.toggle("active", x.dataset.atab === tab));
             ov.querySelectorAll(".lcea-view").forEach(x => x.classList.remove("active"));
             document.getElementById(`lcea-v-${tab}`)?.classList.add("active");
@@ -2857,6 +3167,7 @@
         },
 
         close() {
+            clearTimeout(st.adminRefreshTimer);
             [st.logsRef, st.bansRef, st.legacyBansRef, st.hofRef, st.legacyHofRef, st.adminPresenceRef].forEach(r => { try { r?.off(); } catch (e) {} });
             st.logsRef = st.bansRef = st.legacyBansRef = st.hofRef = st.legacyHofRef = st.adminPresenceRef = null;
             document.getElementById("lce-edit-entry-sub")?.remove();
@@ -2871,20 +3182,20 @@
             st.logsRef = st.db.ref(`${ROOT}/logs`).limitToLast(100);
             st.logsRef.on("value", sn => {
                 st.logs = Object.values(sn.val() || {}).sort((a, b) => (b.ts || 0) - (a.ts || 0));
-                this.renderLogs();
+                if ("analytics" === st.adminTab) this.renderLogs();
             });
             st.bansRef?.off();
             st.bansRef = st.db.ref(`${ROOT}/banned`);
-            st.bansRef.on("value", sn => { st.banned = sn.val() || {}; this.refresh(); });
+            st.bansRef.on("value", sn => { st.banned = sn.val() || {}; this.scheduleRefresh(150); });
             st.legacyBansRef?.off();
             st.legacyBansRef = st.db.ref(`${LEGACY_ROOT}/banned`);
-            st.legacyBansRef.on("value", sn => { st.legacy.banned = sn.val() || {}; this.refresh(); });
+            st.legacyBansRef.on("value", sn => { st.legacy.banned = sn.val() || {}; this.scheduleRefresh(150); });
             st.hofRef?.off();
             st.hofRef = st.db.ref(`${ROOT}/hall_of_fame`);
-            st.hofRef.on("value", sn => { st.hof = sn.val() || {}; this.refresh(); });
+            st.hofRef.on("value", sn => { st.hof = sn.val() || {}; this.scheduleRefresh(150); });
             st.legacyHofRef?.off();
             st.legacyHofRef = st.db.ref(`${LEGACY_ROOT}/hall_of_fame`);
-            st.legacyHofRef.on("value", sn => { st.legacy.hof = sn.val() || {}; this.refresh(); });
+            st.legacyHofRef.on("value", sn => { st.legacy.hof = sn.val() || {}; this.scheduleRefresh(150); });
             this.rebindPresenceStream();
         },
 
@@ -2895,7 +3206,7 @@
             if (!st.db || !st.adminCid || !document.getElementById("lce-admin-modal")) return;
             const path = isLegacy(st.adminCid) ? `${LEGACY_ROOT}/presence` : `${ROOT}/data/${st.adminCid}/presence`;
             st.adminPresenceRef = st.db.ref(path);
-            st.adminPresenceRef.on("value", sn => { st.data.presence = sn.val() || {}; this.refresh(); });
+            st.adminPresenceRef.on("value", sn => { st.data.presence = sn.val() || {}; this.scheduleRefresh(250); });
         },
 
         populateSettings() {
@@ -2908,6 +3219,7 @@
                 sc("lcea-cs-en", !1 !== c.cfg.enabled);
                 sc("lcea-cs-menu", !1 !== c.showInMenu);
                 sc("lcea-cs-pin", Boolean(c.pinTop));
+                sc("lcea-cs-edit", !1 !== c.cfg.allowEditEntry);
                 sc("lcea-cs-blind", Boolean(c.cfg.blindVoting));
                 sc("lcea-cs-hide", Boolean(c.cfg.hideLiveVotes));
                 sc("lcea-cs-app", Boolean(c.cfg.requireApproval));
@@ -2919,6 +3231,10 @@
                 sv("lcea-ban-th", c.cfg.bannerTheme || "gold");
                 sv("lcea-rules-ta", c.cfg.rulesText || DEFAULT_RULES);
                 sv("lcea-welc-ta", c.cfg.welcomeText || "");
+
+                const mp = c.cfg.managerPerms || DEFAULT_MANAGER_PERMS;
+                ["control", "entries", "votes", "radar", "prizes", "broadcast"].forEach(k => sc(`lcea-mp-${k}`, !1 !== mp[k]));
+
                 const qw = document.getElementById("lcea-cs-quiz-wrap");
                 if (qw) {
                     const showQ = ["quiz", "raffle", "prediction"].includes(c.template);
@@ -3061,9 +3377,10 @@
                 }).catch(() => alert("❌ فشل إنشاء المسابقة."));
             });
 
-            // 2. التحكم والمراحل
+            // 2. التحكم والمراحل وقوالب البث
             ov.querySelectorAll(".lcea-time-adj").forEach(b => b.onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
+                if (!h.canPerm(cid, "control")) return showToast("لا تملك صلاحية تعديل الوقت", 3000, "red");
                 if (!c || "active" !== c.status) return showToast("لا توجد مسابقة نشطة");
                 const hrs = Number(b.dataset.h), delta = hrs * 36e5, info = getPhaseInfo(c, st.data.entries, st.data.votes);
                 if ("submission" === info.phase) {
@@ -3074,7 +3391,8 @@
             });
 
             document.getElementById("lcea-pause-btn").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c || "active" !== c.status) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || "active" !== c.status || !h.canPerm(cid, "control")) return;
                 if (c.paused) {
                     const rem = c.remainingMs || 0, now = Date.now(), up = { paused: !1, remainingMs: 0 };
                     if ("submission" === c.pausedPhase) {
@@ -3090,20 +3408,23 @@
             };
 
             document.getElementById("lcea-tog-mode").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control")) return;
                 const next = "dual" === c.mode ? "single" : "dual";
                 this.patchContest(cid, { mode: next }, "dual" === next ? "النظام الآن: فئتان" : "النظام الآن: فئة واحدة");
             };
 
             document.getElementById("lcea-go-sub").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c || !confirm("إعادة فتح مرحلة التقديم لمدة 24 ساعة؟")) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control") || !confirm("إعادة فتح مرحلة التقديم لمدة 24 ساعة؟")) return;
                 const now = Date.now(), noVote = ["prediction", "raffle", "quiz"].includes(c.template);
                 const vDur = Math.max(24 * 36e5, ((c.voteEnd || now) - (c.nomEnd || now)) || 72 * 36e5);
                 this.patchContest(cid, { status: "active", nomEnd: now + 24 * 36e5, voteEnd: noVote ? now + 24 * 36e5 : now + 24 * 36e5 + vDur, paused: !1, resultsPublished: !1 }, "🔄 تم فتح مرحلة التقديم");
             };
 
             document.getElementById("lcea-skip-sub").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control")) return;
                 if ("bracket" === c.template) return startBracketTournament(cid, c);
                 if (!confirm("إنهاء التقديم وبدء المرحلة التالية فوراً؟")) return;
                 const now = Date.now(), noVote = ["prediction", "raffle", "quiz"].includes(c.template);
@@ -3113,7 +3434,8 @@
             };
 
             document.getElementById("lcea-skip-vote").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control")) return;
                 if ("raffle" === c.template) return runRaffleDraw(cid, c);
                 if (!confirm("إنهاء التصويت وإعلان النتائج فوراً؟")) return;
                 const now = Date.now();
@@ -3123,25 +3445,27 @@
 
             document.getElementById("lcea-new-season").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
-                if (!c || !confirm(`إطلاق موسم جديد (#${(c.season || 1) + 1}) لمسابقة (${c.title}) وتصفير مشاركات وأصوات الموسم السابق؟`)) return;
+                if (!c || !h.canPerm(cid, "control") || !confirm(`إطلاق موسم جديد (#${(c.season || 1) + 1}) لمسابقة (${c.title}) وتصفير مشاركات وأصوات الموسم السابق؟`)) return;
                 dbOps.startNewSeason(cid, c).then(() => { this.log("موسم جديد", c.title, `#${(c.season || 1) + 1}`); showToast("🚀 انطلق الموسم الجديد!", 3500, "gold"); });
             };
 
             document.getElementById("lcea-archive-c").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
-                if (!c || !confirm(`أرشفة (${c.title}) وإخفاء زرها من قائمة الأعضاء؟`)) return;
+                if (!c || !h.canPerm(cid, "control") || !confirm(`أرشفة (${c.title}) وإخفاء زرها من قائمة الأعضاء؟`)) return;
                 this.patchContest(cid, { status: "archived", showInMenu: !1 }, "📦 تمت الأرشفة وإخفاء الزر");
             };
 
             ov.querySelectorAll(".lcea-set-mult").forEach(b => b.onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control")) return;
                 const m = Number(b.dataset.m);
                 this.patchContest(cid, { voteMultiplier: m }, `⚡ مضاعف الأصوات الآن: ×${m}`);
-                if (m > 1) dbOps.broadcast(cid, `⚡ ساعة المضاعفة الذهبية في (${c.title})! كل صوت يُحسب ×${m}!`, "purple");
+                if (m > 1 && h.canPerm(cid, "broadcast")) dbOps.broadcast(cid, `⚡ ساعة المضاعفة الذهبية في (${c.title})! كل صوت يُحسب ×${m}!`, "purple");
             });
 
             document.getElementById("lcea-save-hof").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!c || !h.canPerm(cid, "control")) return;
                 const entries = st.data.entries || {}, votes = st.data.votes || {};
                 const counts = computeVoteCounts(entries, votes);
                 if (c.tieBreaker && void 0 !== counts[c.tieBreaker]) counts[c.tieBreaker]++;
@@ -3173,19 +3497,28 @@
                 showToast("🏆 تم التخليد في قاعة الشرف الموحّدة!", 3500, "gold");
             };
 
+            ov.querySelectorAll(".lcea-bc-pre").forEach(b => b.onclick = () => {
+                const bp = BROADCAST_PRESETS[Number(b.dataset.bi)], c = h.getContest(st.adminCid);
+                if (!bp) return;
+                document.getElementById("lcea-bc-inp").value = bp.text(c?.title || "المسابقة");
+                document.getElementById("lcea-bc-th").value = bp.theme;
+            });
+
             document.getElementById("lcea-bc-send").onclick = () => {
+                if (!h.canPerm(st.adminCid, "broadcast")) return showToast("لا تملك صلاحية البث الفوري", 3000, "red");
                 const inp = document.getElementById("lcea-bc-inp"), txt = inp.value.trim(), theme = document.getElementById("lcea-bc-th").value;
                 if (!txt || !st.db) return alert("اكتب نص البث.");
                 dbOps.broadcast(st.adminCid, txt, theme).then(() => { this.log("بث فوري", "الجميع", txt); inp.value = ""; showToast("📢 تم البث للجميع"); });
             };
 
             document.getElementById("lcea-ban-save").onclick = () => {
-                if (!st.adminCid) return;
+                if (!st.adminCid || !h.canPerm(st.adminCid, "control")) return;
                 const txt = document.getElementById("lcea-ban-txt").value.trim(), th = document.getElementById("lcea-ban-th").value;
                 this.patchContestCfg(st.adminCid, { bannerText: txt, bannerTheme: th }, txt ? "📢 تم تحديث الشريط" : "تم إخفاء الشريط");
             };
 
-            // 3. المشاركات / الخيارات اليدوية
+            // 3. المشاركات والبحث فيها
+            document.getElementById("lcea-eq").oninput = () => this.renderEntries();
             let manualMedia = "";
             const meFile = document.getElementById("lcea-me-file"), mePrev = document.getElementById("lcea-me-prev"), meLbl = document.getElementById("lcea-me-lbl"), meClr = document.getElementById("lcea-me-clr");
             const resetMeMedia = () => { manualMedia = ""; mePrev.innerHTML = '<i class="fas fa-camera"></i>'; meLbl.textContent = "صورة من الأستوديو (اختياري)"; meClr.style.display = "none"; };
@@ -3200,7 +3533,7 @@
             };
 
             document.getElementById("lcea-app-all").onclick = () => {
-                const cid = st.adminCid; if (!cid) return;
+                const cid = st.adminCid; if (!cid || !h.canPerm(cid, "entries")) return;
                 dbOps.approveAllPending(cid, st.data.entries).then(cnt => {
                     if (!cnt) return showToast("لا توجد مشاركات معلّقة");
                     this.log("اعتماد جماعي", h.getContest(cid)?.title, `${cnt}`);
@@ -3210,6 +3543,7 @@
 
             document.getElementById("lcea-me-add").onclick = () => {
                 const cid = st.adminCid, c = h.getContest(cid);
+                if (!h.canPerm(cid, "entries")) return showToast("لا تملك صلاحية إدارة المشاركات", 3000, "red");
                 const u = document.getElementById("lcea-me-u").value.trim(), key = h.san(u) || h.genId("opt");
                 if (!u || !cid || !st.db) return alert("أدخل اسم المستخدم أو الخيار.");
                 const cat = document.getElementById("lcea-me-cat").value;
@@ -3245,14 +3579,14 @@
             // 4. الأصوات
             document.getElementById("lcea-vq").oninput = () => this.renderVotes();
             document.getElementById("lcea-rev-10m").onclick = () => {
-                const cid = st.adminCid; if (!cid) return;
+                const cid = st.adminCid; if (!cid || !h.canPerm(cid, "votes")) return;
                 const cut = Date.now() - 10 * 6e4, up = {}; let cnt = 0;
                 Object.entries(st.data.votes || {}).forEach(([k, v]) => { if (v && (v.ts || 0) >= cut) { up[k] = null; cnt++; } });
                 if (!cnt) return showToast("لا توجد أصوات خلال آخر 10 دقائق");
                 if (confirm(`سحب (${cnt}) صوت خلال آخر 10 دقائق؟`)) dbOps.updateVotes(cid, up).then(() => { this.log("سحب أصوات 10د", h.getContest(cid)?.title, `${cnt}`); showToast(`🧹 تم سحب ${cnt} صوت`); });
             };
             document.getElementById("lcea-rev-entry").onclick = () => {
-                const cid = st.adminCid; if (!cid) return;
+                const cid = st.adminCid; if (!cid || !h.canPerm(cid, "votes")) return;
                 const target = prompt("اكتب اسم المشارك المراد تصفير أصواته:");
                 if (!target || !target.trim()) return;
                 const key = h.san(target), up = {}; let cnt = 0;
@@ -3261,17 +3595,21 @@
                 if (confirm(`تصفير (${cnt}) صوت؟`)) dbOps.updateVotes(cid, up).then(() => { this.log("تصفير أصوات مشارك", target, `${cnt}`); showToast(`🗑️ تم حذف ${cnt} صوت`); });
             };
             document.getElementById("lcea-wipe-votes").onclick = () => {
-                const cid = st.adminCid; if (!cid || !confirm("⚠️ تصفير جميع الأصوات في هذه المسابقة؟")) return;
+                const cid = st.adminCid; if (!cid || !h.canPerm(cid, "votes") || !confirm("⚠️ تصفير جميع الأصوات في هذه المسابقة؟")) return;
                 dbOps.wipeVotes(cid).then(() => { this.log("تصفير كل الأصوات", h.getContest(cid)?.title); showToast("🗑️ تم التصفير"); });
             };
 
             // 5. الرادار والحظر
-            document.getElementById("lcea-clr-pres").onclick = () => dbOps.clearPresence(st.adminCid).then(() => showToast("🧹 تم تنظيف الرادار"));
+            document.getElementById("lcea-clr-pres").onclick = () => {
+                if (!h.canPerm(st.adminCid, "radar")) return;
+                dbOps.clearPresence(st.adminCid).then(() => showToast("🧹 تم تنظيف الرادار"));
+            };
             document.getElementById("lcea-bgo").onclick = () => {
+                if (!h.canPerm(st.adminCid, "radar")) return showToast("لا تملك صلاحية الحظر", 3000, "red");
                 const u = document.getElementById("lcea-bu").value.trim(), key = h.san(u);
                 if (!key || !st.db) return alert("أدخل اسم المستخدم.");
                 const scope = document.getElementById("lcea-bs").value;
-                const contestId = "current" === document.getElementById("lcea-bc").value ? (st.adminCid || "all") : "all";
+                const contestId = "current" === document.getElementById("lcea-bc").value ? (st.adminCid || "all") : (this.isFullAdmin() ? "all" : (st.adminCid || "all"));
                 const dur = document.getElementById("lcea-bd").value, reason = document.getElementById("lcea-br").value.trim();
                 const dMap = { "1h": 36e5, "6h": 216e5, "24h": 864e5, "3d": 2592e5, "7d": 6048e5 };
                 const expiresAt = dMap[dur] ? Date.now() + dMap[dur] : null;
@@ -3282,6 +3620,7 @@
                 });
             };
             document.getElementById("lcea-cln-bans").onclick = () => {
+                if (!h.canPerm(st.adminCid, "radar")) return;
                 const up1 = {}, up2 = {}; let cnt = 0;
                 Object.entries(st.banned || {}).forEach(([k, b]) => { if (b && b.expiresAt && Date.now() >= b.expiresAt) { up1[k] = null; cnt++; } });
                 Object.entries(st.legacy.banned || {}).forEach(([k, b]) => { if (b && b.expiresAt && Date.now() >= b.expiresAt) { up2[k] = null; cnt++; } });
@@ -3294,30 +3633,35 @@
 
             // 6. الجوائز والقوانين
             document.getElementById("lcea-pz-reset").onclick = () => {
-                if (st.adminCid && confirm("استعادة الجوائز الافتراضية؟")) dbOps.setPrizes(st.adminCid, isLegacy(st.adminCid) ? ROYAL_DEFAULT_PRIZES : DEFAULT_PRIZES).then(() => showToast("✅ تمت الاستعادة"));
+                if (st.adminCid && h.canPerm(st.adminCid, "prizes") && confirm("استعادة الجوائز الافتراضية؟")) {
+                    dbOps.setPrizes(st.adminCid, isLegacy(st.adminCid) ? ROYAL_DEFAULT_PRIZES : DEFAULT_PRIZES).then(() => showToast("✅ تمت الاستعادة"));
+                }
             };
             document.getElementById("lcea-np-add").onclick = () => {
-                const cid = st.adminCid, title = document.getElementById("lcea-np-t").value.trim(), dur = document.getElementById("lcea-np-d").value.trim(), icon = document.getElementById("lcea-np-i").value.trim() || "fa-crown";
-                if (!cid || !title) return alert("أدخل عنوان الجائزة.");
+                const cid = st.adminCid;
+                if (!cid || !h.canPerm(cid, "prizes")) return;
+                const title = document.getElementById("lcea-np-t").value.trim(), dur = document.getElementById("lcea-np-d").value.trim(), icon = document.getElementById("lcea-np-i").value.trim() || "fa-crown";
+                if (!title) return alert("أدخل عنوان الجائزة.");
                 const next = (Array.isArray(st.data.prizes) ? st.data.prizes : DEFAULT_PRIZES).slice();
                 next.push({ title, dur, icon });
                 dbOps.setPrizes(cid, next).then(() => { document.getElementById("lcea-np-t").value = ""; document.getElementById("lcea-np-d").value = ""; showToast("🎁 تمت إضافة الجائزة"); });
             };
-            document.getElementById("lcea-rules-save").onclick = () => { if (st.adminCid) this.patchContestCfg(st.adminCid, { rulesText: document.getElementById("lcea-rules-ta").value.trim() }, "✅ تم حفظ القوانين"); };
+            document.getElementById("lcea-rules-save").onclick = () => { if (st.adminCid && h.canPerm(st.adminCid, "prizes")) this.patchContestCfg(st.adminCid, { rulesText: document.getElementById("lcea-rules-ta").value.trim() }, "✅ تم حفظ القوانين"); };
             document.getElementById("lcea-welc-save").onclick = () => {
-                if (!st.adminCid) return;
+                if (!st.adminCid || !h.canPerm(st.adminCid, "prizes")) return;
                 const txt = document.getElementById("lcea-welc-ta").value.trim();
                 this.patchContestCfg(st.adminCid, { welcomeText: txt, welcomeVersion: Date.now() }, txt ? "✅ تم تفعيل رسالة الترحيب" : "تم التعطيل");
             };
             document.getElementById("lcea-welc-off").onclick = () => {
-                if (!st.adminCid) return;
+                if (!st.adminCid || !h.canPerm(st.adminCid, "prizes")) return;
                 document.getElementById("lcea-welc-ta").value = "";
                 this.patchContestCfg(st.adminCid, { welcomeText: "" }, "تم تعطيل رسالة الترحيب");
             };
 
             // 7. الصلاحيات والإعدادات
             document.getElementById("lcea-cs-save").onclick = () => {
-                const cid = st.adminCid, c = h.getContest(cid); if (!cid || !c) return;
+                const cid = st.adminCid, c = h.getContest(cid);
+                if (!cid || !c || !h.canPerm(cid, "control")) return showToast("لا تملك صلاحية تعديل الإعدادات", 3000, "red");
                 const title = document.getElementById("lcea-cs-title").value.trim() || c.title;
                 const theme = document.getElementById("lcea-cs-theme").value;
                 const showInMenu = document.getElementById("lcea-cs-menu").checked;
@@ -3331,6 +3675,7 @@
                 this.patchContest(cid, metaUp);
                 this.patchContestCfg(cid, {
                     enabled: document.getElementById("lcea-cs-en").checked,
+                    allowEditEntry: document.getElementById("lcea-cs-edit").checked,
                     blindVoting: document.getElementById("lcea-cs-blind").checked,
                     hideLiveVotes: document.getElementById("lcea-cs-hide").checked,
                     requireApproval: document.getElementById("lcea-cs-app").checked,
@@ -3341,12 +3686,21 @@
                 }, "✅ تم حفظ إعدادات المسابقة");
             };
 
-            document.getElementById("lcea-mgr-add").onclick = () => {
+            document.getElementById("lcea-mgr-add")?.addEventListener("click", () => {
                 const cid = st.adminCid, c = h.getContest(cid); if (!c || !this.isFullAdmin()) return alert("تعيين مديري المسابقة للإدارة العليا فقط.");
                 const inp = document.getElementById("lcea-mgr-inp"), u = inp.value.trim(); if (!u) return;
                 inp.value = "";
                 this.patchContestCfg(cid, { managers: Array.from(new Set([...(c.cfg.managers || []), u])) }, `🛡️ تم تعيين (${u}) مديراً لهذه المسابقة`);
-            };
+            });
+
+            document.getElementById("lcea-mp-save")?.addEventListener("click", () => {
+                const cid = st.adminCid; if (!cid || !this.isFullAdmin()) return;
+                const perms = {};
+                ["control", "entries", "votes", "radar", "prizes", "broadcast"].forEach(k => {
+                    perms[k] = Boolean(document.getElementById(`lcea-mp-${k}`)?.checked);
+                });
+                this.patchContestCfg(cid, { managerPerms: perms }, "🛡️ تم حفظ صلاحيات مديري المسابقة");
+            });
 
             document.getElementById("lcea-gs-save")?.addEventListener("click", () => {
                 this.patchGlobal({
@@ -3422,6 +3776,7 @@
                 const txt = `🏆✨ ${c.title} ✨🏆\n\n🎁 الجوائز:\n` + list.map((p, i) => `${i + 1}. ${p.title}${p.dur ? ` (${p.dur})` : ""}`).join("\n") + "\n\n🔥 ادخل من قائمة الإضافات وشارك الآن!";
                 h.copy(txt, "📋 تم نسخ إعلان الجوائز!");
             };
+            document.getElementById("lcea-exp-csv").onclick = () => this.exportResultsCSV(st.adminCid);
             document.getElementById("lcea-hf-add").onclick = () => {
                 const c = h.getContest(st.adminCid);
                 const name = document.getElementById("lcea-hf-n").value.trim(), label = document.getElementById("lcea-hf-l").value.trim() || "🏆 الفائز", votes = parseInt(document.getElementById("lcea-hf-v").value, 10) || 0;
@@ -3433,11 +3788,12 @@
                 });
             };
             document.getElementById("lcea-log-q").oninput = () => this.renderLogs();
-            document.getElementById("lcea-clr-logs").onclick = () => { if (confirm("مسح سجل العمليات؟")) st.db?.ref(`${ROOT}/logs`).remove().then(() => { st.logs = []; this.renderLogs(); }); };
+            document.getElementById("lcea-clr-logs")?.addEventListener("click", () => { if (confirm("مسح سجل العمليات؟")) st.db?.ref(`${ROOT}/logs`).remove().then(() => { st.logs = []; this.renderLogs(); }); });
         },
 
         refresh() {
-            if (!document.getElementById("lce-admin-modal")) return;
+            const ov = document.getElementById("lce-admin-modal");
+            if (!ov) return;
             this.ensureSelectedCid();
             const sel = document.getElementById("lcea-cid-sel");
             const ids = this.getManagedContestIds();
@@ -3450,6 +3806,11 @@
                 }).join("") : '<option value="">لا توجد مسابقات — أنشئ مسابقة من تبويب المسابقات</option>';
             }
 
+            // عكس حالة الصلاحيات على التبويبات
+            ov.querySelectorAll("[data-perm]").forEach(btn => {
+                btn.classList.toggle("locked", Boolean(st.adminCid && !h.canPerm(st.adminCid, btn.dataset.perm)));
+            });
+
             const c = h.getContest(st.adminCid);
             const info = c ? getPhaseInfo(c, st.data.entries, st.data.votes) : { phase: "idle", remaining: 0 };
             const phMap = { idle: "متوقفة", archived: "مؤرشفة", submission: "التقديم", voting: "التصويت", drawing: "السحب", judging: "الفرز", tiebreaker: "تعادل", results: "النتائج" };
@@ -3459,11 +3820,11 @@
 
             const spBox = document.getElementById("lcea-special-act");
             if (spBox) {
-                if (c && "raffle" === c.template && !c.resultsPublished) {
+                if (c && "raffle" === c.template && !c.resultsPublished && h.canPerm(c.id, "control")) {
                     spBox.style.display = "block";
                     spBox.innerHTML = `<button type="button" id="lcea-sp-draw" class="lcea-btn lcea-b-gold"><i class="fas fa-dice"></i> إجراء السحب العشوائي الآن (${Math.max(1, Number(c.maxWinners) || 1)} فائزين)</button>`;
                     document.getElementById("lcea-sp-draw").onclick = () => runRaffleDraw(c.id, c);
-                } else if (c && "bracket" === c.template && !c.resultsPublished) {
+                } else if (c && "bracket" === c.template && !c.resultsPublished && h.canPerm(c.id, "control")) {
                     spBox.style.display = "block";
                     const hasBr = Boolean(c.bracket?.matches?.length);
                     spBox.innerHTML = `<button type="button" id="lcea-sp-br" class="lcea-btn lcea-b-red"><i class="fas fa-random"></i> ${hasBr ? `تأهيل الفائزين للجولة #${c.bracket.round + 1}` : "سحب قرعة الجولة #1 وبدء المواجهات"}</button>`;
@@ -3493,6 +3854,7 @@
             const box = document.getElementById("lcea-contests-list"); if (!box) return;
             const ids = this.getManagedContestIds();
             if (!ids.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد مسابقات حتى الآن. أنشئ أول مسابقة بالأعلى ✨</div>'; return; }
+            const fullAdm = this.isFullAdmin();
             box.innerHTML = ids.map(id => {
                 const c = h.getContest(id), tmpl = TEMPLATES[c.template] || TEMPLATES.royal, info = getPhaseInfo(c), isSel = id === st.adminCid;
                 return `<div class="lcea-card" style="${isSel ? "border-color:#D4AF37;background:rgba(212,175,55,.06);" : ""}">
@@ -3508,7 +3870,8 @@
                         <button type="button" class="lcea-btn lcea-b-info lcea-mini lcea-sel-c" data-id="${h.esc(id)}"><i class="fas fa-sliders-h"></i> تحكم</button>
                         <button type="button" class="lcea-btn lcea-b-ok lcea-mini lcea-view-c" data-id="${h.esc(id)}"><i class="fas fa-eye"></i> فتح</button>
                         <button type="button" class="lcea-btn lcea-b-dark lcea-mini lcea-tog-menu" data-id="${h.esc(id)}">${c.showInMenu ? "إخفاء الزر" : "إظهار الزر"}</button>
-                        ${this.isFullAdmin() ? `<button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-del-c" data-id="${h.esc(id)}" style="margin-right:auto;" title="${c.isLegacy ? "إغلاق وتصفير" : "حذف نهائي"}"><i class="fas fa-trash"></i></button>` : ""}
+                        ${fullAdm ? `<button type="button" class="lcea-btn lcea-b-warn lcea-mini lcea-clone-c" data-id="${h.esc(id)}" title="نسخ المسابقة بإعداداتها"><i class="fas fa-copy"></i> نسخ</button>` : ""}
+                        ${fullAdm ? `<button type="button" class="lcea-btn lcea-b-dng lcea-mini lcea-del-c" data-id="${h.esc(id)}" style="margin-right:auto;" title="${c.isLegacy ? "إغلاق وتصفير" : "حذف نهائي"}"><i class="fas fa-trash"></i></button>` : ""}
                     </div>
                 </div>`;
             }).join("");
@@ -3519,8 +3882,17 @@
             });
             box.querySelectorAll(".lcea-view-c").forEach(b => b.onclick = () => { this.close(); window.LaylContests.open(b.dataset.id); });
             box.querySelectorAll(".lcea-tog-menu").forEach(b => b.onclick = () => {
-                const c = h.getContest(b.dataset.id); if (!c) return;
+                const c = h.getContest(b.dataset.id); if (!c || !h.canPerm(b.dataset.id, "control")) return;
                 this.patchContest(b.dataset.id, { showInMenu: !c.showInMenu }, !c.showInMenu ? "📌 ظهر الزر في القائمة" : "تم إخفاء الزر من القائمة");
+            });
+            box.querySelectorAll(".lcea-clone-c").forEach(b => b.onclick = () => {
+                const c = h.getContest(b.dataset.id); if (!c || !confirm(`إنشاء نسخة جديدة من (${c.title}) بنفس القوانين والإعدادات؟`)) return;
+                dbOps.cloneContest(b.dataset.id).then(newCid => {
+                    st.adminCid = newCid;
+                    this.log("نسخ مسابقة", c.title);
+                    syncHeavyStreams(); this.rebindPresenceStream(); this.populateSettings();
+                    showToast("📋 تم نسخ المسابقة بنجاح (مخفية من القائمة حتى تفعّل زرها)!", 4000, "gold");
+                }).catch(() => alert("❌ فشل النسخ."));
             });
             box.querySelectorAll(".lcea-del-c").forEach(b => b.onclick = () => {
                 const id = b.dataset.id, c = h.getContest(id); if (!c) return;
@@ -3545,14 +3917,17 @@
             const box = document.getElementById("lcea-entries-list"), c = h.getContest(st.adminCid);
             if (!box || !c) return;
             const counts = computeVoteCounts(st.data.entries, st.data.votes);
-            const list = Object.entries(st.data.entries || {}).sort((a, b) => ("pending" === a[1].status ? -1 : 1) - ("pending" === b[1].status ? -1 : 1) || (counts[b[0]] || 0) - (counts[a[0]] || 0));
-            if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد مشاركات حالياً.</div>'; return; }
+            const q = (document.getElementById("lcea-eq")?.value || "").trim().toLowerCase();
+            const list = Object.entries(st.data.entries || {})
+                .filter(([, it]) => it && (!q || `${it.displayName || ""} ${it.username || ""} ${it.partnerName || ""} ${it.text || ""} ${it.title || ""}`.toLowerCase().includes(q)))
+                .sort((a, b) => ("pending" === a[1].status ? -1 : 1) - ("pending" === b[1].status ? -1 : 1) || (counts[b[0]] || 0) - (counts[a[0]] || 0));
+            if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-size:12px;">لا توجد مشاركات مطابقة.</div>'; return; }
             const isPhoto = "photo" === c.template, isDuo = "duo" === c.template, noVotes = ["prediction", "raffle", "quiz"].includes(c.template);
             box.innerHTML = list.map(([k, it]) => {
                 const pend = "pending" === it.status, frz = Boolean(it.frozen);
                 const thumb = isPhoto ? it.image : it.avatar;
                 const avHtml = h.isValidImg(thumb)
-                    ? `<img src="${h.esc(thumb)}" class="lcea-ezoom" style="width:36px;height:36px;border-radius:${isPhoto ? "7px" : "50%"};object-fit:cover;border:1.5px solid #D4AF37;cursor:zoom-in;flex-shrink:0;">`
+                    ? `<img loading="lazy" decoding="async" src="${h.esc(thumb)}" class="lcea-ezoom" style="width:36px;height:36px;border-radius:${isPhoto ? "7px" : "50%"};object-fit:cover;border:1.5px solid #D4AF37;cursor:zoom-in;flex-shrink:0;">`
                     : `<div style="width:36px;height:36px;border-radius:50%;background:#1e293b;border:1.5px solid #D4AF37;color:#D4AF37;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;"><i class="fas ${h.esc(c.icon || "fa-crown")}"></i></div>`;
                 return `<div class="lcea-card" style="${pend ? "border-color:#f59e0b;" : it.isWinner ? "border-color:#10b981;" : frz ? "border-color:#38bdf8;" : ""}">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
@@ -3582,7 +3957,11 @@
             box.querySelectorAll(".lcea-e-win").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.isWinner); dbOps.updateEntry(cid, b.dataset.k, { isWinner: !cur }); });
             box.querySelectorAll(".lcea-e-edit").forEach(b => b.onclick = () => this.openEditEntry(cid, b.dataset.k));
             box.querySelectorAll(".lcea-e-frz").forEach(b => b.onclick = () => { const cur = Boolean(st.data.entries[b.dataset.k]?.frozen); dbOps.updateEntry(cid, b.dataset.k, { frozen: !cur }); });
-            box.querySelectorAll(".lcea-e-adj").forEach(b => b.onclick = () => { const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10); if (!isNaN(val)) dbOps.updateEntry(cid, b.dataset.k, { bonusVotes: val }).then(() => showToast("✅ تم التعديل")); });
+            box.querySelectorAll(".lcea-e-adj").forEach(b => b.onclick = () => {
+                if (!h.canPerm(cid, "votes")) return showToast("لا تملك صلاحية تعديل الأصوات", 3000, "red");
+                const cur = Number(st.data.entries[b.dataset.k]?.bonusVotes) || 0, val = parseInt(prompt("أصوات إضافية (موجب أو سالب):", String(cur)), 10);
+                if (!isNaN(val)) dbOps.updateEntry(cid, b.dataset.k, { bonusVotes: val }).then(() => showToast("✅ تم التعديل"));
+            });
             box.querySelectorAll(".lcea-e-del").forEach(b => b.onclick = () => { if (confirm("حذف هذه المشاركة نهائياً؟")) dbOps.removeEntry(cid, b.dataset.k).then(() => { this.log("حذف مشاركة", c.title, b.dataset.k); showToast("🗑️ تم الحذف"); }); });
         },
 
@@ -3712,7 +4091,7 @@
         }
     };
 
-    // ==================== تحميل البيانات الثقيلة عند الطلب فقط (مع الجسر المباشر) ====================
+    // ==================== تحميل البيانات الثقيلة عند الطلب مع Debounce لمنع التجمّد ====================
     function syncHeavyStreams() {
         if (!st.db) return;
         const userOpen = Boolean(document.getElementById("lce-modal")?.classList.contains("open"));
@@ -3749,7 +4128,11 @@
                             status: c.status || "approved", bonusVotes: Number(c.bonusVotes) || 0, joinedAt: c.joinedAt || 0
                         };
                     });
-                    st.data.entries = norm; st.heavyLoaded = !0; renderMainBody(); contestsAdmin.refresh();
+                    st.data.entries = norm;
+                    const first = !st.heavyLoaded;
+                    st.heavyLoaded = !0;
+                    scheduleRenderMain(first ? 0 : 120);
+                    contestsAdmin.scheduleRefresh(first ? 0 : 200);
                 });
                 bind(`${LEGACY_ROOT}/votes`, sn => {
                     const raw = sn.val() || {}, norm = {};
@@ -3761,17 +4144,33 @@
                             weight: Math.max(1, Number(v.weight) || 1), ts: v.ts || 0
                         };
                     });
-                    st.data.votes = norm; if (st.heavyLoaded) renderMainBody(); contestsAdmin.refresh();
+                    st.data.votes = norm;
+                    if (st.heavyLoaded) scheduleRenderMain(350);
+                    contestsAdmin.scheduleRefresh(400);
                 });
                 bind(`${LEGACY_ROOT}/prizes`, sn => {
                     const v = sn.val();
                     st.data.prizes = Array.isArray(v) && v.length ? v : ROYAL_DEFAULT_PRIZES.slice();
-                    contestsAdmin.refresh();
+                    contestsAdmin.scheduleRefresh(150);
                 });
             } else {
-                bind(`${ROOT}/data/${targetCid}/entries`, sn => { st.data.entries = sn.val() || {}; st.heavyLoaded = !0; renderMainBody(); contestsAdmin.refresh(); });
-                bind(`${ROOT}/data/${targetCid}/votes`, sn => { st.data.votes = sn.val() || {}; if (st.heavyLoaded) renderMainBody(); contestsAdmin.refresh(); });
-                bind(`${ROOT}/data/${targetCid}/prizes`, sn => { const v = sn.val(); st.data.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice(); contestsAdmin.refresh(); });
+                bind(`${ROOT}/data/${targetCid}/entries`, sn => {
+                    st.data.entries = sn.val() || {};
+                    const first = !st.heavyLoaded;
+                    st.heavyLoaded = !0;
+                    scheduleRenderMain(first ? 0 : 120);
+                    contestsAdmin.scheduleRefresh(first ? 0 : 200);
+                });
+                bind(`${ROOT}/data/${targetCid}/votes`, sn => {
+                    st.data.votes = sn.val() || {};
+                    if (st.heavyLoaded) scheduleRenderMain(350);
+                    contestsAdmin.scheduleRefresh(400);
+                });
+                bind(`${ROOT}/data/${targetCid}/prizes`, sn => {
+                    const v = sn.val();
+                    st.data.prizes = Array.isArray(v) && v.length ? v : DEFAULT_PRIZES.slice();
+                    contestsAdmin.scheduleRefresh(150);
+                });
             }
         } else if (st.heavyCid) {
             st.heavyDetachTimer = setTimeout(() => {
@@ -3782,7 +4181,9 @@
                 st.heavyRefs = [];
                 st.heavyCid = null;
                 st.heavyLoaded = !1;
-            }, 350);
+                // تفريغ الذاكرة من الصور والمشاركات فور إغلاق النافذة
+                st.data = { entries: {}, votes: {}, prizes: DEFAULT_PRIZES.slice(), presence: {} };
+            }, 400);
         }
     }
 
@@ -3834,6 +4235,7 @@
         },
         close() {
             clearInterval(st.timerId);
+            clearTimeout(st.renderTimer);
             document.getElementById("lce-modal")?.classList.remove("open");
             const fab = document.getElementById("lce-mini-fab");
             if (fab) fab.style.display = "none";
@@ -3842,6 +4244,7 @@
         },
         minimize() {
             clearInterval(st.timerId);
+            clearTimeout(st.renderTimer);
             document.getElementById("lce-modal")?.classList.remove("open");
             const fab = document.getElementById("lce-mini-fab");
             if (fab) fab.style.display = "flex";
@@ -3862,7 +4265,7 @@
         openAdmin: () => contestsAdmin.open(LEGACY_CID)
     };
 
-    // ==================== ربط الأزرار تلقائياً في LaylMenu ====================
+    // ==================== ربط الأزرار تلقائياً في LaylMenu (مُجمّع بـ Debounce لمنع التهنيج) ====================
     const menuItemStore = {};
 
     function registerOrUpdateMenu(item) {
@@ -3892,14 +4295,12 @@
                 ${sel} .modern-classic-icon-wrapper{
                     position:relative!important;overflow:visible!important;
                     border:1.5px solid ${th.accent}!important;
-                    box-shadow:0 0 14px ${th.border},0 0 24px ${th.soft}!important;
+                    box-shadow:0 0 10px ${th.soft}!important;
                 }
                 ${sel} .modern-classic-icon-wrapper::before{
-                    content:"";position:absolute;inset:-3px;border-radius:inherit;
-                    border:2px solid ${th.accent};
-                    box-shadow:0 0 16px ${th.border},inset 0 0 8px ${th.soft};
-                    opacity:.3;pointer-events:none;
-                    animation:lceGoldPulse 2.4s ease-in-out infinite;will-change:opacity;
+                    content:"";position:absolute;inset:-2px;border-radius:inherit;
+                    border:1.5px solid ${th.accent};opacity:.35;pointer-events:none;
+                    animation:lceGoldPulse 2.8s ease-in-out infinite;
                 }`;
             });
 
@@ -3909,8 +4310,14 @@
             ds.id = "lce-dynamic-menu-style";
             (document.head || document.documentElement).appendChild(ds);
         }
-        ds.textContent = css;
+        if (ds.textContent !== css) ds.textContent = css;
         pinTopMenuBtns();
+    }
+
+    function scheduleSyncMenuItems(delayMs = 120) {
+        clearTimeout(st.menuSyncTimer);
+        if (delayMs <= 0) { syncMenuItems(); return; }
+        st.menuSyncTimer = setTimeout(syncMenuItems, delayMs);
     }
 
     function syncMenuItems() {
@@ -3958,7 +4365,6 @@
 
         applyMenuDecorations();
         window.LaylMenu?.refresh?.();
-        setTimeout(pinTopMenuBtns, 120);
     }
 
     // ==================== ربط Firebase والهوية والجسر المباشر ====================
@@ -4014,22 +4420,22 @@
 
             st.db.ref("admins").on("value", sn => {
                 st.admins = Object.keys(sn.val() || {});
-                syncMenuItems();
+                scheduleSyncMenuItems(100);
                 if (!h.isAdmin()) contestsAdmin.close();
             });
             st.db.ref(`${ROOT}/global`).on("value", sn => {
                 const v = sn.val();
                 st.global = v && "object" === typeof v ? Object.assign({}, DEFAULT_GLOBAL, v) : Object.assign({}, DEFAULT_GLOBAL);
-                syncMenuItems();
-                renderMainBody();
-                contestsAdmin.refresh();
+                scheduleSyncMenuItems(100);
+                scheduleRenderMain(120);
+                contestsAdmin.scheduleRefresh(150);
             });
             st.db.ref(`${ROOT}/index`).on("value", sn => {
                 st.index = sn.val() || {};
                 Object.keys(st.index).forEach(cid => announceContestPhase(cid, h.getContest(cid)));
-                syncMenuItems();
-                renderMainBody();
-                contestsAdmin.refresh();
+                scheduleSyncMenuItems(100);
+                scheduleRenderMain(120);
+                contestsAdmin.scheduleRefresh(150);
             });
             st.db.ref(`${ROOT}/broadcast`).on("value", sn => {
                 const v = sn.val();
@@ -4043,16 +4449,16 @@
                 st.legacy.state = sn.val() || null;
                 const lm = buildLegacyMeta();
                 if (lm) announceContestPhase(LEGACY_CID, lm);
-                syncMenuItems();
-                renderMainBody();
-                contestsAdmin.refresh();
+                scheduleSyncMenuItems(100);
+                scheduleRenderMain(120);
+                contestsAdmin.scheduleRefresh(150);
             });
             st.db.ref(`${LEGACY_ROOT}/settings`).on("value", sn => {
                 const v = sn.val();
                 st.legacy.settings = v && "object" === typeof v ? Object.assign({}, LEGACY_DEFAULT_SETTINGS, v) : Object.assign({}, LEGACY_DEFAULT_SETTINGS);
-                syncMenuItems();
-                renderMainBody();
-                contestsAdmin.refresh();
+                scheduleSyncMenuItems(100);
+                scheduleRenderMain(120);
+                contestsAdmin.scheduleRefresh(150);
             });
             st.db.ref(`${LEGACY_ROOT}/broadcast`).on("value", sn => {
                 const v = sn.val();
@@ -4073,7 +4479,7 @@
         if (val && val !== st.myUser) {
             st.myUser = val;
             try { localStorage.setItem("pc_username", val); } catch (e) {}
-            syncMenuItems();
+            scheduleSyncMenuItems(80);
             bindCmdListener();
         }
     };
@@ -4088,7 +4494,6 @@
     });
 
     syncMenuItems();
-    setTimeout(pinTopMenuBtns, 900);
     initFirebase();
 }();
 // ====== نهاية الجزء 3 من 3 ======
